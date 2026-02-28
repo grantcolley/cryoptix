@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Cryoptix.Core\Cryoptix.Core.csproj" />
-    <ProjectReference Include="..\Cryoptix.Exchange.Binance\Cryoptix.Exchange.Binance.csproj" />
+    <ProjectReference Include="..\..\Exchanges\Cryoptix.Exchange.Binance\Cryoptix.Exchange.Binance.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/Exchanges/">
     <Project Path="Exchanges/Cryoptix.Exchange.Binance/Cryoptix.Exchange.Binance.csproj" />
-    <Project Path="Exchanges/Cryoptix.Exchange.Console.Test/Cryoptix.Exchange.Console.Test.csproj" />
   </Folder>
   <Project Path="Cryoptix.Core/Cryoptix.Core.csproj" />
   <Project Path="Cryoptix.Web.API/Cryoptix.Web.API.csproj" />
