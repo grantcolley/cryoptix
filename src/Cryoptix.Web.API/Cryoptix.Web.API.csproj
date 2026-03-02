@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="LogFiles\Application\" />
+    <Folder Include="Pipeline\" />
   </ItemGroup>
 
 </Project>

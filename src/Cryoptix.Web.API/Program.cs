@@ -1,9 +1,11 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
 using Cryoptix.Web.API.Authorization;
 using Cryoptix.Web.API.Config;
 using Cryoptix.Web.API.Constants;
+using Cryoptix.Web.API.Endpoints;
+using Cryoptix.Web.API.ExceptionHandling;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 
@@ -35,6 +37,8 @@ builder.Host.UseSerilog((ctx, lc) =>
           shared: true);
 });
 
+// Add services to the container.
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -62,34 +66,21 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireAuthenticatedUser().RequireClaim("permissions", Claims.CRYOPTIX_DEVELOPER_CLAIM);
     });
 
-// Add services to the container.
-builder.Services.AddOpenApi();
+builder.Services.AddApiExceptionHandling();
 
 builder.Services.AddSingleton<IAuthorizationHandler, AllowedClientHandler>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+
+app.UseApiExceptionHandling();
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/ping", () =>
-{
-    return $"{DateTime.Now} Cryoptix";
-})
-    .WithName("ping")
-    .WithDescription("Gets a heartbeat.")
-    .Produces<string>(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status401Unauthorized)
-    .Produces(StatusCodes.Status403Forbidden)
-    .Produces(StatusCodes.Status500InternalServerError)
-    .RequireAuthorization(Claims.CRYOPTIX_CLIENT_ID, Claims.CRYOPTIX_USER_CLAIM);
+app.MapCryoptixApi();
 
 app.Run();
