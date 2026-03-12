@@ -2,8 +2,9 @@
 {
     public enum StrategyCommandType
     {
-        Start = 0,
-        Update = 1,
-        Stop = 2
+        Unknown = 0,
+        Start = 1,
+        Update = 2,
+        Stop = 3
     }
 }
