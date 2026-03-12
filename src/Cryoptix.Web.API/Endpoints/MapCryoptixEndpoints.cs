@@ -10,6 +10,7 @@ namespace Cryoptix.Web.API.Endpoints
                 .RequireAuthorization(Claims.CRYOPTIX_CLIENT_ID, Claims.CRYOPTIX_USER_CLAIM);// group-wide policy
 
             apiGroup.MapAppApi();
+            apiGroup.MapStrategyApi();
 
             return app;
         }
