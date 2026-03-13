@@ -26,4 +26,9 @@
     <Folder Include="LogFiles\Application\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Cryoptix.Strategy\Cryoptix.Strategy.csproj" />
+    <ProjectReference Include="..\Exchanges\Cryoptix.Exchange.Binance\Cryoptix.Exchange.Binance.csproj" />
+  </ItemGroup>
+
 </Project>
