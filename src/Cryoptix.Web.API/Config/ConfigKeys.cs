@@ -4,6 +4,7 @@
     {
         public const string AUTH_DOMAIN = "Auth:Domain";
         public const string AUTH_AUDIENCE = "Auth:Audience";
+        public const string AUTH_ISSUER = "Auth:Issuer";
         public const string CORS_POLICY = "CorsOrigins:Policy";
         public const string CORS_ORIGINS_URLS = "CorsOrigins:Urls";
     }
