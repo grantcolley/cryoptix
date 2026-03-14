@@ -101,15 +101,13 @@ builder.Services.AddSingleton(channel);
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
 
+builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
 builder.Services.AddSingleton<IExchangeApiFactory, ExchangeApiFactory>();
 builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
-builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
-builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
-builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
 builder.Services.AddSingleton<IStrategyExecution, StrategyExecution>();
 builder.Services.AddTransient<MovingAverage>();
 builder.Services.AddSingleton<IStrategyCatalog>(sp =>
