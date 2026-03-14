@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Core.Enums
+﻿namespace Cryoptix.Core.Models
 {
     public enum OrderSide
     {

@@ -1,5 +1,5 @@
 ﻿using Binance.Net.Enums;
-using Cryoptix.Core.Enums;
+using Cryoptix.Core.Models;
 
 namespace Cryoptix.Exchange.Binance
 {
