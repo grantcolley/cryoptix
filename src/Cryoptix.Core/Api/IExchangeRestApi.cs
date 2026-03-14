@@ -1,10 +1,11 @@
-﻿using Cryoptix.Core.Enums;
+﻿using Cryoptix.Core.Exchanges;
 using Cryoptix.Core.Models;
 
-namespace Cryoptix.Core.Interfaces
+namespace Cryoptix.Core.Api
 {
     public interface IExchangeRestApi: IDisposable
     {
+        Exchange Exchange { get; }
         Task<Account> GetAccountInfoAsync(CancellationToken cancellationToken = default);
         Task<Order> PlaceOrderAsync(ClientOrder clientOrder, int? recWindow, CancellationToken cancellationToken = default);
         Task<List<Order>> GetOpenOrdersAsync(string symbol, int? recWindow, CancellationToken cancellationToken = default);

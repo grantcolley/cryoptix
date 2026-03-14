@@ -1,10 +1,11 @@
-﻿using Cryoptix.Core.Enums;
+﻿using Cryoptix.Core.Exchanges;
 using Cryoptix.Core.Models;
 
-namespace Cryoptix.Core.Interfaces
+namespace Cryoptix.Core.Api
 {
     public interface IExchangeSubscriptionApi
     {
+        Exchange Exchange { get; }
         Task<IAsyncDisposable> SubscribeToAccountUpdatesAsync(Credentials user, Action<AccountEventArgs> callback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToKlineUpdatesAsync(string symbol, KlineInterval interval, Action<KlineEventArgs> callback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToOrderBookAsync(string symbol, int? limit, Action<OrderBookEventArgs> callback, Action<Exception> onError, CancellationToken cancellationToken);

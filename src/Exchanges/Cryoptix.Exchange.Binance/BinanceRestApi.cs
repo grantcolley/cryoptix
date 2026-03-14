@@ -2,9 +2,8 @@
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models;
 using Binance.Net.Objects.Models.Spot;
-using Cryoptix.Core.Enums;
+using Cryoptix.Core.Api;
 using Cryoptix.Core.Exceptions;
-using Cryoptix.Core.Interfaces;
 using Cryoptix.Core.Models;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Objects;
@@ -15,12 +14,13 @@ namespace Cryoptix.Exchange.Binance
 {
     public sealed class BinanceRestApi : IExchangeRestApi
     {
-        private const Core.Enums.Exchange Exchange = Core.Enums.Exchange.Binance;
         private readonly IBinanceRestClient _binanceRestClient;
         private readonly string _accountName;
         private int _disposed;
 
         private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed != 0, nameof(BinanceRestApi));
+
+        public Core.Exchanges.Exchange Exchange => Core.Exchanges.Exchange.Binance;
 
         public BinanceRestApi(IBinanceRestClient binanceRestClient, Credentials credentials)
         {
@@ -296,7 +296,7 @@ namespace Cryoptix.Exchange.Binance
             }
         }
 
-        private static T EnsureSuccess<T>(WebCallResult<T> result, string message)
+        private T EnsureSuccess<T>(WebCallResult<T> result, string message)
         {
             if (!result.Success)
             {

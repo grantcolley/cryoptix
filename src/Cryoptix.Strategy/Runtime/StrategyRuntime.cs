@@ -1,4 +1,4 @@
-﻿using Cryoptix.Core.Interfaces;
+﻿using Cryoptix.Core.Api;
 
 namespace Cryoptix.Strategy.Runtime
 {
@@ -6,6 +6,6 @@ namespace Cryoptix.Strategy.Runtime
     {
         public Func<Strategy>? GetStrategy { get; init; }
         public required Func<CancellationToken, Task> WaitForStrategyUpdateAsync { get; init; }
-        public IExchangeRestApi? ExchangeRestApi { get; set; }
+        public ExchangeApi? ExchangeApi { get; init; }
     }
 }

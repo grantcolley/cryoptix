@@ -1,6 +1,6 @@
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
-using Cryoptix.Core.Interfaces;
+using Cryoptix.Core.Api;
 using Cryoptix.Core.Models;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Strategy.Catalog;
@@ -101,6 +101,9 @@ builder.Services.AddSingleton(channel);
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
 
+builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
+builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
+builder.Services.AddSingleton<IExchangeApiFactory, ExchangeApiFactory>();
 builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
@@ -115,7 +118,7 @@ builder.Services.AddSingleton<IStrategyCatalog>(sp =>
         new KeyValuePair<StrategyType, Func<IStrategyExecutable>>(StrategyType.MovingAverage, () => sp.GetRequiredService<MovingAverage>())
     ]));
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
