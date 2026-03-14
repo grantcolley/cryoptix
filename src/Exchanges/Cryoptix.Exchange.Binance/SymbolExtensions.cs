@@ -1,5 +1,4 @@
 ﻿using Binance.Net.Objects.Models.Spot;
-using Cryoptix.Core.Enums;
 using Cryoptix.Core.Models;
 
 namespace Cryoptix.Exchange.Binance
@@ -16,7 +15,7 @@ namespace Cryoptix.Exchange.Binance
             {
                 Name = $"{s.BaseAsset}{s.QuoteAsset}",
                 ExchangeSymbol = $"{s.BaseAsset}{s.QuoteAsset}",
-                Exchange = Core.Enums.Exchange.Binance,
+                Exchange = Core.Exchanges.Exchange.Binance,
                 BaseAsset = new Asset { Symbol = s.BaseAsset, Precision = s.BaseAssetPrecision },
                 QuoteAsset = new Asset { Symbol = s.QuoteAsset, Precision = s.QuoteAssetPrecision },
                 OrderTypes = [OrderType.Limit, OrderType.Market, OrderType.StopLoss, OrderType.StopLossLimit, OrderType.TakeProfit, OrderType.TakeProfitLimit],

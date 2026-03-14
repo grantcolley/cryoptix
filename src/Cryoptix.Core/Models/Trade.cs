@@ -1,4 +1,4 @@
-﻿using Cryoptix.Core.Enums;
+﻿using Cryoptix.Core.Exchanges;
 
 namespace Cryoptix.Core.Models
 {
