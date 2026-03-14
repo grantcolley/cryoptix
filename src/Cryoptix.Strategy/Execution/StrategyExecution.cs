@@ -1,14 +1,16 @@
-﻿using Cryoptix.Strategy.Catalog;
+﻿using Cryoptix.Core.Api;
+using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Status;
 using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Execution
 {
-    public class StrategyExecution(StrategyStateStore state, IStrategyCatalog catalog) : IStrategyExecution
+    public class StrategyExecution(StrategyStateStore state, IStrategyCatalog catalog, IExchangeApiFactory exchangeApiFactory) : IStrategyExecution
     {
         private readonly StrategyStateStore _state = state;
         private readonly IStrategyCatalog _catalog = catalog;
+        private readonly IExchangeApiFactory _exchangeApiFactory = exchangeApiFactory;
         private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
         private Task? _activeTask;
@@ -80,7 +82,8 @@ namespace Cryoptix.Strategy.Execution
                 StrategyRuntime strategyRuntime = new()
                 { 
                     GetStrategy = () => Volatile.Read(ref _activeStrategy),
-                    WaitForStrategyUpdateAsync = ct => activeStrategyUpdatedSignal.WaitAsync(ct)
+                    WaitForStrategyUpdateAsync = ct => activeStrategyUpdatedSignal.WaitAsync(ct),
+                    ExchangeApi = _exchangeApiFactory.GetApi(strategy.Exchange)
                 };
 
                 Task runTask = RunStrategyAsync(strategy, strategyExecution, strategyRuntime, activeCancellationToken);
