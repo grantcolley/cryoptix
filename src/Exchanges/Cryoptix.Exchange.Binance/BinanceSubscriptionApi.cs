@@ -2,8 +2,8 @@
 using Binance.Net.Interfaces;
 using Binance.Net.Objects.Models.Spot.Socket;
 using Binance.Net.SymbolOrderBooks;
-using Cryoptix.Core.Api;
-using Cryoptix.Core.Models;
+using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Models;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Interfaces;
 using CryptoExchange.Net.Objects;
@@ -14,7 +14,7 @@ namespace Cryoptix.Exchange.Binance
 {
     public sealed class BinanceSubscriptionApi : IExchangeSubscriptionApi
     {
-        public Core.Exchanges.Exchange Exchange => Core.Exchanges.Exchange.Binance;
+        public Exchanges.Exchange Exchange => Exchanges.Exchange.Binance;
 
         public async Task<IAsyncDisposable> SubscribeToAccountUpdatesAsync(Credentials credentials, Action<AccountEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken)
         {

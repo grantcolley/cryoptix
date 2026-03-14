@@ -1,6 +1,5 @@
-﻿using Cryoptix.Core.Enums;
-using Cryoptix.Core.Interfaces;
-using Cryoptix.Core.Models;
+﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Models;
 
 namespace Cryoptix.Exchange.Console.Test
 {
@@ -9,6 +8,8 @@ namespace Cryoptix.Exchange.Console.Test
         private readonly IExchangeRestApi _exchangeRestApi = exchangeRestApi;
         private readonly string _accountName = accountName;
         private bool disposedValue;
+
+        public Exchanges.Exchange Exchange => Exchanges.Exchange.Unknown;
 
         public async Task<string> CancelOrderAsync(string symbol, string orderId, CancellationToken cancellationToken = default)
         {

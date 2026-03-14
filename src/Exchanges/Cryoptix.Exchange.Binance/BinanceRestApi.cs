@@ -2,9 +2,9 @@
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models;
 using Binance.Net.Objects.Models.Spot;
-using Cryoptix.Core.Api;
-using Cryoptix.Core.Exceptions;
-using Cryoptix.Core.Models;
+using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Exceptions;
+using Cryoptix.Exchange.Models;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Objects;
 using System.Data;
@@ -20,7 +20,7 @@ namespace Cryoptix.Exchange.Binance
 
         private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed != 0, nameof(BinanceRestApi));
 
-        public Core.Exchanges.Exchange Exchange => Core.Exchanges.Exchange.Binance;
+        public Exchanges.Exchange Exchange => Exchanges.Exchange.Binance;
 
         public BinanceRestApi(IBinanceRestClient binanceRestClient, Credentials credentials)
         {

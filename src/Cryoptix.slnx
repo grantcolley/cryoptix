@@ -2,7 +2,7 @@
   <Folder Name="/Exchanges/">
     <Project Path="Exchanges/Cryoptix.Exchange.Binance/Cryoptix.Exchange.Binance.csproj" />
   </Folder>
-  <Project Path="Cryoptix.Core/Cryoptix.Core.csproj" />
+  <Project Path="Cryoptix.Exchange/Cryoptix.Exchange.csproj" />
   <Project Path="Cryoptix.Strategy/Cryoptix.Strategy.csproj" />
   <Project Path="Cryoptix.Web.API/Cryoptix.Web.API.csproj" />
 </Solution>

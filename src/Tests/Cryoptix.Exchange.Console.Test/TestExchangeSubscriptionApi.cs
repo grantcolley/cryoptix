@@ -1,12 +1,13 @@
-﻿using Cryoptix.Core.Enums;
-using Cryoptix.Core.Interfaces;
-using Cryoptix.Core.Models;
+﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Models;
 
 namespace Cryoptix.Exchange.Console.Test
 {
     public class TestExchangeSubscriptionApi(IExchangeSubscriptionApi exchangeSubscriptionApi) : IExchangeSubscriptionApi
     {
         private readonly IExchangeSubscriptionApi _exchangeSubscriptionApi = exchangeSubscriptionApi;
+
+        public Exchanges.Exchange Exchange => Exchanges.Exchange.Unknown;
 
         public Task<IAsyncDisposable> SubscribeToAccountUpdatesAsync(Credentials credentials, Action<AccountEventArgs> callback, Action<Exception> exception, CancellationToken cancellationToken)
         {

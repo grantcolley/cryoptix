@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Binance.Net.Clients;
-using Cryoptix.Core.Enums;
-using Cryoptix.Core.Models;
+using Cryoptix.Exchange.Models;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Exchange.Console.Test;
 

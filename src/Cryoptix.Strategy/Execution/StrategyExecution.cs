@@ -1,4 +1,4 @@
-﻿using Cryoptix.Core.Api;
+﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Status;
