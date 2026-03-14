@@ -1,7 +1,7 @@
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
-using Cryoptix.Core.Api;
-using Cryoptix.Core.Models;
+using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Models;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
