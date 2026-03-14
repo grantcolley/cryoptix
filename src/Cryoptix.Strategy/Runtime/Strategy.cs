@@ -1,4 +1,5 @@
-﻿using Cryoptix.Strategy.Strategies;
+﻿using Cryoptix.Core.Exchanges;
+using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Runtime
 {
@@ -9,5 +10,6 @@ namespace Cryoptix.Strategy.Runtime
         public string? Description { get; set; }
         public string? Symbol { get; set; }
         public StrategyType StrategyType { get; set; }
+        public Exchange Exchange { get; set; }
     }
 }
