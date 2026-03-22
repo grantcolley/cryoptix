@@ -5,11 +5,11 @@ namespace Cryoptix.Web.API.Services
 {
     public class StrategyBackgroundService(
         IStrategyCommandQueue strategyCommandQueue,
-        IStrategyExecution strategyExecutionService,
+        IStrategyExecution strategyExecution,
         ILogger<StrategyBackgroundService> logger) : BackgroundService
     {
         private readonly IStrategyCommandQueue _strategyCommandQueue = strategyCommandQueue;
-        private readonly IStrategyExecution _strategyExecutionService = strategyExecutionService;
+        private readonly IStrategyExecution _strategyExecution = strategyExecution;
         private readonly ILogger<StrategyBackgroundService> _logger = logger;
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -29,7 +29,7 @@ namespace Cryoptix.Web.API.Services
                                 break;
                             }
 
-                            await _strategyExecutionService.StartAsync(strategyCommand.Strategy, cancellationToken);
+                            await _strategyExecution.StartAsync(strategyCommand.Strategy, cancellationToken);
                             break;
 
                         case StrategyCommandType.Update:
@@ -39,11 +39,11 @@ namespace Cryoptix.Web.API.Services
                                 break;
                             }
 
-                            await _strategyExecutionService.UpdateAsync(strategyCommand.Strategy);
+                            await _strategyExecution.UpdateAsync(strategyCommand.Strategy);
                             break;
 
                         case StrategyCommandType.Stop:
-                            await _strategyExecutionService.StopAsync();
+                            await _strategyExecution.StopAsync();
                             break;
 
                         default:
@@ -74,7 +74,7 @@ namespace Cryoptix.Web.API.Services
             try
             {
                 await base.StopAsync(cancellationToken);
-                await _strategyExecutionService.StopAsync();
+                await _strategyExecution.StopAsync();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
