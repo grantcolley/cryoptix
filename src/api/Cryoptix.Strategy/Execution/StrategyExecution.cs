@@ -302,7 +302,7 @@ namespace Cryoptix.Strategy.Execution
 
         private async Task RunStrategyAsync(
             Runtime.Strategy strategy,
-            IStrategyExecutable strategyExecution,
+            IStrategyExecutable strategyExecutable,
             StrategyRuntime strategyRuntime,
             CancellationToken cancellationToken)
         {
@@ -315,7 +315,7 @@ namespace Cryoptix.Strategy.Execution
                     Strategy = strategy
                 });
 
-                await strategyExecution.ExecuteAsync(strategyRuntime, cancellationToken);
+                await strategyExecutable.ExecuteAsync(strategyRuntime, cancellationToken);
             }
             catch (OperationCanceledException)
             {
