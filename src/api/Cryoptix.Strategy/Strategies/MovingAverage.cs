@@ -1,12 +1,17 @@
 ﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Models;
 using Cryoptix.Strategy.Execution;
 using Cryoptix.Strategy.Runtime;
+using Cryoptix.Strategy.Subscriptions;
+using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Strategies
 {
-    public class MovingAverage : IStrategyExecutable
+    public class MovingAverage(ILogger<MovingAverage> logger) : IStrategyExecutable
     {
         public readonly StrategyType Type = StrategyType.MovingAverage;
+
+        private readonly ILogger<MovingAverage> _logger = logger;
 
         private ExchangeApi? _exchangeApi;
         private Runtime.Strategy? _strategy;
@@ -19,24 +24,23 @@ namespace Cryoptix.Strategy.Strategies
 
             _exchangeApi = strategyRuntime.ExchangeApi;
 
-            // Apply initial config/state
             await ApplyStrategyAsync(strategyRuntime.GetStrategy(), cancellationToken);
 
-            // Start the real-time processing once
-            Task strategyExecutionTask = ExecuteStrategyAsync(cancellationToken);
+            SubscriptionSession subscriptionSession = await StartStrategySubscriptionsAsync(cancellationToken);
 
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     Task strategyUpdateTask = strategyRuntime.WaitForStrategyUpdateAsync(cancellationToken);
+                    Task sessionCompletionTask = subscriptionSession.Completion;
 
-                    Task completed = await Task.WhenAny(strategyUpdateTask, strategyExecutionTask);
+                    Task completed = await Task.WhenAny(strategyUpdateTask, sessionCompletionTask);
 
-                    if (completed == strategyExecutionTask)
+                    if (completed == sessionCompletionTask)
                     {
-                        // Subscription ended or failed
-                        await strategyExecutionTask; // propagate exceptions
+                        // Propagate failure/cancellation from the subscription lifetime task.
+                        await sessionCompletionTask;
                         break;
                     }
 
@@ -44,22 +48,19 @@ namespace Cryoptix.Strategy.Strategies
                     await ApplyStrategyAsync(updated, cancellationToken);
                 }
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            finally
             {
-                // normal shutdown
+                await subscriptionSession.DisposeAsync();
             }
-
-            await strategyExecutionTask;
         }
 
-        private async Task ExecuteStrategyAsync(CancellationToken cancellationToken)
+        private async Task<SubscriptionSession> StartStrategySubscriptionsAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (_exchangeApi?.SubscriptionsApi == null)
             {
-                Console.Error.WriteLine("Exchange API does not support subscriptions.");
-                return;
+                throw new InvalidOperationException("Exchange API does not support subscriptions.");
             }
 
             Runtime.Strategy? intitalStrategy = Volatile.Read(ref _strategy);
@@ -67,48 +68,58 @@ namespace Cryoptix.Strategy.Strategies
             if(intitalStrategy == null 
                 || string.IsNullOrWhiteSpace(intitalStrategy.Symbol))
             {
-                return;
+                throw new InvalidOperationException("Strategy symbol is required.");
             }
 
-            await using var subscription = await _exchangeApi.SubscriptionsApi.SubscribeToTradesAsync(
-                symbol: intitalStrategy.Symbol,
-                callback: async trade =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    Runtime.Strategy? strategy = Volatile.Read(ref _strategy);
-                    if (strategy == null)
-                        return;
-
-                    System.Diagnostics.Debug.WriteLine($"{strategy.Name} {strategy.Description}");
-
-                    foreach (var t in trade.Trades)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"{t.Time} {t.Price} {t.QuoteQuantity}");
-                    }
-                    // Process the trade and make trading decisions
-                },
-                onError: ex =>
-                {
-                    // Handle subscription errors
-                    Console.Error.WriteLine($"Subscription error: {ex}");
-                },
-                cancellationToken: cancellationToken);
+            CancellationTokenSource sessionCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             try
             {
-                await Task.Delay(Timeout.Infinite, cancellationToken);
+                IAsyncDisposable subscriptionHandle = await _exchangeApi.SubscriptionsApi.SubscribeToTradesAsync(
+                    symbol: intitalStrategy.Symbol,
+                    onCallback: trade => OnTrade(trade),
+                    onError: ex =>
+                    {
+                        // Handle subscription errors
+                        _logger.LogError($"Subscription error: {ex}");
+                    },
+                    cancellationToken: sessionCancellationTokenSource.Token);
+
+                Task completionTask = WaitUntilCancelledAsync(sessionCancellationTokenSource.Token);
+
+                return new SubscriptionSession(subscriptionHandle, sessionCancellationTokenSource, completionTask);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch
             {
-                // normal shutdown
+                sessionCancellationTokenSource.Dispose();
+                throw;
             }
         }
 
         private Task ApplyStrategyAsync(Runtime.Strategy? strategy, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Volatile.Write(ref _strategy, strategy);
             return Task.CompletedTask;
+        }
+
+        private void OnTrade(TradeEventArgs trade)
+        {
+            Runtime.Strategy? strategy = Volatile.Read(ref _strategy);
+            if (strategy == null)
+                return;
+
+            foreach (Trade t in trade.Trades)
+            {
+                _logger.LogInformation($"{t.Time} {t.Price} {t.QuoteQuantity}");
+            }
+
+            // Process the trade data and make trading decisions
+        }
+
+        private static async Task WaitUntilCancelledAsync(CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
         }
     }
 }
