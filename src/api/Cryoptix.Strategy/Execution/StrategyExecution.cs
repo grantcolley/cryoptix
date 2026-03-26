@@ -3,6 +3,7 @@ using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Status;
 using Cryoptix.Strategy.Strategies;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Cryoptix.Strategy.Execution
 {
@@ -61,6 +62,23 @@ namespace Cryoptix.Strategy.Execution
                     return;
                 }
 
+                _activeCancellationTokenSource?.Dispose();
+                _activeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                AsyncAutoResetEvent activeStrategyUpdatedSignal = new();
+                _activeStrategyUpdatedSignal = activeStrategyUpdatedSignal;
+
+                Volatile.Write(ref _activeStrategy, strategy);
+
+                StrategyRuntime strategyRuntime = new()
+                {
+                    GetStrategy = () => Volatile.Read(ref _activeStrategy),
+                    WaitForStrategyUpdateAsync = ct => activeStrategyUpdatedSignal.WaitAsync(ct),
+                    ExchangeApi = _exchangeApiFactory.GetApi(strategy.Exchange)
+                };
+
+                IStrategyExecutable strategyExecution = strategyExecutionFactory();
+
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Starting,
@@ -68,43 +86,11 @@ namespace Cryoptix.Strategy.Execution
                     Strategy = strategy
                 });
 
-                _activeCancellationTokenSource?.Dispose();
-                _activeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                CancellationToken activeCancellationToken = _activeCancellationTokenSource.Token;
-
-                IStrategyExecutable strategyExecution = strategyExecutionFactory();
-
-                Volatile.Write(ref _activeStrategy, strategy);
-                
-                AsyncAutoResetEvent activeStrategyUpdatedSignal = new();
-                _activeStrategyUpdatedSignal = activeStrategyUpdatedSignal;
-
-                StrategyRuntime strategyRuntime = new()
-                { 
-                    GetStrategy = () => Volatile.Read(ref _activeStrategy),
-                    WaitForStrategyUpdateAsync = ct => activeStrategyUpdatedSignal.WaitAsync(ct),
-                    ExchangeApi = _exchangeApiFactory.GetApi(strategy.Exchange)
-                };
-
-                Task runTask = RunStrategyAsync(strategy, strategyExecution, strategyRuntime, activeCancellationToken);
+                Task runTask = RunStrategyAsync(strategy, strategyExecution, strategyRuntime, _activeCancellationTokenSource.Token);
 
                 _activeTask = runTask;
 
-                _ = runTask.ContinueWith(
-                    completedTask => OnRunCompletedAsync(completedTask),
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default).Unwrap();
-            }
-            catch (Exception ex)
-            {
-                _state.Set(new StrategyStatus
-                {
-                    StrategyState = StrategyState.Faulted,
-                    StrategyType = strategy.StrategyType,
-                    Strategy = strategy,
-                    Message = ex.Message
-                });
+                _ = ObserveCompletionAsync(_activeTask);
             }
             finally
             {
@@ -137,22 +123,19 @@ namespace Cryoptix.Strategy.Execution
 
                 Runtime.Strategy? currentStrategy = Volatile.Read(ref _activeStrategy);
 
-                if (currentStrategy != null)
+                if (currentStrategy != null && !currentStrategy.CanUpdate(strategy, out string? message))
                 {
-                    if (!currentStrategy.CanUpdate(strategy, out string? message))
+                    _state.Set(new StrategyStatus
                     {
-                        _state.Set(new StrategyStatus
-                        {
-                            StrategyState = StrategyState.Faulted,
-                            StrategyType = currentStrategy.StrategyType,
-                            Strategy = currentStrategy,
-                            Message = message
-                        });
+                        StrategyState = StrategyState.Faulted,
+                        StrategyType = currentStrategy.StrategyType,
+                        Strategy = currentStrategy,
+                        Message = message
+                    });
 
-                        return;
-                    }
+                    return;
                 }
-
+                
                 Volatile.Write(ref _activeStrategy, strategy);
 
                 signalToSet = _activeStrategyUpdatedSignal;
@@ -286,18 +269,50 @@ namespace Cryoptix.Strategy.Execution
             GC.SuppressFinalize(this);
         }
 
-        private void ThrowIfDisposed()
+        private async Task ObserveCompletionAsync(Task runTask)
         {
-            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposeStarted) != 0, this);
+            try
+            {
+                await runTask;
+            }
+            catch
+            {
+                // Fault state was already recorded in RunStrategyAsync.
+            }
+
+            await OnRunCompletedAsync(runTask);
         }
 
-        private void CleanupActiveExecution()
+        private async Task OnRunCompletedAsync(Task completedTask)
         {
-            _activeTask = null;
-            _activeCancellationTokenSource?.Dispose();
-            _activeCancellationTokenSource = null;
-            Volatile.Write(ref _activeStrategy, null);
-            _activeStrategyUpdatedSignal = null;
+            try
+            {
+                await _semaphoreSlim.WaitAsync();
+            }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!ReferenceEquals(_activeTask, completedTask))
+                    return;
+
+                CleanupActiveExecution();
+
+                if (completedTask.IsFaulted)
+                    return;
+
+                _state.Set(new StrategyStatus
+                {
+                    StrategyState = StrategyState.Idle
+                });
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
         }
 
         private async Task RunStrategyAsync(
@@ -317,7 +332,7 @@ namespace Cryoptix.Strategy.Execution
 
                 await strategyExecutable.ExecuteAsync(strategyRuntime, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 // Normal cancellation
             }
@@ -335,41 +350,18 @@ namespace Cryoptix.Strategy.Execution
             }
         }
 
-        private async Task OnRunCompletedAsync(Task completedTask)
+        private void ThrowIfDisposed()
         {
-            try
-            {
-                await _semaphoreSlim.WaitAsync();
-            }
-            catch (ObjectDisposedException)
-            {
-                return;
-            }
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposeStarted) != 0, this);
+        }
 
-            try
-            {
-                if (!ReferenceEquals(_activeTask, completedTask))
-                {
-                    return;
-                }
-
-                CleanupActiveExecution();
-
-                if (completedTask.IsFaulted)
-                {
-                    // Fault state already set in RunStrategyAsync
-                    return;
-                }
-
-                _state.Set(new StrategyStatus
-                {
-                    StrategyState = StrategyState.Idle
-                });
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
-            }
+        private void CleanupActiveExecution()
+        {
+            _activeTask = null;
+            _activeCancellationTokenSource?.Dispose();
+            _activeCancellationTokenSource = null;
+            Volatile.Write(ref _activeStrategy, null);
+            _activeStrategyUpdatedSignal = null;
         }
     }
 }
