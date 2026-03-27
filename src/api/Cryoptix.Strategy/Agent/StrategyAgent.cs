@@ -3,14 +3,13 @@ using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Status;
 using Cryoptix.Strategy.Strategies;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Cryoptix.Strategy.Execution
+namespace Cryoptix.Strategy.Agent
 {
-    public class StrategyExecution(StrategyStateStore state, IStrategyCatalog catalog, IExchangeApiFactory exchangeApiFactory) : IStrategyExecution
+    public class StrategyAgent(StrategyStateStore state, IStrategyProcessorCatalog strategyProcessorCatalog, IExchangeApiFactory exchangeApiFactory) : IStrategyAgent
     {
         private readonly StrategyStateStore _state = state;
-        private readonly IStrategyCatalog _catalog = catalog;
+        private readonly IStrategyProcessorCatalog _strategyProcessorCatalog = strategyProcessorCatalog;
         private readonly IExchangeApiFactory _exchangeApiFactory = exchangeApiFactory;
         private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
@@ -41,22 +40,22 @@ namespace Cryoptix.Strategy.Execution
                     _state.Set(new StrategyStatus
                     {
                         StrategyState = StrategyState.Faulted,
-                        StrategyType = strategy.StrategyType,
+                        StrategyProcessorType = strategy.StrategyProcessorType,
                         Strategy = strategy,
-                        Message = $"Start rejected: strategy {currentStrategy?.StrategyType} {currentStrategy?.Name} already running. Stop first."
+                        Message = $"Start rejected: strategy {currentStrategy?.StrategyProcessorType} {currentStrategy?.Name} already running. Stop first."
                     });
 
                     return;
                 }
 
-                if (!_catalog.TryCreate(strategy.StrategyType, out Func<IStrategyExecutable> strategyExecutionFactory))
+                if (!_strategyProcessorCatalog.TryCreate(strategy.StrategyProcessorType, out Func<IStrategyProcessor> strategyProcessorFactory))
                 {
                     _state.Set(new StrategyStatus
                     {
                         StrategyState = StrategyState.Faulted,
-                        StrategyType = strategy.StrategyType,
+                        StrategyProcessorType = strategy.StrategyProcessorType,
                         Strategy = strategy,
-                        Message = $"Unknown strategy '{strategy.StrategyType}' {strategy.Name}"
+                        Message = $"Unknown strategy '{strategy.StrategyProcessorType}' {strategy.Name}"
                     });
 
                     return;
@@ -77,16 +76,16 @@ namespace Cryoptix.Strategy.Execution
                     ExchangeApi = _exchangeApiFactory.GetApi(strategy.Exchange)
                 };
 
-                IStrategyExecutable strategyExecution = strategyExecutionFactory();
+                IStrategyProcessor strategyProcessor = strategyProcessorFactory();
 
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Starting,
-                    StrategyType = strategy.StrategyType,
+                    StrategyProcessorType = strategy.StrategyProcessorType,
                     Strategy = strategy
                 });
 
-                Task runTask = RunStrategyAsync(strategy, strategyExecution, strategyRuntime, _activeCancellationTokenSource.Token);
+                Task runTask = RunStrategyAsync(strategy, strategyProcessor, strategyRuntime, _activeCancellationTokenSource.Token);
 
                 _activeTask = runTask;
 
@@ -128,7 +127,7 @@ namespace Cryoptix.Strategy.Execution
                     _state.Set(new StrategyStatus
                     {
                         StrategyState = StrategyState.Faulted,
-                        StrategyType = currentStrategy.StrategyType,
+                        StrategyProcessorType = currentStrategy.StrategyProcessorType,
                         Strategy = currentStrategy,
                         Message = message
                     });
@@ -146,7 +145,7 @@ namespace Cryoptix.Strategy.Execution
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Running,
-                    StrategyType = strategy.StrategyType,
+                    StrategyProcessorType = strategy.StrategyProcessorType,
                     Strategy = strategy
                 });
             }
@@ -202,7 +201,7 @@ namespace Cryoptix.Strategy.Execution
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Stopping,
-                    StrategyType = strategyToReport?.StrategyType ?? StrategyType.None,
+                    StrategyProcessorType = strategyToReport?.StrategyProcessorType ?? StrategyProcessorType.None,
                     Strategy = strategyToReport
                 });
             }
@@ -317,7 +316,7 @@ namespace Cryoptix.Strategy.Execution
 
         private async Task RunStrategyAsync(
             Runtime.Strategy strategy,
-            IStrategyExecutable strategyExecutable,
+            IStrategyProcessor strategyProcessor,
             StrategyRuntime strategyRuntime,
             CancellationToken cancellationToken)
         {
@@ -326,11 +325,11 @@ namespace Cryoptix.Strategy.Execution
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Running,
-                    StrategyType = strategy.StrategyType,
+                    StrategyProcessorType = strategy.StrategyProcessorType,
                     Strategy = strategy
                 });
 
-                await strategyExecutable.ExecuteAsync(strategyRuntime, cancellationToken);
+                await strategyProcessor.ExecuteAsync(strategyRuntime, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -341,7 +340,7 @@ namespace Cryoptix.Strategy.Execution
                 _state.Set(new StrategyStatus
                 {
                     StrategyState = StrategyState.Faulted,
-                    StrategyType = strategy.StrategyType,
+                    StrategyProcessorType = strategy.StrategyProcessorType,
                     Strategy = strategy,
                     Message = ex.Message
                 });

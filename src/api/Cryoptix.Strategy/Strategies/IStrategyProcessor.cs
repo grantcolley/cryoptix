@@ -1,8 +1,8 @@
 ﻿using Cryoptix.Strategy.Runtime;
 
-namespace Cryoptix.Strategy.Execution
+namespace Cryoptix.Strategy.Strategies
 {
-    public interface IStrategyExecutable
+    public interface IStrategyProcessor
     {
         Task ExecuteAsync(StrategyRuntime strategyRuntime, CancellationToken cancellationToken);
     }

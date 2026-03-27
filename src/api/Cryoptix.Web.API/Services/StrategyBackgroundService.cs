@@ -1,15 +1,15 @@
 ﻿using Cryoptix.Strategy.Command;
-using Cryoptix.Strategy.Execution;
+using Cryoptix.Strategy.Agent;
 
 namespace Cryoptix.Web.API.Services
 {
     public class StrategyBackgroundService(
         IStrategyCommandQueue strategyCommandQueue,
-        IStrategyExecution strategyExecution,
+        IStrategyAgent strategyAgent,
         ILogger<StrategyBackgroundService> logger) : BackgroundService
     {
         private readonly IStrategyCommandQueue _strategyCommandQueue = strategyCommandQueue;
-        private readonly IStrategyExecution _strategyExecution = strategyExecution;
+        private readonly IStrategyAgent _strategyAgent = strategyAgent;
         private readonly ILogger<StrategyBackgroundService> _logger = logger;
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -29,7 +29,7 @@ namespace Cryoptix.Web.API.Services
                                 break;
                             }
 
-                            await _strategyExecution.StartAsync(strategyCommand.Strategy, cancellationToken);
+                            await _strategyAgent.StartAsync(strategyCommand.Strategy, cancellationToken);
                             break;
 
                         case StrategyCommandType.Update:
@@ -39,11 +39,11 @@ namespace Cryoptix.Web.API.Services
                                 break;
                             }
 
-                            await _strategyExecution.UpdateAsync(strategyCommand.Strategy);
+                            await _strategyAgent.UpdateAsync(strategyCommand.Strategy);
                             break;
 
                         case StrategyCommandType.Stop:
-                            await _strategyExecution.StopAsync();
+                            await _strategyAgent.StopAsync();
                             break;
 
                         default:
@@ -74,7 +74,7 @@ namespace Cryoptix.Web.API.Services
             try
             {
                 await base.StopAsync(cancellationToken);
-                await _strategyExecution.StopAsync();
+                await _strategyAgent.StopAsync();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

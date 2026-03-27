@@ -1,6 +1,6 @@
-﻿namespace Cryoptix.Strategy.Execution
+﻿namespace Cryoptix.Strategy.Agent
 {
-    public interface IStrategyExecution : IAsyncDisposable
+    public interface IStrategyAgent : IAsyncDisposable
     {
         Task StartAsync(Runtime.Strategy strategy, CancellationToken cancellationToken);
         Task StopAsync();
