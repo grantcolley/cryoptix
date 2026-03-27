@@ -1,12 +1,12 @@
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Cryoptix.Exchange.Api;
-using Cryoptix.Exchange.Models;
 using Cryoptix.Exchange.Binance;
+using Cryoptix.Exchange.Models;
+using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
-using Cryoptix.Strategy.Execution;
 using Cryoptix.Strategy.Status;
 using Cryoptix.Strategy.Strategies;
 using Cryoptix.Web.API.Authorization;
@@ -108,12 +108,12 @@ builder.Services.AddSingleton<IExchangeApiFactory, ExchangeApiFactory>();
 builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
-builder.Services.AddSingleton<IStrategyExecution, StrategyExecution>();
+builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
 builder.Services.AddTransient<MovingAverage>();
-builder.Services.AddSingleton<IStrategyCatalog>(sp =>
-    new StrategyCatalog(
+builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
+    new StrategyProcessorCatalog(
     [
-        new KeyValuePair<StrategyType, Func<IStrategyExecutable>>(StrategyType.MovingAverage, () => sp.GetRequiredService<MovingAverage>())
+        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.MovingAverage, () => sp.GetRequiredService<MovingAverage>())
     ]));
 
 WebApplication app = builder.Build();

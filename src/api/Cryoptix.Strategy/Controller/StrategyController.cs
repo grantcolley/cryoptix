@@ -8,26 +8,26 @@ namespace Cryoptix.Strategy.Controller
     public sealed class StrategyController(
         StrategyStateStore stateStore,
         IStrategyCommandQueue queue,
-        IStrategyCatalog catalog) : IStrategyController
+        IStrategyProcessorCatalog strategyProcessorCatalog) : IStrategyController
     {
         private readonly StrategyStateStore _strategyStateStore = stateStore;
         private readonly IStrategyCommandQueue _strategyCommandQueue = queue;
-        private readonly IStrategyCatalog _strategyCatalog = catalog;
+        private readonly IStrategyProcessorCatalog _strategyProcessorCatalog = strategyProcessorCatalog;
 
         public StrategyStatus GetStatus() => _strategyStateStore.Get();
 
-        public IReadOnlyCollection<StrategyType> GetAvailableStrategies() => _strategyCatalog.Keys;
+        public IReadOnlyCollection<StrategyProcessorType> GetAvailableStrategies() => _strategyProcessorCatalog.Keys;
 
         public async Task<StrategyCommandResult> StartAsync(Runtime.Strategy strategy, CancellationToken ct)
         {
-            if (!_strategyCatalog.TryCreate(strategy.StrategyType, out _))
+            if (!_strategyProcessorCatalog.TryCreate(strategy.StrategyProcessorType, out _))
             {
                 return new StrategyCommandResult
                 {
                     Success = false,
                     StatusCode = StrategyControllerStatusCodes.Status404NotFound,
-                    Title = $"Strategy type '{strategy.StrategyType}' not found",
-                    Message = $"Unknown strategy '{strategy.StrategyType}' {strategy.Name}"
+                    Title = $"Strategy type '{strategy.StrategyProcessorType}' not found",
+                    Message = $"Unknown strategy '{strategy.StrategyProcessorType}' {strategy.Name}"
                 };
             }
 

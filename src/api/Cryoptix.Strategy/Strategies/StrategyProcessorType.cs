@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Strategy.Strategies
 {
-    public enum StrategyType
+    public enum StrategyProcessorType
     {
         None = 0,
         MovingAverage = 1,

@@ -1,15 +1,14 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Models;
-using Cryoptix.Strategy.Execution;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Subscriptions;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Strategies
 {
-    public class MovingAverage(ILogger<MovingAverage> logger) : IStrategyExecutable
+    public class MovingAverage(ILogger<MovingAverage> logger) : IStrategyProcessor
     {
-        public readonly StrategyType Type = StrategyType.MovingAverage;
+        public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.MovingAverage;
 
         private readonly ILogger<MovingAverage> _logger = logger;
 

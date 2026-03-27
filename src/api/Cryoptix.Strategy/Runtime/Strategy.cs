@@ -8,7 +8,7 @@ namespace Cryoptix.Strategy.Runtime
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Symbol { get; set; }
-        public StrategyType StrategyType { get; set; }
+        public StrategyProcessorType StrategyProcessorType { get; set; }
         public Exchange.Exchanges.Exchange Exchange { get; set; }
     }
 }

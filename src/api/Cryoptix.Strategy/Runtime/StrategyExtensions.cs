@@ -10,9 +10,9 @@
             {
                 message = "Strategy cannot be null.";
             }
-            else if (activeStrategy.StrategyType != strategy.StrategyType)
+            else if (activeStrategy.StrategyProcessorType != strategy.StrategyProcessorType)
             {
-                message = $"StrategyType change from {activeStrategy.StrategyType} to {strategy.StrategyType} requires stop/start.";
+                message = $"StrategyType change from {activeStrategy.StrategyProcessorType} to {strategy.StrategyProcessorType} requires stop/start.";
             }
             else if (activeStrategy.StrategyId != strategy.StrategyId)
             {
