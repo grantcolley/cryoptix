@@ -1,7 +1,7 @@
 ﻿using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
+using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Status;
-using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Controller
 {

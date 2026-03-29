@@ -1,4 +1,4 @@
-﻿using Cryoptix.Strategy.Strategies;
+﻿using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Status
 {

@@ -7,8 +7,8 @@ using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
+using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Status;
-using Cryoptix.Strategy.Strategies;
 using Cryoptix.Web.API.Authorization;
 using Cryoptix.Web.API.Config;
 using Cryoptix.Web.API.Constants;
@@ -109,11 +109,11 @@ builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
-builder.Services.AddTransient<MovingAverage>();
+builder.Services.AddTransient<StrategyProcessor>();
 builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
     new StrategyProcessorCatalog(
     [
-        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.MovingAverage, () => sp.GetRequiredService<MovingAverage>())
+        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.MovingAverage, () => sp.GetRequiredService<StrategyProcessor>())
     ]));
 
 WebApplication app = builder.Build();

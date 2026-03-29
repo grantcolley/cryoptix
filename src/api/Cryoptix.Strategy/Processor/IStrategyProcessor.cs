@@ -1,6 +1,6 @@
 ﻿using Cryoptix.Strategy.Runtime;
 
-namespace Cryoptix.Strategy.Strategies
+namespace Cryoptix.Strategy.Processor
 {
     public interface IStrategyProcessor
     {

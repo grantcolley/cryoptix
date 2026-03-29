@@ -4,13 +4,13 @@ using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Subscriptions;
 using Microsoft.Extensions.Logging;
 
-namespace Cryoptix.Strategy.Strategies
+namespace Cryoptix.Strategy.Processor
 {
-    public class MovingAverage(ILogger<MovingAverage> logger) : IStrategyProcessor
+    public class StrategyProcessor(ILogger<StrategyProcessor> logger) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.MovingAverage;
 
-        private readonly ILogger<MovingAverage> _logger = logger;
+        private readonly ILogger<StrategyProcessor> _logger = logger;
 
         private ExchangeApi? _exchangeApi;
         private Runtime.Strategy? _strategy;
@@ -113,7 +113,7 @@ namespace Cryoptix.Strategy.Strategies
                 _logger.LogInformation($"{t.Time} {t.Price} {t.QuoteQuantity}");
             }
 
-            // Process the trade data and make trading decisions
+            // Process the data and make trading decisions
         }
 
         private static async Task WaitUntilCancelledAsync(CancellationToken cancellationToken)

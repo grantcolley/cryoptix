@@ -1,8 +1,8 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Strategy.Catalog;
+using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.Status;
-using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Agent
 {
