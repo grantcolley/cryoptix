@@ -1,4 +1,5 @@
-﻿using Cryoptix.Strategy.Processor;
+﻿using Cryoptix.Exchange.Models;
+using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Runtime
 {
@@ -8,6 +9,7 @@ namespace Cryoptix.Strategy.Runtime
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Symbol { get; set; }
+        public KlineInterval KlineInterval { get; set; }
         public StrategyProcessorType StrategyProcessorType { get; set; }
         public Exchange.Exchanges.Exchange Exchange { get; set; }
     }
