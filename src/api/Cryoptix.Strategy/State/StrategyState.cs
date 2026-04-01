@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Strategy.Status
+﻿namespace Cryoptix.Strategy.State
 {
     public enum StrategyState
     {

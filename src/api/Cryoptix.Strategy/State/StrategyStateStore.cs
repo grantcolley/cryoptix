@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Cryoptix.Strategy.Status
+namespace Cryoptix.Strategy.State
 {
     public class StrategyStateStore(ILogger<StrategyStateStore> logger)
     {

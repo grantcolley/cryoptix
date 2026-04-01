@@ -1,6 +1,6 @@
 ﻿using Cryoptix.Strategy.Processor;
 
-namespace Cryoptix.Strategy.Status
+namespace Cryoptix.Strategy.State
 {
     public class StrategyStatus
     {
