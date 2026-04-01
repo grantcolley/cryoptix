@@ -2,6 +2,7 @@
 {
     public enum KlineInterval
     {
+        Unknown = 0,
         Minute,
         Minutes3,
         Minutes5,
