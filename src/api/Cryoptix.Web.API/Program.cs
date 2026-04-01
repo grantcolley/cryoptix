@@ -113,7 +113,7 @@ builder.Services.AddTransient<StrategyProcessor>();
 builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
     new StrategyProcessorCatalog(
     [
-        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.MovingAverage, () => sp.GetRequiredService<StrategyProcessor>())
+        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.TradingFlow, () => sp.GetRequiredService<StrategyProcessor>())
     ]));
 
 WebApplication app = builder.Build();
