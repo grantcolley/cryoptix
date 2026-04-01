@@ -8,7 +8,7 @@ using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
 using Cryoptix.Strategy.Processor;
-using Cryoptix.Strategy.Status;
+using Cryoptix.Strategy.State;
 using Cryoptix.Web.API.Authorization;
 using Cryoptix.Web.API.Config;
 using Cryoptix.Web.API.Constants;
