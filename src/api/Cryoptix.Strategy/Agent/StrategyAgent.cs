@@ -6,7 +6,11 @@ using Cryoptix.Strategy.Status;
 
 namespace Cryoptix.Strategy.Agent
 {
-    public class StrategyAgent(StrategyStateStore state, IStrategyProcessorCatalog strategyProcessorCatalog, IExchangeApiFactory exchangeApiFactory) : IStrategyAgent
+    public class StrategyAgent(
+        StrategyStateStore state, 
+        IStrategyProcessorCatalog strategyProcessorCatalog, 
+        IExchangeApiFactory exchangeApiFactory)
+        : IStrategyAgent
     {
         private readonly StrategyStateStore _state = state;
         private readonly IStrategyProcessorCatalog _strategyProcessorCatalog = strategyProcessorCatalog;
