@@ -2,7 +2,7 @@
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Runtime;
-using Cryoptix.Strategy.Status;
+using Cryoptix.Strategy.State;
 
 namespace Cryoptix.Strategy.Agent
 {
@@ -73,7 +73,7 @@ namespace Cryoptix.Strategy.Agent
 
                 Volatile.Write(ref _activeStrategy, strategy);
 
-                StrategyRuntime strategyRuntime = new()
+                StrategyAgentSession strategyAgentSession = new()
                 {
                     GetStrategy = () => Volatile.Read(ref _activeStrategy),
                     WaitForStrategyUpdateAsync = ct => activeStrategyUpdatedSignal.WaitAsync(ct),
@@ -89,7 +89,7 @@ namespace Cryoptix.Strategy.Agent
                     Strategy = strategy
                 });
 
-                Task runTask = RunStrategyAsync(strategy, strategyProcessor, strategyRuntime, _activeCancellationTokenSource.Token);
+                Task runTask = RunStrategyAsync(strategy, strategyProcessor, strategyAgentSession, _activeCancellationTokenSource.Token);
 
                 _activeTask = runTask;
 
@@ -321,7 +321,7 @@ namespace Cryoptix.Strategy.Agent
         private async Task RunStrategyAsync(
             Runtime.Strategy strategy,
             IStrategyProcessor strategyProcessor,
-            StrategyRuntime strategyRuntime,
+            StrategyAgentSession strategyAgentSession,
             CancellationToken cancellationToken)
         {
             try
@@ -333,7 +333,7 @@ namespace Cryoptix.Strategy.Agent
                     Strategy = strategy
                 });
 
-                await strategyProcessor.ExecuteAsync(strategyRuntime, cancellationToken);
+                await strategyProcessor.ExecuteAsync(strategyAgentSession, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

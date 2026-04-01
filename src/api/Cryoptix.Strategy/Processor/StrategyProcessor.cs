@@ -1,37 +1,35 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Models;
-using Cryoptix.Strategy.Runtime;
-using Cryoptix.Strategy.Subscriptions;
+using Cryoptix.Strategy.Agent;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Processor
 {
-
     public class StrategyProcessor(ILogger<StrategyProcessor> logger) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
         private readonly ILogger<StrategyProcessor> _logger = logger;
 
-        public async Task ExecuteAsync(StrategyRuntime strategyRuntime, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(strategyRuntime);
-            ArgumentNullException.ThrowIfNull(strategyRuntime.ExchangeApi);
-            ArgumentNullException.ThrowIfNull(strategyRuntime.ExchangeApi.RestApi);
-            ArgumentNullException.ThrowIfNull(strategyRuntime.ExchangeApi.SubscriptionsApi);
+            ArgumentNullException.ThrowIfNull(strategyAgentSession);
+            ArgumentNullException.ThrowIfNull(strategyAgentSession.ExchangeApi);
+            ArgumentNullException.ThrowIfNull(strategyAgentSession.ExchangeApi.RestApi);
+            ArgumentNullException.ThrowIfNull(strategyAgentSession.ExchangeApi.SubscriptionsApi);
 
-            if (strategyRuntime.GetStrategy is null)
-                throw new ArgumentNullException($"{nameof(strategyRuntime)}.GetStrategy");
-            if (strategyRuntime.WaitForStrategyUpdateAsync is null)
-                throw new ArgumentNullException($"{nameof(strategyRuntime)}.WaitForStrategyUpdateAsync");
+            if (strategyAgentSession.GetStrategy is null)
+                throw new ArgumentNullException($"{nameof(strategyAgentSession)}.GetStrategy");
+            if (strategyAgentSession.WaitForStrategyUpdateAsync is null)
+                throw new ArgumentNullException($"{nameof(strategyAgentSession)}.WaitForStrategyUpdateAsync");
 
-            Runtime.Strategy? initialStrategy = strategyRuntime.GetStrategy();
+            Runtime.Strategy? initialStrategy = strategyAgentSession.GetStrategy();
             ValidateInitialStrategy(initialStrategy);
 
-            StrategyExecutionSession session = new()
+            StrategyProcessorSession strategyProcessorSession = new()
             {
-                ExchangeApi = strategyRuntime.ExchangeApi,
+                ExchangeApi = strategyAgentSession.ExchangeApi,
                 Strategy = initialStrategy!,
                 Cache = new MarketDataCache(
                     maxTradesPerSymbol: 10_000,
@@ -46,32 +44,32 @@ namespace Cryoptix.Strategy.Processor
                     AllowSynchronousContinuations = false
                 });
 
-            SubscriptionSession? subscriptionSession = null;
+            StrategyProcessorSubscriptions? strategyProcessorSubscriptions = null;
             Task processingTask = Task.CompletedTask;
 
             try
             {
                 await SeedStrategyAsync(
-                    strategy: session.Strategy,
-                    restApi: session.ExchangeApi.RestApi!,
+                    strategy: strategyProcessorSession.Strategy,
+                    restApi: strategyProcessorSession.ExchangeApi.RestApi!,
                     writer: marketEventChannel.Writer,
                     cancellationToken: cancellationToken);
 
-                subscriptionSession = await StartStrategySubscriptionsAsync(
-                    strategy: session.Strategy,
-                    subscriptionsApi: session.ExchangeApi.SubscriptionsApi!,
+                strategyProcessorSubscriptions = await StartStrategySubscriptionsAsync(
+                    strategy: strategyProcessorSession.Strategy,
+                    subscriptionsApi: strategyProcessorSession.ExchangeApi.SubscriptionsApi!,
                     writer: marketEventChannel.Writer,
                     cancellationToken: cancellationToken);
 
                 processingTask = ProcessMarketEventsAsync(
-                    session: session,
+                    strategyProcessorSession: strategyProcessorSession,
                     reader: marketEventChannel.Reader,
                     cancellationToken: cancellationToken);
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Task strategyUpdateTask = strategyRuntime.WaitForStrategyUpdateAsync(cancellationToken);
-                    Task subscriptionCompletionTask = subscriptionSession.Completion;
+                    Task strategyUpdateTask = strategyAgentSession.WaitForStrategyUpdateAsync(cancellationToken);
+                    Task subscriptionCompletionTask = strategyProcessorSubscriptions.Completion;
 
                     Task completed = await Task.WhenAny(
                         strategyUpdateTask,
@@ -90,27 +88,27 @@ namespace Cryoptix.Strategy.Processor
                         break;
                     }
 
-                    Runtime.Strategy? updatedStrategy = strategyRuntime.GetStrategy();
+                    Runtime.Strategy? updatedStrategy = strategyAgentSession.GetStrategy();
                     if (updatedStrategy == null)
                     {
                         _logger.LogWarning("Received null strategy update; ignoring.");
                         continue;
                     }
 
-                    ValidateCompatibleStrategyUpdate(session.Strategy, updatedStrategy);
+                    ValidateCompatibleStrategyUpdate(strategyProcessorSession.Strategy, updatedStrategy);
 
-                    session.Strategy = updatedStrategy;
+                    strategyProcessorSession.Strategy = updatedStrategy;
 
                     _logger.LogInformation(
                         "Applied strategy update for {Symbol}. Subscriptions unchanged.",
-                        session.Strategy.Symbol);
+                        strategyProcessorSession.Strategy.Symbol);
                 }
             }
             finally
             {
-                if (subscriptionSession != null)
+                if (strategyProcessorSubscriptions != null)
                 {
-                    await subscriptionSession.DisposeAsync();
+                    await strategyProcessorSubscriptions.DisposeAsync();
                 }
 
                 marketEventChannel.Writer.TryComplete();
@@ -188,7 +186,7 @@ namespace Cryoptix.Strategy.Processor
                 strategy.KlineInterval);
         }
 
-        private async Task<SubscriptionSession> StartStrategySubscriptionsAsync(
+        private async Task<StrategyProcessorSubscriptions> StartStrategySubscriptionsAsync(
             Runtime.Strategy strategy,
             IExchangeSubscriptionApi subscriptionsApi,
             ChannelWriter<MarketEvent> writer,
@@ -280,7 +278,7 @@ namespace Cryoptix.Strategy.Processor
                     strategy.Symbol,
                     strategy.KlineInterval);
 
-                return new SubscriptionSession(compositeHandle, sessionCancellationTokenSource, completionTask);
+                return new StrategyProcessorSubscriptions(compositeHandle, sessionCancellationTokenSource, completionTask);
             }
             catch
             {
@@ -300,7 +298,7 @@ namespace Cryoptix.Strategy.Processor
         }
 
         private async Task ProcessMarketEventsAsync(
-            StrategyExecutionSession session,
+            StrategyProcessorSession strategyProcessorSession,
             ChannelReader<MarketEvent> reader,
             CancellationToken cancellationToken)
         {
@@ -309,11 +307,11 @@ namespace Cryoptix.Strategy.Processor
                 switch (marketEvent)
                 {
                     case KlineMarketEvent klineEvent:
-                        await ProcessKlineEventAsync(session, klineEvent, cancellationToken);
+                        await ProcessKlineEventAsync(strategyProcessorSession, klineEvent, cancellationToken);
                         break;
 
                     case TradeMarketEvent tradeEvent:
-                        await ProcessTradeEventAsync(session, tradeEvent, cancellationToken);
+                        await ProcessTradeEventAsync(strategyProcessorSession, tradeEvent, cancellationToken);
                         break;
 
                     default:
@@ -324,19 +322,19 @@ namespace Cryoptix.Strategy.Processor
         }
 
         private Task ProcessKlineEventAsync(
-            StrategyExecutionSession session,
+            StrategyProcessorSession strategyProcessorSession,
             KlineMarketEvent marketEvent,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            Runtime.Strategy strategy = session.Strategy;
+            Runtime.Strategy strategy = strategyProcessorSession.Strategy;
             Kline incomingKline = marketEvent.Kline;
 
-            KlineUpsertResult upsertResult = session.Cache.UpsertKline(incomingKline);
+            KlineUpsertResult upsertResult = strategyProcessorSession.Cache.UpsertKline(incomingKline);
 
-            IReadOnlyList<Kline> cachedKlines = session.Cache.GetKlines(strategy.Symbol!, strategy.KlineInterval);
-            Kline? latestKline = session.Cache.GetLatestKline(strategy.Symbol!, strategy.KlineInterval);
+            IReadOnlyList<Kline> cachedKlines = strategyProcessorSession.Cache.GetKlines(strategy.Symbol!, strategy.KlineInterval);
+            Kline? latestKline = strategyProcessorSession.Cache.GetLatestKline(strategy.Symbol!, strategy.KlineInterval);
 
             _logger.LogInformation(
                 "Processed {Source} kline for {Symbol} {Interval} OpenTime:{OpenTime:u} Final:{Final} " +
@@ -364,16 +362,16 @@ namespace Cryoptix.Strategy.Processor
         }
 
         private Task ProcessTradeEventAsync(
-            StrategyExecutionSession session,
+            StrategyProcessorSession strategyProcessorSession,
             TradeMarketEvent marketEvent,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            Runtime.Strategy strategy = session.Strategy;
+            Runtime.Strategy strategy = strategyProcessorSession.Strategy;
             Trade incomingTrade = marketEvent.Trade;
 
-            bool added = session.Cache.AddTrade(incomingTrade);
+            bool added = strategyProcessorSession.Cache.AddTrade(incomingTrade);
             if (!added)
             {
                 _logger.LogDebug(
@@ -384,7 +382,7 @@ namespace Cryoptix.Strategy.Processor
                 return Task.CompletedTask;
             }
 
-            IReadOnlyList<Trade> cachedTrades = session.Cache.GetTrades(strategy.Symbol!);
+            IReadOnlyList<Trade> cachedTrades = strategyProcessorSession.Cache.GetTrades(strategy.Symbol!);
 
             _logger.LogInformation(
                 "Processed trade for {Symbol} TradeId:{TradeId} Time:{Time:u} Price:{Price} QuoteQty:{QuoteQty} TradeCacheCount:{TradeCacheCount}",
@@ -421,7 +419,7 @@ namespace Cryoptix.Strategy.Processor
             }
         }
 
-        private sealed class StrategyExecutionSession
+        private sealed class StrategyProcessorSession
         {
             public required ExchangeApi ExchangeApi { get; init; }
             public required Runtime.Strategy Strategy { get; set; }

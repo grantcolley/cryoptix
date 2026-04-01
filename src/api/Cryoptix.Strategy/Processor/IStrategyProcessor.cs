@@ -1,9 +1,9 @@
-﻿using Cryoptix.Strategy.Runtime;
+﻿using Cryoptix.Strategy.Agent;
 
 namespace Cryoptix.Strategy.Processor
 {
     public interface IStrategyProcessor
     {
-        Task ExecuteAsync(StrategyRuntime strategyRuntime, CancellationToken cancellationToken);
+        Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken);
     }
 }
