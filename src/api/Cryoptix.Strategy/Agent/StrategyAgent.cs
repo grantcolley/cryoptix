@@ -46,7 +46,7 @@ namespace Cryoptix.Strategy.Agent
                         StrategyState = StrategyState.Faulted,
                         StrategyProcessorType = strategy.StrategyProcessorType,
                         Strategy = strategy,
-                        Message = $"Start rejected: strategy {currentStrategy?.StrategyProcessorType} {currentStrategy?.Name} already running. Stop first."
+                        Message = $"Start rejected: strategy processor {currentStrategy?.StrategyProcessorType} {currentStrategy?.Name} already running. Stop first."
                     });
 
                     return;
@@ -59,7 +59,7 @@ namespace Cryoptix.Strategy.Agent
                         StrategyState = StrategyState.Faulted,
                         StrategyProcessorType = strategy.StrategyProcessorType,
                         Strategy = strategy,
-                        Message = $"Unknown strategy '{strategy.StrategyProcessorType}' {strategy.Name}"
+                        Message = $"Unknown strategy processor '{strategy.StrategyProcessorType}' {strategy.Name}"
                     });
 
                     return;
