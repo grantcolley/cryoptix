@@ -26,7 +26,7 @@ namespace Cryoptix.Strategy.Controller
                 {
                     Success = false,
                     StatusCode = StrategyControllerStatusCodes.Status404NotFound,
-                    Title = $"Strategy type '{strategy.StrategyProcessorType}' not found",
+                    Title = $"Strategy processor '{strategy.StrategyProcessorType}' not found",
                     Message = $"Unknown strategy '{strategy.StrategyProcessorType}' {strategy.Name}"
                 };
             }
