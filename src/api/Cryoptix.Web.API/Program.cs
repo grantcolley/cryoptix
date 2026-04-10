@@ -4,9 +4,11 @@ using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Exchange.Models;
 using Cryoptix.Strategy.Agent;
+using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
+using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.State;
 using Cryoptix.Web.API.Authorization;
@@ -109,6 +111,11 @@ builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
+builder.Services.AddSingleton<IStrategyAnalysisContextFactory, StrategyAnalysisContextFactory>();
+builder.Services.AddSingleton<MovingAverageIndicatorEngine>();
+builder.Services.AddSingleton<MovingAverageSignalEngine>();
+builder.Services.AddSingleton<IStrategyEnginePair, MovingAverageStrategyEnginePair>();
+builder.Services.AddSingleton<IStrategyEnginePairFactory, StrategyEnginePairFactory>();
 builder.Services.AddTransient<StrategyProcessor>();
 builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
     new StrategyProcessorCatalog(

@@ -11,6 +11,9 @@ namespace Cryoptix.Strategy.Runtime
         public string? Symbol { get; set; }
         public KlineInterval KlineInterval { get; set; }
         public StrategyProcessorType StrategyProcessorType { get; set; }
+        public StrategyEngineType StrategyEngineType { get; set; }
         public Exchange.Exchanges.Exchange Exchange { get; set; }
+        public int FastPeriod { get; init; }
+        public int SlowPeriod { get; init; }
     }
 }

@@ -1,16 +1,25 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Models;
 using Cryoptix.Strategy.Agent;
+using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Cache;
+using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Event;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Processor
 {
-    public class StrategyProcessor(ILogger<StrategyProcessor> logger) : IStrategyProcessor
+    public class StrategyProcessor(
+    ILogger<StrategyProcessor> logger,
+    IStrategyEnginePairFactory strategyEnginePairFactory,
+    IStrategyAnalysisContextFactory strategyAnalysisContextFactory) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
         private readonly ILogger<StrategyProcessor> _logger = logger;
+        private readonly IStrategyEnginePairFactory _strategyEnginePairFactory = strategyEnginePairFactory;
+        private readonly IStrategyAnalysisContextFactory _strategyAnalysisContextFactory = strategyAnalysisContextFactory;
 
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
@@ -210,7 +219,7 @@ namespace Cryoptix.Strategy.Processor
                     interval: strategy.KlineInterval,
                     onCallback: args =>
                     {
-                        if(args.Klines == null || !args.Klines.Any())
+                        if (args.Klines == null || !args.Klines.Any())
                         {
                             _logger.LogWarning(
                                 "Received kline update with no klines for {Symbol} {Interval}",
@@ -243,7 +252,7 @@ namespace Cryoptix.Strategy.Processor
                     symbol: strategy.Symbol,
                     onCallback: args =>
                     {
-                        if(args.Trades == null || !args.Trades.Any())
+                        if (args.Trades == null || !args.Trades.Any())
                         {
                             _logger.LogWarning(
                                 "Received trade update with no trades for {Symbol}",
@@ -321,90 +330,97 @@ namespace Cryoptix.Strategy.Processor
             }
         }
 
-        private Task ProcessKlineEventAsync(
-            StrategyProcessorSession strategyProcessorSession,
+        private async Task ProcessKlineEventAsync(
+            StrategyProcessorSession session,
             KlineMarketEvent marketEvent,
             CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            KlineUpsertResult upsertResult = session.Cache.UpsertKline(marketEvent.Kline);
 
-            Runtime.Strategy strategy = strategyProcessorSession.Strategy;
-            Kline incomingKline = marketEvent.Kline;
+            StrategyAnalysisContext context = _strategyAnalysisContextFactory.CreateForKline(session, marketEvent);
 
-            KlineUpsertResult upsertResult = strategyProcessorSession.Cache.UpsertKline(incomingKline);
+            IStrategyEnginePair enginePair =
+                _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
 
-            IReadOnlyList<Kline> cachedKlines = strategyProcessorSession.Cache.GetKlines(strategy.Symbol!, strategy.KlineInterval);
-            Kline? latestKline = strategyProcessorSession.Cache.GetLatestKline(strategy.Symbol!, strategy.KlineInterval);
+            IndicatorComputationResult indicators =
+                await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
+
+            SignalEvaluationResult signal =
+                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
 
             _logger.LogInformation(
-                "Processed {Source} kline for {Symbol} {Interval} OpenTime:{OpenTime:u} Final:{Final} " +
-                "Inserted:{Inserted} Updated:{Updated} CacheCount:{CacheCount} LatestOpenTime:{LatestOpenTime}",
+                "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} Inserted:{Inserted} Updated:{Updated} Signal:{Signal} Reason:{Reason}",
                 marketEvent.Source,
-                incomingKline.Symbol,
-                incomingKline.Interval,
-                incomingKline.OpenTime,
-                incomingKline.Final,
+                marketEvent.Kline.Symbol,
+                marketEvent.Kline.Interval,
+                marketEvent.Kline.OpenTime,
                 upsertResult.Inserted,
                 upsertResult.Updated,
-                cachedKlines.Count,
-                latestKline?.OpenTime);
+                signal.Signal,
+                signal.Reason);
 
-            // Do all indicator calculations here, outside websocket callbacks.
-            // Example:
-            //
-            // _indicatorEngine.Update(strategy, cachedKlines);
-            // _signalEngine.Evaluate(strategy, cachedKlines, session.Cache.GetTrades(strategy.Symbol));
-            //
-            // Because seeded/live klines both pass through the same cache and same path,
-            // dedupe/upsert behavior stays consistent.
-
-            return Task.CompletedTask;
+            await HandleSignalAsync(context, signal, cancellationToken);
         }
 
-        private Task ProcessTradeEventAsync(
-            StrategyProcessorSession strategyProcessorSession,
+        private async Task ProcessTradeEventAsync(
+            StrategyProcessorSession session,
             TradeMarketEvent marketEvent,
             CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            Runtime.Strategy strategy = strategyProcessorSession.Strategy;
-            Trade incomingTrade = marketEvent.Trade;
-
-            bool added = strategyProcessorSession.Cache.AddTrade(incomingTrade);
+            bool added = session.Cache.AddTrade(marketEvent.Trade);
             if (!added)
             {
                 _logger.LogDebug(
                     "Ignored duplicate trade {TradeId} for {Symbol}",
-                    incomingTrade.Id,
-                    incomingTrade.Symbol);
+                    marketEvent.Trade.Id,
+                    marketEvent.Trade.Symbol);
 
-                return Task.CompletedTask;
+                return;
             }
 
-            IReadOnlyList<Trade> cachedTrades = strategyProcessorSession.Cache.GetTrades(strategy.Symbol!);
+            StrategyAnalysisContext context = _strategyAnalysisContextFactory.CreateForTrade(session, marketEvent);
+
+            IStrategyEnginePair enginePair =
+                _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
+
+            IndicatorComputationResult indicators =
+                await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
+
+            SignalEvaluationResult signal =
+                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
 
             _logger.LogInformation(
-                "Processed trade for {Symbol} TradeId:{TradeId} Time:{Time:u} Price:{Price} QuoteQty:{QuoteQty} TradeCacheCount:{TradeCacheCount}",
-                incomingTrade.Symbol,
-                incomingTrade.Id,
-                incomingTrade.Time,
-                incomingTrade.Price,
-                incomingTrade.QuoteQuantity,
-                cachedTrades.Count);
+                "TRADE {Symbol} TradeId:{TradeId} Signal:{Signal} Reason:{Reason}",
+                marketEvent.Trade.Symbol,
+                marketEvent.Trade.Id,
+                signal.Signal,
+                signal.Reason);
 
-            // Trade-driven indicator/signal work goes here.
-            // Example:
-            //
-            // _signalEngine.OnTrade(strategy, cachedTrades, session.Cache.GetKlines(strategy.Symbol, strategy.Interval));
+            await HandleSignalAsync(context, signal, cancellationToken);
+        }
+
+        private Task HandleSignalAsync(
+            StrategyAnalysisContext context,
+            SignalEvaluationResult signal,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (signal.Signal == StrategySignal.None)
+                return Task.CompletedTask;
+
+            _logger.LogInformation(
+                "Signal generated for {Symbol} [{StrategyType}]: {Signal}. Reason: {Reason}",
+                context.Strategy.Symbol,
+                context.Strategy.StrategyProcessorType,
+                signal.Signal,
+                signal.Reason);
 
             return Task.CompletedTask;
         }
 
         private static DateTime GetSeedStartTime(Runtime.Strategy strategy, DateTime endTimeUtc)
         {
-            // Replace with strategy-specific lookback logic.
-            // This is just a sensible default.
             return endTimeUtc.AddDays(-2);
         }
 
@@ -418,226 +434,5 @@ namespace Cryoptix.Strategy.Processor
             {
             }
         }
-
-        private sealed class StrategyProcessorSession
-        {
-            public required ExchangeApi ExchangeApi { get; init; }
-            public required Runtime.Strategy Strategy { get; set; }
-            public required MarketDataCache Cache { get; init; }
-        }
-
-        private enum MarketEventSource
-        {
-            Seed,
-            Live
-        }
-
-        private abstract record MarketEvent;
-
-        private sealed record KlineMarketEvent(Kline Kline, MarketEventSource Source) : MarketEvent;
-
-        private sealed record TradeMarketEvent(Trade Trade) : MarketEvent;
-
-        private sealed class CompositeAsyncDisposable(params IAsyncDisposable[] inner) : IAsyncDisposable
-        {
-            private readonly IAsyncDisposable[] _inner = inner;
-            private int _disposed;
-
-            public async ValueTask DisposeAsync()
-            {
-                if (Interlocked.Exchange(ref _disposed, 1) != 0)
-                    return;
-
-                List<Exception>? exceptions = null;
-
-                for (int i = _inner.Length - 1; i >= 0; i--)
-                {
-                    try
-                    {
-                        await _inner[i].DisposeAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        exceptions ??= [];
-                        exceptions.Add(ex);
-                    }
-                }
-
-                if (exceptions is { Count: > 0 })
-                {
-                    throw new AggregateException(exceptions);
-                }
-            }
-        }
-
-        private sealed class MarketDataCache
-        {
-            private readonly int _maxTradesPerSymbol;
-            private readonly int _maxKlinesPerSeries;
-
-            // (symbol, interval) -> openTime -> kline
-            private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
-
-            // symbol -> rolling trades in arrival order
-            private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
-
-            // symbol -> trade ids for dedupe
-            private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
-
-            public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries)
-            {
-                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTradesPerSymbol);
-                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxKlinesPerSeries);
-
-                _maxTradesPerSymbol = maxTradesPerSymbol;
-                _maxKlinesPerSeries = maxKlinesPerSeries;
-            }
-
-            public KlineUpsertResult UpsertKline(Kline kline)
-            {
-                ArgumentNullException.ThrowIfNull(kline);
-
-                string symbol = NormalizeSymbol(kline.Symbol!);
-                var seriesKey = (symbol, kline.Interval);
-
-                if (!_klines.TryGetValue(seriesKey, out var series))
-                {
-                    series = [];
-                    _klines[seriesKey] = series;
-                }
-
-                bool existed = series.TryGetValue(kline.OpenTime, out Kline? existing);
-
-                // Upsert using (symbol, interval, openTime) identity.
-                // The latest version wins, which handles:
-                // - seeded historical klines
-                // - repeated live partial updates
-                // - final live candle replacing partial candle
-                series[kline.OpenTime] = kline;
-
-                TrimKlineSeries(series);
-
-                if (!existed)
-                {
-                    return new KlineUpsertResult(
-                        Inserted: true,
-                        Updated: false,
-                        Previous: null,
-                        Current: kline);
-                }
-
-                bool materiallyChanged = !AreEquivalent(existing!, kline);
-
-                return new KlineUpsertResult(
-                    Inserted: false,
-                    Updated: materiallyChanged,
-                    Previous: existing,
-                    Current: kline);
-            }
-
-            public bool AddTrade(Trade trade)
-            {
-                ArgumentNullException.ThrowIfNull(trade);
-
-                string symbol = NormalizeSymbol(trade.Symbol!);
-
-                if (!_trades.TryGetValue(symbol, out var trades))
-                {
-                    trades = [];
-                    _trades[symbol] = trades;
-                }
-
-                if (!_tradeIds.TryGetValue(symbol, out var tradeIds))
-                {
-                    tradeIds = [];
-                    _tradeIds[symbol] = tradeIds;
-                }
-
-                if (!tradeIds.Add(trade.Id))
-                {
-                    return false;
-                }
-
-                trades.AddLast(trade);
-
-                while (trades.Count > _maxTradesPerSymbol)
-                {
-                    LinkedListNode<Trade>? oldest = trades.First;
-                    if (oldest == null)
-                        break;
-
-                    trades.RemoveFirst();
-                    tradeIds.Remove(oldest.Value.Id);
-                }
-
-                return true;
-            }
-
-            public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
-            {
-                var key = (NormalizeSymbol(symbol), interval);
-
-                if (!_klines.TryGetValue(key, out var series))
-                    return [];
-
-                return [.. series.Values];
-            }
-
-            public Kline? GetLatestKline(string symbol, KlineInterval interval)
-            {
-                var key = (NormalizeSymbol(symbol), interval);
-
-                if (!_klines.TryGetValue(key, out var series) || series.Count == 0)
-                    return null;
-
-                return series.Values.Last();
-            }
-
-            public IReadOnlyList<Trade> GetTrades(string symbol)
-            {
-                symbol = NormalizeSymbol(symbol);
-
-                if (!_trades.TryGetValue(symbol, out var trades))
-                    return [];
-
-                return [.. trades];
-            }
-
-            private void TrimKlineSeries(SortedDictionary<DateTime, Kline> series)
-            {
-                while (series.Count > _maxKlinesPerSeries)
-                {
-                    DateTime oldestKey = series.First().Key;
-                    series.Remove(oldestKey);
-                }
-            }
-
-            private static string NormalizeSymbol(string symbol) =>
-                symbol.Trim().ToUpperInvariant();
-
-            private static bool AreEquivalent(Kline x, Kline y)
-            {
-                return string.Equals(x.Symbol, y.Symbol, StringComparison.OrdinalIgnoreCase)
-                    && x.Interval == y.Interval
-                    && x.OpenTime == y.OpenTime
-                    && x.CloseTime == y.CloseTime
-                    && x.Open == y.Open
-                    && x.High == y.High
-                    && x.Low == y.Low
-                    && x.Close == y.Close
-                    && x.Volume == y.Volume
-                    && x.NumberOfTrades == y.NumberOfTrades
-                    && x.QuoteAssetVolume == y.QuoteAssetVolume
-                    && x.TakerBuyQuoteAssetVolume == y.TakerBuyQuoteAssetVolume
-                    && x.TakerBuyBaseAssetVolume == y.TakerBuyBaseAssetVolume
-                    && x.Final == y.Final;
-            }
-        }
-
-        private readonly record struct KlineUpsertResult(
-            bool Inserted,
-            bool Updated,
-            Kline? Previous,
-            Kline Current);
     }
 }
