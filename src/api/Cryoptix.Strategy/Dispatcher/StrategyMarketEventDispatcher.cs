@@ -3,6 +3,7 @@ using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Processor;
+using Cryoptix.Strategy.Signal;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Dispatcher
@@ -10,11 +11,13 @@ namespace Cryoptix.Strategy.Dispatcher
     public sealed class StrategyMarketEventDispatcher(
         ILogger<StrategyMarketEventDispatcher> logger,
         IStrategyAnalysisContextFactory strategyAnalysisContextFactory,
-        IStrategyEnginePairFactory strategyEnginePairFactory) : IStrategyMarketEventDispatcher
+        IStrategyEnginePairFactory strategyEnginePairFactory,
+        IStrategySignalHandler strategySignalHandler) : IStrategyMarketEventDispatcher
     {
         private readonly ILogger<StrategyMarketEventDispatcher> _logger = logger;
         private readonly IStrategyAnalysisContextFactory _strategyAnalysisContextFactory = strategyAnalysisContextFactory;
         private readonly IStrategyEnginePairFactory _strategyEnginePairFactory = strategyEnginePairFactory;
+        private readonly IStrategySignalHandler _strategySignalHandler = strategySignalHandler;
 
         public async Task DispatchAsync(
             StrategyProcessorSession session,
@@ -74,7 +77,7 @@ namespace Cryoptix.Strategy.Dispatcher
                 signal.Signal,
                 signal.Reason);
 
-            await HandleSignalAsync(context, signal, cancellationToken);
+            await _strategySignalHandler.HandleAsync(context, signal, cancellationToken);
         }
 
         private async Task DispatchTradeAsync(
@@ -112,30 +115,7 @@ namespace Cryoptix.Strategy.Dispatcher
                 signal.Signal,
                 signal.Reason);
 
-            await HandleSignalAsync(context, signal, cancellationToken);
-        }
-
-        private Task HandleSignalAsync(
-            StrategyAnalysisContext context,
-            SignalEvaluationResult signal,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (signal.Signal == StrategySignal.None)
-                return Task.CompletedTask;
-
-            _logger.LogInformation(
-                "Signal generated for {Symbol} [{StrategyType}]: {Signal}. Reason: {Reason}",
-                context.Strategy.Symbol,
-                context.Strategy.StrategyProcessorType,
-                signal.Signal,
-                signal.Reason);
-
-            // Future hook:
-            // return _orderExecutor.ExecuteAsync(context, signal, cancellationToken);
-
-            return Task.CompletedTask;
+            await _strategySignalHandler.HandleAsync(context, signal, cancellationToken);
         }
     }
 }
