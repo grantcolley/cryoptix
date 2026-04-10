@@ -1,5 +1,6 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Models;
+using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Event;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
@@ -7,9 +8,11 @@ using System.Threading.Channels;
 namespace Cryoptix.Strategy.Seeding
 {
     public sealed class StrategyMarketSeeder(
-        ILogger<StrategyMarketSeeder> logger) : IStrategyMarketSeeder
+        ILogger<StrategyMarketSeeder> logger,
+        IStrategyClock clock) : IStrategyMarketSeeder
     {
         private readonly ILogger<StrategyMarketSeeder> _logger = logger;
+        private readonly IStrategyClock _clock = clock;
 
         public async Task SeedAsync(
             Runtime.Strategy strategy,
@@ -29,7 +32,7 @@ namespace Cryoptix.Strategy.Seeding
             if (strategy.KlineInterval == default)
                 throw new InvalidOperationException("Strategy kline interval is required.");
 
-            DateTime endTime = DateTime.UtcNow;
+            DateTime endTime = _clock.UtcNow;
             DateTime startTime = GetSeedStartTime(strategy, endTime);
 
             _logger.LogInformation(
@@ -75,7 +78,6 @@ namespace Cryoptix.Strategy.Seeding
 
         private static DateTime GetSeedStartTime(Runtime.Strategy strategy, DateTime endTimeUtc)
         {
-            // Replace with strategy-specific lookback rules later if needed.
             return endTimeUtc.AddDays(-2);
         }
     }

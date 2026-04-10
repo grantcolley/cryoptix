@@ -1,10 +1,14 @@
-﻿using Cryoptix.Strategy.Event;
+﻿using Cryoptix.Strategy.Clock;
+using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Analysis
 {
-    public sealed class StrategyAnalysisContextFactory : IStrategyAnalysisContextFactory
+    public sealed class StrategyAnalysisContextFactory(
+        IStrategyClock clock) : IStrategyAnalysisContextFactory
     {
+        private readonly IStrategyClock _clock = clock;
+
         public StrategyAnalysisContext CreateForKline(
             StrategyProcessorSession session,
             KlineMarketEvent marketEvent)
@@ -24,7 +28,7 @@ namespace Cryoptix.Strategy.Analysis
                     Source = marketEvent.Source,
                     Kline = marketEvent.Kline
                 },
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = _clock.UtcNow
             };
         }
 
@@ -47,7 +51,7 @@ namespace Cryoptix.Strategy.Analysis
                     Source = MarketEventSource.Live,
                     Trade = marketEvent.Trade
                 },
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = _clock.UtcNow
             };
         }
     }
