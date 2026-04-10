@@ -1,10 +1,8 @@
-﻿using Cryoptix.Exchange.Api;
-using Cryoptix.Exchange.Models;
-using Cryoptix.Strategy.Agent;
-using Cryoptix.Strategy.Analysis;
+﻿using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Cache;
-using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Seeding;
 using Cryoptix.Strategy.Subscription;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
@@ -13,16 +11,16 @@ namespace Cryoptix.Strategy.Processor
 {
     public class StrategyProcessor(
         ILogger<StrategyProcessor> logger,
-        IStrategyEnginePairFactory strategyEnginePairFactory,
-        IStrategyAnalysisContextFactory strategyAnalysisContextFactory,
-        IStrategyMarketEventSubscriber strategyMarketEventSubscriber) : IStrategyProcessor
+        IStrategyMarketSeeder strategyMarketSeeder,
+        IStrategyMarketEventSubscriber strategyMarketEventSubscriber,
+        IStrategyMarketEventDispatcher strategyMarketEventDispatcher) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
         private readonly ILogger<StrategyProcessor> _logger = logger;
-        private readonly IStrategyEnginePairFactory _strategyEnginePairFactory = strategyEnginePairFactory;
-        private readonly IStrategyAnalysisContextFactory _strategyAnalysisContextFactory = strategyAnalysisContextFactory;
+        private readonly IStrategyMarketSeeder _strategyMarketSeeder = strategyMarketSeeder;
         private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
+        private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
 
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
@@ -61,7 +59,7 @@ namespace Cryoptix.Strategy.Processor
 
             try
             {
-                await SeedStrategyAsync(
+                await _strategyMarketSeeder.SeedAsync(
                     strategy: strategyProcessorSession.Strategy,
                     restApi: strategyProcessorSession.ExchangeApi.RestApi!,
                     writer: marketEventChannel.Writer,
@@ -74,9 +72,9 @@ namespace Cryoptix.Strategy.Processor
                     cancellationToken: cancellationToken);
 
                 processingTask = ProcessMarketEventsAsync(
-                    strategyProcessorSession: strategyProcessorSession,
-                    reader: marketEventChannel.Reader,
-                    cancellationToken: cancellationToken);
+                    strategyProcessorSession,
+                    marketEventChannel.Reader,
+                    cancellationToken);
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -135,6 +133,20 @@ namespace Cryoptix.Strategy.Processor
             }
         }
 
+        private async Task ProcessMarketEventsAsync(
+            StrategyProcessorSession strategyProcessorSession,
+            ChannelReader<MarketEvent> reader,
+            CancellationToken cancellationToken)
+        {
+            await foreach (MarketEvent marketEvent in reader.ReadAllAsync(cancellationToken))
+            {
+                await _strategyMarketEventDispatcher.DispatchAsync(
+                    strategyProcessorSession,
+                    marketEvent,
+                    cancellationToken);
+            }
+        }
+
         private static void ValidateInitialStrategy(Runtime.Strategy? strategy)
         {
             if (strategy == null)
@@ -158,162 +170,6 @@ namespace Cryoptix.Strategy.Processor
             {
                 throw new InvalidOperationException("Strategy update cannot change Interval while processor is running.");
             }
-        }
-
-        private async Task SeedStrategyAsync(
-            Runtime.Strategy strategy,
-            IExchangeRestApi restApi,
-            ChannelWriter<MarketEvent> writer,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            DateTime endTime = DateTime.UtcNow;
-            DateTime startTime = GetSeedStartTime(strategy, endTime);
-
-            _logger.LogInformation(
-                "Fetching historical klines for {Symbol} {Interval} from {Start:u} to {End:u}",
-                strategy.Symbol,
-                strategy.KlineInterval,
-                startTime,
-                endTime);
-
-            List<Kline> historicalKlines = await restApi.GetKlinesAsync(
-                symbol: strategy.Symbol!,
-                interval: strategy.KlineInterval,
-                startTime: startTime,
-                endTime: endTime,
-                limit: null,
-                cancellationToken: cancellationToken);
-
-            foreach (Kline kline in historicalKlines.OrderBy(k => k.OpenTime))
-            {
-                await writer.WriteAsync(new KlineMarketEvent(kline, MarketEventSource.Seed), cancellationToken);
-            }
-
-            _logger.LogInformation(
-                "Seeded {Count} klines for {Symbol} {Interval}",
-                historicalKlines.Count,
-                strategy.Symbol,
-                strategy.KlineInterval);
-        }
-
-        private async Task ProcessMarketEventsAsync(
-            StrategyProcessorSession strategyProcessorSession,
-            ChannelReader<MarketEvent> reader,
-            CancellationToken cancellationToken)
-        {
-            await foreach (MarketEvent marketEvent in reader.ReadAllAsync(cancellationToken))
-            {
-                switch (marketEvent)
-                {
-                    case KlineMarketEvent klineEvent:
-                        await ProcessKlineEventAsync(strategyProcessorSession, klineEvent, cancellationToken);
-                        break;
-
-                    case TradeMarketEvent tradeEvent:
-                        await ProcessTradeEventAsync(strategyProcessorSession, tradeEvent, cancellationToken);
-                        break;
-
-                    default:
-                        _logger.LogWarning("Unknown market event type {EventType}", marketEvent.GetType().Name);
-                        break;
-                }
-            }
-        }
-
-        private async Task ProcessKlineEventAsync(
-            StrategyProcessorSession session,
-            KlineMarketEvent marketEvent,
-            CancellationToken cancellationToken)
-        {
-            KlineUpsertResult upsertResult = session.Cache.UpsertKline(marketEvent.Kline);
-
-            StrategyAnalysisContext context = _strategyAnalysisContextFactory.CreateForKline(session, marketEvent);
-
-            IStrategyEnginePair enginePair =
-                _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
-
-            IndicatorComputationResult indicators =
-                await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
-
-            SignalEvaluationResult signal =
-                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
-
-            _logger.LogInformation(
-                "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} Inserted:{Inserted} Updated:{Updated} Signal:{Signal} Reason:{Reason}",
-                marketEvent.Source,
-                marketEvent.Kline.Symbol,
-                marketEvent.Kline.Interval,
-                marketEvent.Kline.OpenTime,
-                upsertResult.Inserted,
-                upsertResult.Updated,
-                signal.Signal,
-                signal.Reason);
-
-            await HandleSignalAsync(context, signal, cancellationToken);
-        }
-
-        private async Task ProcessTradeEventAsync(
-            StrategyProcessorSession session,
-            TradeMarketEvent marketEvent,
-            CancellationToken cancellationToken)
-        {
-            bool added = session.Cache.AddTrade(marketEvent.Trade);
-            if (!added)
-            {
-                _logger.LogDebug(
-                    "Ignored duplicate trade {TradeId} for {Symbol}",
-                    marketEvent.Trade.Id,
-                    marketEvent.Trade.Symbol);
-
-                return;
-            }
-
-            StrategyAnalysisContext context = _strategyAnalysisContextFactory.CreateForTrade(session, marketEvent);
-
-            IStrategyEnginePair enginePair =
-                _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
-
-            IndicatorComputationResult indicators =
-                await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
-
-            SignalEvaluationResult signal =
-                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
-
-            _logger.LogInformation(
-                "TRADE {Symbol} TradeId:{TradeId} Signal:{Signal} Reason:{Reason}",
-                marketEvent.Trade.Symbol,
-                marketEvent.Trade.Id,
-                signal.Signal,
-                signal.Reason);
-
-            await HandleSignalAsync(context, signal, cancellationToken);
-        }
-
-        private Task HandleSignalAsync(
-            StrategyAnalysisContext context,
-            SignalEvaluationResult signal,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (signal.Signal == StrategySignal.None)
-                return Task.CompletedTask;
-
-            _logger.LogInformation(
-                "Signal generated for {Symbol} [{StrategyType}]: {Signal}. Reason: {Reason}",
-                context.Strategy.Symbol,
-                context.Strategy.StrategyProcessorType,
-                signal.Signal,
-                signal.Reason);
-
-            return Task.CompletedTask;
-        }
-
-        private static DateTime GetSeedStartTime(Runtime.Strategy strategy, DateTime endTimeUtc)
-        {
-            return endTimeUtc.AddDays(-2);
         }
     }
 }
