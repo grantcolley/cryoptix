@@ -5,21 +5,24 @@ using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Subscription;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Processor
 {
     public class StrategyProcessor(
-    ILogger<StrategyProcessor> logger,
-    IStrategyEnginePairFactory strategyEnginePairFactory,
-    IStrategyAnalysisContextFactory strategyAnalysisContextFactory) : IStrategyProcessor
+        ILogger<StrategyProcessor> logger,
+        IStrategyEnginePairFactory strategyEnginePairFactory,
+        IStrategyAnalysisContextFactory strategyAnalysisContextFactory,
+        IStrategyMarketEventSubscriber strategyMarketEventSubscriber) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
         private readonly ILogger<StrategyProcessor> _logger = logger;
         private readonly IStrategyEnginePairFactory _strategyEnginePairFactory = strategyEnginePairFactory;
         private readonly IStrategyAnalysisContextFactory _strategyAnalysisContextFactory = strategyAnalysisContextFactory;
+        private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
 
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
@@ -53,7 +56,7 @@ namespace Cryoptix.Strategy.Processor
                     AllowSynchronousContinuations = false
                 });
 
-            StrategyProcessorSubscriptions? strategyProcessorSubscriptions = null;
+            StrategyMarketEventSubscriptions? strategyMarketEventSubscriptions = null;
             Task processingTask = Task.CompletedTask;
 
             try
@@ -64,7 +67,7 @@ namespace Cryoptix.Strategy.Processor
                     writer: marketEventChannel.Writer,
                     cancellationToken: cancellationToken);
 
-                strategyProcessorSubscriptions = await StartStrategySubscriptionsAsync(
+                strategyMarketEventSubscriptions = await _strategyMarketEventSubscriber.SubscribeAsync(
                     strategy: strategyProcessorSession.Strategy,
                     subscriptionsApi: strategyProcessorSession.ExchangeApi.SubscriptionsApi!,
                     writer: marketEventChannel.Writer,
@@ -78,7 +81,7 @@ namespace Cryoptix.Strategy.Processor
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     Task strategyUpdateTask = strategyAgentSession.WaitForStrategyUpdateAsync(cancellationToken);
-                    Task subscriptionCompletionTask = strategyProcessorSubscriptions.Completion;
+                    Task subscriptionCompletionTask = strategyMarketEventSubscriptions.Completion;
 
                     Task completed = await Task.WhenAny(
                         strategyUpdateTask,
@@ -115,9 +118,9 @@ namespace Cryoptix.Strategy.Processor
             }
             finally
             {
-                if (strategyProcessorSubscriptions != null)
+                if (strategyMarketEventSubscriptions != null)
                 {
-                    await strategyProcessorSubscriptions.DisposeAsync();
+                    await strategyMarketEventSubscriptions.DisposeAsync();
                 }
 
                 marketEventChannel.Writer.TryComplete();
@@ -193,117 +196,6 @@ namespace Cryoptix.Strategy.Processor
                 historicalKlines.Count,
                 strategy.Symbol,
                 strategy.KlineInterval);
-        }
-
-        private async Task<StrategyProcessorSubscriptions> StartStrategySubscriptionsAsync(
-            Runtime.Strategy strategy,
-            IExchangeSubscriptionApi subscriptionsApi,
-            ChannelWriter<MarketEvent> writer,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (string.IsNullOrWhiteSpace(strategy.Symbol))
-                throw new InvalidOperationException("Strategy symbol is required.");
-
-            CancellationTokenSource sessionCancellationTokenSource =
-                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            IAsyncDisposable? klineSubscription = null;
-            IAsyncDisposable? tradeSubscription = null;
-
-            try
-            {
-                klineSubscription = await subscriptionsApi.SubscribeToKlineUpdatesAsync(
-                    symbol: strategy.Symbol,
-                    interval: strategy.KlineInterval,
-                    onCallback: args =>
-                    {
-                        if (args.Klines == null || !args.Klines.Any())
-                        {
-                            _logger.LogWarning(
-                                "Received kline update with no klines for {Symbol} {Interval}",
-                                strategy.Symbol,
-                                strategy.KlineInterval);
-                            return;
-                        }
-
-                        foreach (Kline kline in args.Klines)
-                        {
-                            if (!writer.TryWrite(new KlineMarketEvent(kline, MarketEventSource.Live)))
-                            {
-                                _logger.LogWarning(
-                                    "Failed to enqueue live kline for {Symbol} {Interval}; channel closed.",
-                                    kline.Symbol,
-                                    kline.Interval);
-                            }
-                        }
-                    },
-                    onError: ex =>
-                    {
-                        _logger.LogError(ex,
-                            "Kline subscription error for {Symbol} {Interval}",
-                            strategy.Symbol,
-                            strategy.KlineInterval);
-                    },
-                    cancellationToken: sessionCancellationTokenSource.Token);
-
-                tradeSubscription = await subscriptionsApi.SubscribeToTradesAsync(
-                    symbol: strategy.Symbol,
-                    onCallback: args =>
-                    {
-                        if (args.Trades == null || !args.Trades.Any())
-                        {
-                            _logger.LogWarning(
-                                "Received trade update with no trades for {Symbol}",
-                                strategy.Symbol);
-                            return;
-                        }
-
-                        foreach (Trade trade in args.Trades)
-                        {
-                            if (!writer.TryWrite(new TradeMarketEvent(trade)))
-                            {
-                                _logger.LogWarning(
-                                    "Failed to enqueue live trade for {Symbol}; channel closed.",
-                                    trade.Symbol);
-                            }
-                        }
-                    },
-                    onError: ex =>
-                    {
-                        _logger.LogError(ex,
-                            "Trade subscription error for {Symbol}",
-                            strategy.Symbol);
-                    },
-                    cancellationToken: sessionCancellationTokenSource.Token);
-
-                CompositeAsyncDisposable compositeHandle = new(klineSubscription, tradeSubscription);
-
-                Task completionTask = WaitUntilCancelledCleanlyAsync(sessionCancellationTokenSource.Token);
-
-                _logger.LogInformation(
-                    "Started subscriptions for {Symbol} {Interval}",
-                    strategy.Symbol,
-                    strategy.KlineInterval);
-
-                return new StrategyProcessorSubscriptions(compositeHandle, sessionCancellationTokenSource, completionTask);
-            }
-            catch
-            {
-                if (tradeSubscription != null)
-                {
-                    try { await tradeSubscription.DisposeAsync(); } catch { }
-                }
-
-                if (klineSubscription != null)
-                {
-                    try { await klineSubscription.DisposeAsync(); } catch { }
-                }
-
-                sessionCancellationTokenSource.Dispose();
-                throw;
-            }
         }
 
         private async Task ProcessMarketEventsAsync(
@@ -422,17 +314,6 @@ namespace Cryoptix.Strategy.Processor
         private static DateTime GetSeedStartTime(Runtime.Strategy strategy, DateTime endTimeUtc)
         {
             return endTimeUtc.AddDays(-2);
-        }
-
-        private static async Task WaitUntilCancelledCleanlyAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await Task.Delay(Timeout.Infinite, cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-            }
         }
     }
 }

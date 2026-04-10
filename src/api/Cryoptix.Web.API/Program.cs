@@ -11,6 +11,7 @@ using Cryoptix.Strategy.Controller;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.State;
+using Cryoptix.Strategy.Subscription;
 using Cryoptix.Web.API.Authorization;
 using Cryoptix.Web.API.Config;
 using Cryoptix.Web.API.Constants;
@@ -102,7 +103,6 @@ Channel<StrategyCommand> channel = Channel.CreateBounded<StrategyCommand>(
 builder.Services.AddSingleton(channel);
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
-
 builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
@@ -112,6 +112,7 @@ builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
 builder.Services.AddSingleton<IStrategyAnalysisContextFactory, StrategyAnalysisContextFactory>();
+builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
 builder.Services.AddSingleton<MovingAverageIndicatorEngine>();
 builder.Services.AddSingleton<MovingAverageSignalEngine>();
 builder.Services.AddSingleton<IStrategyEnginePair, MovingAverageStrategyEnginePair>();

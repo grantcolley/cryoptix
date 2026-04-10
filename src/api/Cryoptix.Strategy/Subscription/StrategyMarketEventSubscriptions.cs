@@ -1,6 +1,6 @@
-﻿namespace Cryoptix.Strategy.Processor
+﻿namespace Cryoptix.Strategy.Subscription
 {
-    public sealed class StrategyProcessorSubscriptions(
+    public sealed class StrategyMarketEventSubscriptions(
         IAsyncDisposable subscriptionHandle,
         CancellationTokenSource cts,
         Task completion) : IAsyncDisposable
