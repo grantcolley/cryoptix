@@ -9,7 +9,8 @@ namespace Cryoptix.Strategy.Subscription
         Task<StrategyMarketEventSubscriptions> SubscribeAsync(
             Runtime.Strategy strategy,
             IExchangeSubscriptionApi subscriptionsApi,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<KlineMarketEvent> klineWriter,
+            ChannelWriter<TradeMarketEvent> tradeWriter,
             CancellationToken cancellationToken);
     }
 }

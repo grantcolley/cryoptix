@@ -9,7 +9,7 @@ namespace Cryoptix.Strategy.Seeding
         Task SeedAsync(
             Runtime.Strategy strategy,
             IExchangeRestApi restApi,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<KlineMarketEvent> klineWriter,
             CancellationToken cancellationToken);
     }
 }

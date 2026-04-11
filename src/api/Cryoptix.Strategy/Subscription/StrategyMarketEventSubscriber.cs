@@ -15,12 +15,14 @@ namespace Cryoptix.Strategy.Subscription
         public async Task<StrategyMarketEventSubscriptions> SubscribeAsync(
             Runtime.Strategy strategy,
             IExchangeSubscriptionApi subscriptionsApi,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<KlineMarketEvent> klineWriter,
+            ChannelWriter<TradeMarketEvent> tradeWriter,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategy);
             ArgumentNullException.ThrowIfNull(subscriptionsApi);
-            ArgumentNullException.ThrowIfNull(writer);
+            ArgumentNullException.ThrowIfNull(klineWriter);
+            ArgumentNullException.ThrowIfNull(tradeWriter);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -38,13 +40,13 @@ namespace Cryoptix.Strategy.Subscription
                 klineSubscription = await subscriptionsApi.SubscribeToKlineUpdatesAsync(
                     symbol: strategy.Symbol,
                     interval: strategy.KlineInterval,
-                    onCallback: args => OnKlineCallback(strategy, writer, args),
+                    onCallback: args => OnKlineCallback(strategy, klineWriter, args),
                     onError: ex => OnKlineError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
                 tradeSubscription = await subscriptionsApi.SubscribeToTradesAsync(
                     symbol: strategy.Symbol,
-                    onCallback: args => OnTradeCallback(strategy, writer, args),
+                    onCallback: args => OnTradeCallback(strategy, tradeWriter, args),
                     onError: ex => OnTradeError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
@@ -80,7 +82,7 @@ namespace Cryoptix.Strategy.Subscription
 
         private void OnKlineCallback(
             Runtime.Strategy strategy,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<KlineMarketEvent> writer,
             KlineEventArgs args)
         {
             if (args.Klines == null || !args.Klines.Any())
@@ -97,7 +99,7 @@ namespace Cryoptix.Strategy.Subscription
                 if (!writer.TryWrite(new KlineMarketEvent(kline, MarketEventSource.Live)))
                 {
                     _logger.LogWarning(
-                        "Failed to enqueue live kline for {Symbol} {Interval}; channel closed.",
+                        "Failed to enqueue live kline for {Symbol} {Interval}. Channel may be full or closed.",
                         kline.Symbol,
                         kline.Interval);
                 }
@@ -106,7 +108,7 @@ namespace Cryoptix.Strategy.Subscription
 
         private void OnTradeCallback(
             Runtime.Strategy strategy,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<TradeMarketEvent> writer,
             TradeEventArgs args)
         {
             if (args.Trades == null || !args.Trades.Any())
@@ -117,14 +119,22 @@ namespace Cryoptix.Strategy.Subscription
                 return;
             }
 
+            int dropped = 0;
+
             foreach (Trade trade in args.Trades)
             {
                 if (!writer.TryWrite(new TradeMarketEvent(trade)))
                 {
-                    _logger.LogWarning(
-                        "Failed to enqueue live trade for {Symbol}; channel closed.",
-                        trade.Symbol);
+                    dropped++;
                 }
+            }
+
+            if (dropped > 0)
+            {
+                _logger.LogWarning(
+                    "Dropped {DroppedCount} trade events for {Symbol} due to channel pressure or closure.",
+                    dropped,
+                    strategy.Symbol);
             }
         }
 

@@ -6,6 +6,7 @@ using Cryoptix.Exchange.Models;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Catalog;
+using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
@@ -36,9 +37,15 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+string klineCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY);
+string tradeCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY);
+string dropTradesWhenFull = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL);
+string klineFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE);
+
 string domain = builder.Configuration[ConfigKeys.AUTH_DOMAIN] ?? throw new NullReferenceException(ConfigKeys.AUTH_DOMAIN);
 string audience = builder.Configuration[ConfigKeys.AUTH_AUDIENCE] ?? throw new NullReferenceException(ConfigKeys.AUTH_AUDIENCE);
 string issuer = builder.Configuration[ConfigKeys.AUTH_ISSUER] ?? throw new NullReferenceException(ConfigKeys.AUTH_ISSUER);
+
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetRequiredSection("Auth"));
 
 builder.Host.UseSerilog((ctx, lc) =>
@@ -104,6 +111,14 @@ Channel<StrategyCommand> channel = Channel.CreateBounded<StrategyCommand>(
         FullMode = BoundedChannelFullMode.Wait
     });
 
+builder.Services.AddSingleton(new StrategyChannelOptions
+{
+    KlineCapacity = Int32.Parse(klineCapacity),
+    TradeCapacity = Int32.Parse(tradeCapacity),
+    DropTradesWhenFull = bool.Parse(dropTradesWhenFull),
+    KlineFullMode = (BoundedChannelFullMode)int.Parse(klineFullMode)
+});
+
 builder.Services.AddSingleton(channel);
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
@@ -116,6 +131,7 @@ builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
 builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
 builder.Services.AddSingleton<IStrategyClock, SystemStrategyClock>();
+builder.Services.AddSingleton<IStrategyEventChannelFactory, StrategyEventChannelFactory>();
 builder.Services.AddSingleton<IStrategyMarketSeeder, StrategyMarketSeeder>();
 builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
 builder.Services.AddSingleton<IStrategySignalHandler, StrategySignalHandler>();

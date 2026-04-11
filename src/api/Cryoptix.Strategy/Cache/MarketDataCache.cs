@@ -13,11 +13,8 @@ namespace Cryoptix.Strategy.Cache
 
         public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries)
         {
-            if (maxTradesPerSymbol <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxTradesPerSymbol));
-
-            if (maxKlinesPerSeries <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxKlinesPerSeries));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTradesPerSymbol);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxKlinesPerSeries);
 
             _maxTradesPerSymbol = maxTradesPerSymbol;
             _maxKlinesPerSeries = maxKlinesPerSeries;

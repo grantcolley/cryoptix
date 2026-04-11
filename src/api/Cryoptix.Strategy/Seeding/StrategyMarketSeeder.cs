@@ -17,12 +17,12 @@ namespace Cryoptix.Strategy.Seeding
         public async Task SeedAsync(
             Runtime.Strategy strategy,
             IExchangeRestApi restApi,
-            ChannelWriter<MarketEvent> writer,
+            ChannelWriter<KlineMarketEvent> klineWriter,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategy);
             ArgumentNullException.ThrowIfNull(restApi);
-            ArgumentNullException.ThrowIfNull(writer);
+            ArgumentNullException.ThrowIfNull(klineWriter);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -50,21 +50,9 @@ namespace Cryoptix.Strategy.Seeding
                 limit: null,
                 cancellationToken: cancellationToken);
 
-            if (historicalKlines.Count == 0)
-            {
-                _logger.LogWarning(
-                    "No historical klines returned for {Symbol} {Interval} from {Start:u} to {End:u}",
-                    strategy.Symbol,
-                    strategy.KlineInterval,
-                    startTime,
-                    endTime);
-
-                return;
-            }
-
             foreach (Kline kline in historicalKlines.OrderBy(k => k.OpenTime))
             {
-                await writer.WriteAsync(
+                await klineWriter.WriteAsync(
                     new KlineMarketEvent(kline, MarketEventSource.Seed),
                     cancellationToken);
             }
