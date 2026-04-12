@@ -45,8 +45,8 @@ namespace Cryoptix.Strategy.Processor
                 ExchangeApi = strategyAgentSession.ExchangeApi,
                 Strategy = initialStrategy!,
                 Cache = new MarketDataCache(
-                    maxTradesPerSymbol: 10_000,
-                    maxKlinesPerSeries: 5_000)
+                    maxTradesPerSymbol: initialStrategy.CacheMaxTradesPerSymbol,
+                    maxKlinesPerSeries: initialStrategy.CacheMaxKlinesPerSeries)
             };
 
             StrategyEventChannels channels = _strategyEventChannelFactory.Create();
@@ -139,6 +139,8 @@ namespace Cryoptix.Strategy.Processor
             ChannelReader<KlineMarketEvent> klineReader = channels.Klines.Reader;
             ChannelReader<TradeMarketEvent> tradeReader = channels.Trades.Reader;
 
+            int maxTradesPerPass = session.Strategy.StrategyProcessorMaxTradesPerPass;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 bool processedAny = false;
@@ -155,7 +157,6 @@ namespace Cryoptix.Strategy.Processor
 
                 // Then process a batch of trades.
                 int tradeBatchCount = 0;
-                const int maxTradesPerPass = 256;
 
                 while (tradeBatchCount < maxTradesPerPass && tradeReader.TryRead(out TradeMarketEvent? tradeEvent))
                 {
