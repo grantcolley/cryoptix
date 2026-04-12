@@ -141,11 +141,11 @@ builder.Services.AddSingleton<MovingAverageIndicatorEngine>();
 builder.Services.AddSingleton<MovingAverageSignalEngine>();
 builder.Services.AddSingleton<IStrategyEnginePair, MovingAverageStrategyEnginePair>();
 builder.Services.AddSingleton<IStrategyEnginePairFactory, StrategyEnginePairFactory>();
-builder.Services.AddTransient<StrategyProcessor>();
+builder.Services.AddTransient<TradingFlowProcessor>();
 builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
     new StrategyProcessorCatalog(
     [
-        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.TradingFlow, () => sp.GetRequiredService<StrategyProcessor>())
+        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.TradingFlow, () => sp.GetRequiredService<TradingFlowProcessor>())
     ]));
 
 WebApplication app = builder.Build();
