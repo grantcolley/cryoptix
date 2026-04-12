@@ -103,7 +103,7 @@ builder.Services.AddSingleton<Credentials>(
 
 builder.Services.AddHostedService<StrategyBackgroundService>();
 
-Channel<StrategyCommand> channel = Channel.CreateBounded<StrategyCommand>(
+Channel<StrategyCommand> strategyCommandChannel = Channel.CreateBounded<StrategyCommand>(
     new BoundedChannelOptions(100)
     {
         SingleReader = true,
@@ -119,9 +119,9 @@ builder.Services.AddSingleton(new StrategyChannelOptions
     KlineFullMode = (BoundedChannelFullMode)int.Parse(klineFullMode)
 });
 
-builder.Services.AddSingleton(channel);
-builder.Services.AddSingleton(channel.Reader);
-builder.Services.AddSingleton(channel.Writer);
+builder.Services.AddSingleton(strategyCommandChannel);
+builder.Services.AddSingleton(strategyCommandChannel.Reader);
+builder.Services.AddSingleton(strategyCommandChannel.Writer);
 builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
