@@ -2,11 +2,13 @@
 using Cryoptix.Exchange.Models;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Processor;
+using Cryoptix.Strategy.Snapshot;
 using Microsoft.Extensions.Logging;
-using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Subscription
 {
+    using System.Threading.Channels;
+
     public sealed class StrategyMarketEventSubscriber(
         ILogger<StrategyMarketEventSubscriber> logger) : IStrategyMarketEventSubscriber
     {
@@ -14,15 +16,20 @@ namespace Cryoptix.Strategy.Subscription
 
         public async Task<StrategyMarketEventSubscriptions> SubscribeAsync(
             Runtime.Strategy strategy,
+            Credentials? credentials,
             IExchangeSubscriptionApi subscriptionsApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
             ChannelWriter<TradeMarketEvent> tradeWriter,
+            OrderBookRealtimeState orderBookRealtimeState,
+            AccountRealtimeState accountRealtimeState,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategy);
             ArgumentNullException.ThrowIfNull(subscriptionsApi);
             ArgumentNullException.ThrowIfNull(klineWriter);
             ArgumentNullException.ThrowIfNull(tradeWriter);
+            ArgumentNullException.ThrowIfNull(orderBookRealtimeState);
+            ArgumentNullException.ThrowIfNull(accountRealtimeState);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -34,6 +41,8 @@ namespace Cryoptix.Strategy.Subscription
 
             IAsyncDisposable? klineSubscription = null;
             IAsyncDisposable? tradeSubscription = null;
+            IAsyncDisposable? orderBookSubscription = null;
+            IAsyncDisposable? accountSubscription = null;
 
             try
             {
@@ -50,13 +59,39 @@ namespace Cryoptix.Strategy.Subscription
                     onError: ex => OnTradeError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
-                CompositeAsyncDisposable compositeHandle = new(klineSubscription, tradeSubscription);
+                orderBookSubscription = await subscriptionsApi.SubscribeToOrderBookAsync(
+                    symbol: strategy.Symbol,
+                    limit: strategy.OrderBookLimit,
+                    onCallback: args => OnOrderBookCallback(strategy, orderBookRealtimeState, args),
+                    onError: ex => OnOrderBookError(strategy, ex),
+                    cancellationToken: sessionCancellationTokenSource.Token);
+
+                if (credentials != null)
+                {
+                    accountSubscription = await subscriptionsApi.SubscribeToAccountUpdatesAsync(
+                        user: credentials,
+                        onCallback: args => OnAccountCallback(accountRealtimeState, args),
+                        onError: ex => OnAccountError(credentials, ex),
+                        cancellationToken: sessionCancellationTokenSource.Token);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "No credentials supplied for strategy {Symbol}; account updates will not be subscribed.",
+                        strategy.Symbol);
+                }
+
+                CompositeAsyncDisposable compositeHandle = accountSubscription == null
+                    ? new CompositeAsyncDisposable(klineSubscription, tradeSubscription, orderBookSubscription)
+                    : new CompositeAsyncDisposable(klineSubscription, tradeSubscription, orderBookSubscription, accountSubscription);
+
                 Task completionTask = WaitUntilCancelledCleanlyAsync(sessionCancellationTokenSource.Token);
 
                 _logger.LogInformation(
-                    "Started subscriptions for {Symbol} {Interval}",
+                    "Started subscriptions for {Symbol} {Interval}, including order book{AccountSuffix}",
                     strategy.Symbol,
-                    strategy.KlineInterval);
+                    strategy.KlineInterval,
+                    accountSubscription == null ? "" : " and account");
 
                 return new StrategyMarketEventSubscriptions(
                     compositeHandle,
@@ -65,6 +100,16 @@ namespace Cryoptix.Strategy.Subscription
             }
             catch
             {
+                if (accountSubscription != null)
+                {
+                    try { await accountSubscription.DisposeAsync(); } catch { }
+                }
+
+                if (orderBookSubscription != null)
+                {
+                    try { await orderBookSubscription.DisposeAsync(); } catch { }
+                }
+
                 if (tradeSubscription != null)
                 {
                     try { await tradeSubscription.DisposeAsync(); } catch { }
@@ -138,6 +183,32 @@ namespace Cryoptix.Strategy.Subscription
             }
         }
 
+        private void OnOrderBookCallback(
+            Runtime.Strategy strategy,
+            OrderBookRealtimeState orderBookRealtimeState,
+            OrderBookEventArgs args)
+        {
+            if (args.OrderBook == null)
+            {
+                _logger.LogWarning(
+                    "Received order book update with null payload for {Symbol}",
+                    strategy.Symbol);
+                return;
+            }
+
+            orderBookRealtimeState.Update(args.OrderBook);
+        }
+
+        private void OnAccountCallback(
+            AccountRealtimeState accountRealtimeState,
+            AccountEventArgs args)
+        {
+            if (args.Account == null)
+                return;
+
+            accountRealtimeState.Update(args.Account);
+        }
+
         private void OnKlineError(Runtime.Strategy strategy, Exception ex)
         {
             _logger.LogError(ex,
@@ -151,6 +222,20 @@ namespace Cryoptix.Strategy.Subscription
             _logger.LogError(ex,
                 "Trade subscription error for {Symbol}",
                 strategy.Symbol);
+        }
+
+        private void OnOrderBookError(Runtime.Strategy strategy, Exception ex)
+        {
+            _logger.LogError(ex,
+                "Order book subscription error for {Symbol}",
+                strategy.Symbol);
+        }
+
+        private void OnAccountError(Credentials credentials, Exception ex)
+        {
+            _logger.LogError(ex,
+                "Account subscription error for account {AccountName}",
+                credentials.AccountName);
         }
 
         private static async Task WaitUntilCancelledCleanlyAsync(CancellationToken cancellationToken)

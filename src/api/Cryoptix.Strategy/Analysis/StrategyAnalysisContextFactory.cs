@@ -13,13 +13,11 @@ namespace Cryoptix.Strategy.Analysis
             StrategyProcessorSession session,
             KlineMarketEvent marketEvent)
         {
-            ArgumentNullException.ThrowIfNull(session);
-            ArgumentNullException.ThrowIfNull(marketEvent);
-
             return new StrategyAnalysisContext
             {
                 Strategy = session.Strategy,
                 ExchangeApi = session.ExchangeApi,
+                Credentials = session.Credentials,
                 Klines = session.Cache.GetKlines(session.Strategy.Symbol, session.Strategy.KlineInterval),
                 Trades = session.Cache.GetTrades(session.Strategy.Symbol),
                 CurrentEvent = new MarketEventEnvelope
@@ -28,6 +26,8 @@ namespace Cryoptix.Strategy.Analysis
                     Source = marketEvent.Source,
                     Kline = marketEvent.Kline
                 },
+                OrderBookRealtimeState = session.OrderBookRealtimeState,
+                AccountRealtimeState = session.AccountRealtimeState,
                 TimestampUtc = _clock.UtcNow
             };
         }
@@ -36,13 +36,11 @@ namespace Cryoptix.Strategy.Analysis
             StrategyProcessorSession session,
             TradeMarketEvent marketEvent)
         {
-            ArgumentNullException.ThrowIfNull(session);
-            ArgumentNullException.ThrowIfNull(marketEvent);
-
             return new StrategyAnalysisContext
             {
                 Strategy = session.Strategy,
                 ExchangeApi = session.ExchangeApi,
+                Credentials = session.Credentials,
                 Klines = session.Cache.GetKlines(session.Strategy.Symbol, session.Strategy.KlineInterval),
                 Trades = session.Cache.GetTrades(session.Strategy.Symbol),
                 CurrentEvent = new MarketEventEnvelope
@@ -51,6 +49,8 @@ namespace Cryoptix.Strategy.Analysis
                     Source = MarketEventSource.Live,
                     Trade = marketEvent.Trade
                 },
+                OrderBookRealtimeState = session.OrderBookRealtimeState,
+                AccountRealtimeState = session.AccountRealtimeState,
                 TimestampUtc = _clock.UtcNow
             };
         }

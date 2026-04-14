@@ -17,6 +17,9 @@ namespace Cryoptix.Strategy.Runtime
         public int FastPeriod { get; init; }
         public int SlowPeriod { get; init; }
 
+        public int? OrderBookLimit { get; set; } = 20;
+        public int MaxOrderBookAgeSeconds { get; set; } = 3;
+        public int MaxAccountAgeSeconds { get; set; } = 10;
         public int CacheMaxKlinesPerSeries { get; set; } = 5000;
         public int CacheMaxTradesPerSymbol { get; set; } = 10000;
         public int StrategyProcessorMaxTradesPerPass { get; set; } = 256;

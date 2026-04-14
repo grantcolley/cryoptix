@@ -4,6 +4,7 @@ using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Seeding;
+using Cryoptix.Strategy.Snapshot;
 using Cryoptix.Strategy.Subscription;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
@@ -44,6 +45,9 @@ namespace Cryoptix.Strategy.Processor
             {
                 ExchangeApi = strategyAgentSession.ExchangeApi,
                 Strategy = initialStrategy!,
+                Credentials = strategyAgentSession.Credentials,
+                OrderBookRealtimeState = new OrderBookRealtimeState(),
+                AccountRealtimeState = new AccountRealtimeState(),
                 Cache = new MarketDataCache(
                     maxTradesPerSymbol: initialStrategy.CacheMaxTradesPerSymbol,
                     maxKlinesPerSeries: initialStrategy.CacheMaxKlinesPerSeries)
@@ -64,9 +68,12 @@ namespace Cryoptix.Strategy.Processor
 
                 strategyMarketEventSubscriptions = await _strategyMarketEventSubscriber.SubscribeAsync(
                     strategy: strategyProcessorSession.Strategy,
+                    credentials: strategyProcessorSession.Credentials,
                     subscriptionsApi: strategyProcessorSession.ExchangeApi.SubscriptionsApi!,
                     klineWriter: channels.Klines.Writer,
                     tradeWriter: channels.Trades.Writer,
+                    orderBookRealtimeState: strategyProcessorSession.OrderBookRealtimeState,
+                    accountRealtimeState: strategyProcessorSession.AccountRealtimeState,
                     cancellationToken: cancellationToken);
 
                 processingTask = ProcessMarketEventsAsync(
