@@ -67,15 +67,14 @@ namespace Cryoptix.Strategy.Dispatcher
                 await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
 
             _logger.LogInformation(
-                "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} Inserted:{Inserted} Updated:{Updated} Signal:{Signal} Reason:{Reason}",
+                "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} CloseTime:{CloseTime:u} Open:{Open} Close:{Close}",
                 marketEvent.Source,
                 marketEvent.Kline.Symbol,
                 marketEvent.Kline.Interval,
                 marketEvent.Kline.OpenTime,
-                upsertResult.Inserted,
-                upsertResult.Updated,
-                signal.Signal,
-                signal.Reason);
+                marketEvent.Kline.CloseTime,
+                marketEvent.Kline.Open,
+                marketEvent.Kline.Close);
 
             await _strategySignalHandler.HandleAsync(context, signal, cancellationToken);
         }
@@ -109,11 +108,13 @@ namespace Cryoptix.Strategy.Dispatcher
                 await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
 
             _logger.LogInformation(
-                "TRADE {Symbol} TradeId:{TradeId} Signal:{Signal} Reason:{Reason}",
+                "TRADE {Symbol} TradeId:{TradeId} Time:{Time:u} Price:{Price} BaseQuantity:{BaseQuantity} QuoteQuantity:{QuoteQuantity}",
                 marketEvent.Trade.Symbol,
                 marketEvent.Trade.Id,
-                signal.Signal,
-                signal.Reason);
+                marketEvent.Trade.Time,
+                marketEvent.Trade.Price,
+                marketEvent.Trade.BaseQuantity,
+                marketEvent.Trade.QuoteQuantity);
 
             await _strategySignalHandler.HandleAsync(context, signal, cancellationToken);
         }
