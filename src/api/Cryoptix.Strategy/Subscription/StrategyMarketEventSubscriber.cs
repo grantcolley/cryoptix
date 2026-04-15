@@ -197,6 +197,33 @@ namespace Cryoptix.Strategy.Subscription
             }
 
             orderBookRealtimeState.Update(args.OrderBook);
+
+            _logger.LogInformation(
+                "ORDER BOOK {Symbol} UpdateTime:{UpdateTime:u} BestAsk.Price:{BestAskPrice} BestAsk.Quantity:{BestAskQuantity} BestBid.Price:{BestBidPrice} BestBid.Quantity:{BestBidQuantity}",
+                args.OrderBook.Symbol,
+                args.OrderBook.UpdateTime,
+                args.OrderBook.BestAsk?.Price,
+                args.OrderBook.BestAsk?.Quantity,
+                args.OrderBook.BestBid?.Price,
+                args.OrderBook.BestBid?.Quantity);
+
+            foreach (OrderBookPrice bid in args.OrderBook.Bids.Take(5))
+            {
+                _logger.LogInformation(
+                    "ORDER BOOK BID {Symbol} BID Price:{Price} Quantity:{Quantity}",
+                    args.OrderBook.Symbol,
+                    bid.Price,
+                    bid.Quantity);
+            }
+
+            foreach (OrderBookPrice ask in args.OrderBook.Asks.Take(5))
+            {
+                _logger.LogInformation(
+                    "ORDER BOOK ASK {Symbol} ASK Price:{Price} Quantity:{Quantity}",
+                    args.OrderBook.Symbol,
+                    ask.Price,
+                    ask.Quantity);
+            }
         }
 
         private void OnAccountCallback(
