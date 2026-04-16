@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Strategy.Execution
+﻿namespace Cryoptix.Strategy.Order
 {
     public interface IOrderExecutionService
     {

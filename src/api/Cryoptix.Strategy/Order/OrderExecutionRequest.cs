@@ -2,7 +2,7 @@
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 
-namespace Cryoptix.Strategy.Execution
+namespace Cryoptix.Strategy.Order
 {
     public sealed class OrderExecutionRequest
     {

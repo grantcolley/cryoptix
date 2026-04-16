@@ -2,7 +2,7 @@
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Engine;
-using Cryoptix.Strategy.Execution;
+using Cryoptix.Strategy.Order;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Signal

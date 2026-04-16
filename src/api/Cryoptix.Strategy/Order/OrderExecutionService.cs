@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Cryoptix.Strategy.Execution
+namespace Cryoptix.Strategy.Order
 {
     public sealed class OrderExecutionService(
         ILogger<OrderExecutionService> logger) : IOrderExecutionService
