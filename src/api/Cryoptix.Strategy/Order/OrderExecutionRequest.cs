@@ -10,27 +10,13 @@ namespace Cryoptix.Strategy.Order
         public required SignalEvaluationResult Signal { get; init; }
         public required OrderBook OrderBook { get; init; }
         public required Account Account { get; init; }
-
-        /// <summary>
-        /// Asset being bought or sold, derived from the strategy symbol if needed.
-        /// Example: BTC for BTCUSDT.
-        /// </summary>
-        public string? BaseAsset { get; init; }
-
-        /// <summary>
-        /// Quote asset used for pricing and cash balance checks.
-        /// Example: USDT for BTCUSDT.
-        /// </summary>
-        public string? QuoteAsset { get; init; }
-
-        /// <summary>
-        /// Optional quantity computed by the signal handler/risk layer.
-        /// </summary>
-        public decimal? Quantity { get; init; }
-
-        /// <summary>
-        /// Optional limit price hint. Null means market-style execution or executor-side pricing.
-        /// </summary>
+        public required OrderSide Side { get; init; }
+        public required string Symbol { get; init; }
+        public required string BaseAsset { get; init; }
+        public required string QuoteAsset { get; init; }
+        public required decimal Quantity { get; init; }
         public decimal? LimitPrice { get; init; }
+        public decimal? QuoteNotional { get; init; }
+        public string? Reason { get; init; }
     }
 }
