@@ -135,6 +135,7 @@ builder.Services.AddSingleton<IStrategyClock, SystemStrategyClock>();
 builder.Services.AddSingleton<IStrategyMarketSeeder, StrategyMarketSeeder>();
 builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
 builder.Services.AddSingleton<IStrategyAnalysisContextFactory, StrategyAnalysisContextFactory>();
+builder.Services.AddSingleton<IOrderSizingService, OrderSizingService>();
 builder.Services.AddSingleton<IOrderExecutionService, OrderExecutionService>();
 builder.Services.AddSingleton<IStrategySignalHandler, StrategySignalHandler>();
 builder.Services.AddSingleton<IStrategyMarketEventDispatcher, StrategyMarketEventDispatcher>();
