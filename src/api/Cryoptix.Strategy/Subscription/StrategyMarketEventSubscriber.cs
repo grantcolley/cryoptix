@@ -207,26 +207,32 @@ namespace Cryoptix.Strategy.Subscription
                 args.OrderBook.BestBid?.Price,
                 args.OrderBook.BestBid?.Quantity);
 
-            foreach (OrderBookPrice bid in args.OrderBook.Bids.Take(5))
+            if (args.OrderBook.Bids != null)
             {
-                _logger.LogInformation(
-                    "ORDER BOOK BID {Symbol} BID Price:{Price} Quantity:{Quantity}",
-                    args.OrderBook.Symbol,
-                    bid.Price,
-                    bid.Quantity);
+                foreach (OrderBookPrice bid in args.OrderBook.Bids.Take(5))
+                {
+                    _logger.LogInformation(
+                        "ORDER BOOK BID {Symbol} BID Price:{Price} Quantity:{Quantity}",
+                        args.OrderBook.Symbol,
+                        bid.Price,
+                        bid.Quantity);
+                }
             }
 
-            foreach (OrderBookPrice ask in args.OrderBook.Asks.Take(5))
+            if (args.OrderBook.Asks != null)
             {
-                _logger.LogInformation(
-                    "ORDER BOOK ASK {Symbol} ASK Price:{Price} Quantity:{Quantity}",
-                    args.OrderBook.Symbol,
-                    ask.Price,
-                    ask.Quantity);
+                foreach (OrderBookPrice ask in args.OrderBook.Asks.Take(5))
+                {
+                    _logger.LogInformation(
+                        "ORDER BOOK ASK {Symbol} ASK Price:{Price} Quantity:{Quantity}",
+                        args.OrderBook.Symbol,
+                        ask.Price,
+                        ask.Quantity);
+                }
             }
         }
 
-        private void OnAccountCallback(
+        private static void OnAccountCallback(
             AccountRealtimeState accountRealtimeState,
             AccountEventArgs args)
         {
