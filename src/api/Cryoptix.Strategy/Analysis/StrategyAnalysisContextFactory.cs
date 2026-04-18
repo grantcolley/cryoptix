@@ -18,8 +18,8 @@ namespace Cryoptix.Strategy.Analysis
                 Strategy = session.Strategy,
                 ExchangeApi = session.ExchangeApi,
                 Credentials = session.Credentials,
-                Klines = session.Cache.GetKlines(session.Strategy.Symbol, session.Strategy.KlineInterval),
-                Trades = session.Cache.GetTrades(session.Strategy.Symbol),
+                Klines = session.Cache.GetKlines(session.Strategy.Symbol!, session.Strategy.KlineInterval),
+                Trades = session.Cache.GetTrades(session.Strategy.Symbol!),
                 CurrentEvent = new MarketEventEnvelope
                 {
                     Kind = MarketEventKind.Kline,
@@ -41,8 +41,8 @@ namespace Cryoptix.Strategy.Analysis
                 Strategy = session.Strategy,
                 ExchangeApi = session.ExchangeApi,
                 Credentials = session.Credentials,
-                Klines = session.Cache.GetKlines(session.Strategy.Symbol, session.Strategy.KlineInterval),
-                Trades = session.Cache.GetTrades(session.Strategy.Symbol),
+                Klines = session.Cache.GetKlines(session.Strategy.Symbol!, session.Strategy.KlineInterval),
+                Trades = session.Cache.GetTrades(session.Strategy.Symbol!),
                 CurrentEvent = new MarketEventEnvelope
                 {
                     Kind = MarketEventKind.Trade,
