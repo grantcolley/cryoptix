@@ -31,7 +31,7 @@ using Serilog;
 using System.Threading.Channels;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-            
+
 builder.Configuration
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
