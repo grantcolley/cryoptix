@@ -24,7 +24,7 @@ namespace Cryoptix.Strategy.Cache
         {
             ArgumentNullException.ThrowIfNull(kline);
 
-            string symbol = NormalizeSymbol(kline.Symbol);
+            string symbol = NormalizeSymbol(kline.Symbol!);
             var key = (symbol, kline.Interval);
 
             if (!_klines.TryGetValue(key, out var series))
@@ -64,7 +64,7 @@ namespace Cryoptix.Strategy.Cache
         {
             ArgumentNullException.ThrowIfNull(trade);
 
-            string symbol = NormalizeSymbol(trade.Symbol);
+            string symbol = NormalizeSymbol(trade.Symbol!);
 
             if (!_trades.TryGetValue(symbol, out var trades))
             {
