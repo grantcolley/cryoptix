@@ -13,7 +13,7 @@
 
         private static async Task<IResult> GetHealth()
         {
-            return Results.Ok($"{DateTime.Now} Cryoptix");
+            return Results.Ok($"Cryoptix {DateTime.Now}");
         }
     }
 }
