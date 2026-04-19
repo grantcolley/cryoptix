@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Cryoptix.Observer\Cryoptix.Observer.csproj" />
     <ProjectReference Include="..\Cryoptix.Strategy\Cryoptix.Strategy.csproj" />
     <ProjectReference Include="..\Exchanges\Cryoptix.Exchange.Binance\Cryoptix.Exchange.Binance.csproj" />
   </ItemGroup>

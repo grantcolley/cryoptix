@@ -11,5 +11,9 @@
         public const string STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY = "StrategyChannelOptions:TradeCapacity";
         public const string STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL = "StrategyChannelOptions:DropTradesWhenFull";
         public const string STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE = "StrategyChannelOptions:KlineFullMode";
+        public const string STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_CAPACITY = "StrategyChannelOptions:KlineBroadcastCapacity";
+        public const string STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_CAPACITY = "StrategyChannelOptions:TradeBroadcastCapacity";
+        public const string STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_FULL_MODE = "StrategyChannelOptions:KlineBroadcastFullMode";
+        public const string STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_FULL_MODE = "StrategyChannelOptions:TradeBroadcastFullMode";
     }
 }
