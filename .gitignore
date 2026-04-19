@@ -418,5 +418,5 @@ FodyWeavers.xsd
 *.msp
 
 # AppSettings
-/src/Cryoptix.Web.API/appsettings.Development.json
-/src/Cryoptix.Web.API/appsettings.Production.json
+/src/api/Cryoptix.Web.API/appsettings.Development.json
+/src/api/Cryoptix.Web.API/appsettings.Production.json
