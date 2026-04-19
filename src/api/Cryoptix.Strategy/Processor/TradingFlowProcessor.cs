@@ -1,8 +1,10 @@
-﻿using Cryoptix.Strategy.Agent;
+﻿using Cryoptix.Exchange.Models;
+using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Notification;
 using Cryoptix.Strategy.Seeding;
 using Cryoptix.Strategy.Snapshot;
 using Cryoptix.Strategy.Subscription;
@@ -16,7 +18,8 @@ namespace Cryoptix.Strategy.Processor
         IStrategyMarketSeeder strategyMarketSeeder,
         IStrategyMarketEventSubscriber strategyMarketEventSubscriber,
         IStrategyMarketEventDispatcher strategyMarketEventDispatcher,
-        IStrategyEventChannelFactory strategyEventChannelFactory) : IStrategyProcessor
+        IStrategyEventChannelFactory strategyEventChannelFactory,
+        INotificationPump notificationPump) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
@@ -25,6 +28,7 @@ namespace Cryoptix.Strategy.Processor
         private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
         private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
         private readonly IStrategyEventChannelFactory _strategyEventChannelFactory = strategyEventChannelFactory;
+        private readonly INotificationPump _notificationPump = notificationPump;
 
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
@@ -57,6 +61,7 @@ namespace Cryoptix.Strategy.Processor
 
             StrategyMarketEventSubscriptions? strategyMarketEventSubscriptions = null;
             Task processingTask = Task.CompletedTask;
+            Task notificationTask = Task.CompletedTask;
 
             try
             {
@@ -81,6 +86,10 @@ namespace Cryoptix.Strategy.Processor
                     channels,
                     cancellationToken);
 
+                notificationTask = _notificationPump.RunAsync(
+                    channels,
+                    cancellationToken);
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     Task strategyUpdateTask = strategyAgentSession.WaitForStrategyUpdateAsync(cancellationToken);
@@ -89,11 +98,18 @@ namespace Cryoptix.Strategy.Processor
                     Task completed = await Task.WhenAny(
                         strategyUpdateTask,
                         subscriptionCompletionTask,
-                        processingTask);
+                        processingTask,
+                        notificationTask);
 
                     if (completed == processingTask)
                     {
                         await processingTask;
+                        break;
+                    }
+
+                    if (completed == notificationTask)
+                    {
+                        await notificationTask;
                         break;
                     }
 
@@ -130,7 +146,7 @@ namespace Cryoptix.Strategy.Processor
 
                 try
                 {
-                    await processingTask;
+                    await Task.WhenAll(processingTask, notificationTask);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -146,23 +162,33 @@ namespace Cryoptix.Strategy.Processor
             ChannelReader<KlineMarketEvent> klineReader = channels.Klines.Reader;
             ChannelReader<TradeMarketEvent> tradeReader = channels.Trades.Reader;
 
+            ChannelWriter<Kline> klineBroadcastWriter = channels.KlineBroadcasts.Writer;
+            ChannelWriter<Trade> tradeBroadcastWriter = channels.TradeBroadcasts.Writer;
+
             int maxTradesPerPass = session.Strategy.StrategyProcessorMaxTradesPerPass;
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 bool processedAny = false;
 
-                // Drain klines first: they are higher priority.
                 while (klineReader.TryRead(out KlineMarketEvent? klineEvent))
                 {
                     processedAny = true;
+
+                    if (!klineBroadcastWriter.TryWrite(klineEvent.Kline))
+                    {
+                        _logger.LogDebug(
+                            "Dropped kline broadcast event for {Symbol} {Interval} due to broadcast channel pressure.",
+                            klineEvent.Kline.Symbol,
+                            klineEvent.Kline.Interval);
+                    }
+
                     await _strategyMarketEventDispatcher.DispatchAsync(
                         session,
                         klineEvent,
                         cancellationToken);
                 }
 
-                // Then process a batch of trades.
                 int tradeBatchCount = 0;
 
                 while (tradeBatchCount < maxTradesPerPass && tradeReader.TryRead(out TradeMarketEvent? tradeEvent))
@@ -170,13 +196,20 @@ namespace Cryoptix.Strategy.Processor
                     processedAny = true;
                     tradeBatchCount++;
 
+                    if (!tradeBroadcastWriter.TryWrite(tradeEvent.Trade))
+                    {
+                        _logger.LogDebug(
+                            "Dropped trade broadcast event for {Symbol} TradeId:{TradeId} due to broadcast channel pressure.",
+                            tradeEvent.Trade.Symbol,
+                            tradeEvent.Trade.Id);
+                    }
+
                     await _strategyMarketEventDispatcher.DispatchAsync(
                         session,
                         tradeEvent,
                         cancellationToken);
                 }
 
-                // Exit when both channels are done and empty.
                 if (klineReader.Completion.IsCompleted && tradeReader.Completion.IsCompleted)
                 {
                     bool hasRemainingKlines = klineReader.TryPeek(out _);
@@ -189,13 +222,11 @@ namespace Cryoptix.Strategy.Processor
                 if (processedAny)
                     continue;
 
-                // Wait for either channel to have data.
                 Task<bool> waitForKline = klineReader.WaitToReadAsync(cancellationToken).AsTask();
                 Task<bool> waitForTrade = tradeReader.WaitToReadAsync(cancellationToken).AsTask();
 
                 Task completed = await Task.WhenAny(waitForKline, waitForTrade);
 
-                // Propagate faults/cancellation.
                 if (completed == waitForKline)
                 {
                     await waitForKline;

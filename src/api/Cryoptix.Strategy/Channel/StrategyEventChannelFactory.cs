@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Strategy.Event;
-using System.Threading.Channels;
+using Cryoptix.Exchange.Models;
 
 namespace Cryoptix.Strategy.Channel
 {
@@ -10,12 +10,12 @@ namespace Cryoptix.Strategy.Channel
 
         public StrategyEventChannels Create()
         {
-            BoundedChannelFullMode tradeFullMode = _options.DropTradesWhenFull
-                ? BoundedChannelFullMode.DropOldest
-                : BoundedChannelFullMode.Wait;
+            System.Threading.Channels.BoundedChannelFullMode tradeFullMode = _options.DropTradesWhenFull
+                ? System.Threading.Channels.BoundedChannelFullMode.DropOldest
+                : System.Threading.Channels.BoundedChannelFullMode.Wait;
 
-            Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(
-                new BoundedChannelOptions(_options.KlineCapacity)
+            System.Threading.Channels.Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(
+                new System.Threading.Channels.BoundedChannelOptions(_options.KlineCapacity)
                 {
                     SingleReader = true,
                     SingleWriter = false,
@@ -23,8 +23,8 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = _options.KlineFullMode
                 });
 
-            Channel<TradeMarketEvent> tradeChannel = System.Threading.Channels.Channel.CreateBounded<TradeMarketEvent>(
-                new BoundedChannelOptions(_options.TradeCapacity)
+            System.Threading.Channels.Channel<TradeMarketEvent> tradeChannel = System.Threading.Channels.Channel.CreateBounded<TradeMarketEvent>(
+                new System.Threading.Channels.BoundedChannelOptions(_options.TradeCapacity)
                 {
                     SingleReader = true,
                     SingleWriter = false,
@@ -32,10 +32,30 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = tradeFullMode
                 });
 
+            System.Threading.Channels.Channel<Kline> klineBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Kline>(
+                new System.Threading.Channels.BoundedChannelOptions(_options.KlineBroadcastCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false,
+                    FullMode = _options.KlineBroadcastFullMode
+                });
+
+            System.Threading.Channels.Channel<Trade> tradeBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Trade>(
+                new System.Threading.Channels.BoundedChannelOptions(_options.TradeBroadcastCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false,
+                    FullMode = _options.TradeBroadcastFullMode
+                });
+
             return new StrategyEventChannels
             {
                 Klines = klineChannel,
-                Trades = tradeChannel
+                Trades = tradeChannel,
+                KlineBroadcasts = klineBroadcastChannel,
+                TradeBroadcasts = tradeBroadcastChannel
             };
         }
     }

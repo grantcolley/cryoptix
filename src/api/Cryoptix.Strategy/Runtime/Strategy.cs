@@ -27,5 +27,10 @@ namespace Cryoptix.Strategy.Runtime
         public int SubscriptionChannelTradeCapacity { get; set; } = 10000;
         public bool SubscriptionChannelDropTradesWhenFull { get; set; } = true;
         public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.Wait;
+
+        public int KlineBroadcastCapacity { get; init; } = 500;
+        public int TradeBroadcastCapacity { get; init; } = 10000;
+        public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
     }
 }
