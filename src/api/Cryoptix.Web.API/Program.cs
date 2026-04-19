@@ -3,6 +3,9 @@ using Binance.Net.Interfaces.Clients;
 using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Exchange.Models;
+using Cryoptix.Observer.Authorization;
+using Cryoptix.Observer.Notification;
+using Cryoptix.Observer.Subscription;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Catalog;
@@ -12,6 +15,7 @@ using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
 using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Notification;
 using Cryoptix.Strategy.Order;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Seeding;
@@ -23,6 +27,7 @@ using Cryoptix.Web.API.Config;
 using Cryoptix.Web.API.Constants;
 using Cryoptix.Web.API.Endpoints;
 using Cryoptix.Web.API.ExceptionHandling;
+using Cryoptix.Web.API.Notification;
 using Cryoptix.Web.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +47,11 @@ string klineCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS
 string tradeCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY);
 string dropTradesWhenFull = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL);
 string klineFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE);
+
+string klineBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_CAPACITY);
+string tradeBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_CAPACITY);
+string klineBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_FULL_MODE);
+string tradeBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_FULL_MODE);
 
 string domain = builder.Configuration[ConfigKeys.AUTH_DOMAIN] ?? throw new NullReferenceException(ConfigKeys.AUTH_DOMAIN);
 string audience = builder.Configuration[ConfigKeys.AUTH_AUDIENCE] ?? throw new NullReferenceException(ConfigKeys.AUTH_AUDIENCE);
@@ -112,17 +122,27 @@ Channel<StrategyCommand> strategyCommandChannel = Channel.CreateBounded<Strategy
         FullMode = BoundedChannelFullMode.Wait
     });
 
+builder.Services.AddSingleton(strategyCommandChannel);
+builder.Services.AddSingleton(strategyCommandChannel.Reader);
+builder.Services.AddSingleton(strategyCommandChannel.Writer);
 builder.Services.AddSingleton(new StrategyChannelOptions
 {
     KlineCapacity = Int32.Parse(klineCapacity),
     TradeCapacity = Int32.Parse(tradeCapacity),
     DropTradesWhenFull = bool.Parse(dropTradesWhenFull),
-    KlineFullMode = (BoundedChannelFullMode)int.Parse(klineFullMode)
+    KlineFullMode = (BoundedChannelFullMode)int.Parse(klineFullMode),
+    KlineBroadcastCapacity = Int32.Parse(klineBroadcastCapacity),
+    TradeBroadcastCapacity = Int32.Parse(tradeBroadcastCapacity),
+    KlineBroadcastFullMode = (BoundedChannelFullMode)int.Parse(klineBroadcastFullMode),
+    TradeBroadcastFullMode = (BoundedChannelFullMode)int.Parse(tradeBroadcastFullMode)
 });
 
-builder.Services.AddSingleton(strategyCommandChannel);
-builder.Services.AddSingleton(strategyCommandChannel.Reader);
-builder.Services.AddSingleton(strategyCommandChannel.Writer);
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserContextAccessor, Auth0UserContextAccessor>();
+builder.Services.AddSingleton<ISubscriptionManager, InMemorySubscriptionManager>();
+builder.Services.AddSingleton<INotificationBroadcaster, SignalRNotificationBroadcaster>();
+builder.Services.AddSingleton<INotificationDispatcher, NotificationDispatcher>();
+
 builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
@@ -140,6 +160,8 @@ builder.Services.AddSingleton<IOrderExecutionService, OrderExecutionService>();
 builder.Services.AddSingleton<IStrategySignalHandler, StrategySignalHandler>();
 builder.Services.AddSingleton<IStrategyMarketEventDispatcher, StrategyMarketEventDispatcher>();
 builder.Services.AddSingleton<IStrategyEventChannelFactory, StrategyEventChannelFactory>();
+builder.Services.AddSingleton<INotificationDispatcher, NotificationDispatcher>();
+builder.Services.AddSingleton<INotificationPump, NotificationPump>();
 builder.Services.AddSingleton<MovingAverageIndicatorEngine>();
 builder.Services.AddSingleton<MovingAverageSignalEngine>();
 builder.Services.AddSingleton<IStrategyEnginePair, MovingAverageStrategyEnginePair>();
