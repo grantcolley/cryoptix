@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Exchange.Exchanges
+﻿namespace Cryoptix.Market.Models
 {
     public enum Exchange
     {

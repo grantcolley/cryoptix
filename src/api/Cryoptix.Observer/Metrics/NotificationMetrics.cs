@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Models;
+﻿using Cryoptix.Market.Models;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 

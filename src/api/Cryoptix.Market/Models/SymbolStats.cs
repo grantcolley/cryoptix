@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class SymbolStats
     {
@@ -22,7 +22,7 @@
         public decimal PriceChange { get; set; }
         public TimeSpan Period { get; set; }
         public string? Symbol { get; set; }
-        public Exchanges.Exchange Exchange { get; set; }
+        public Market.Models.Exchange Exchange { get; set; }
         public long LastTradeId { get; set; }
         public long TotalTrades { get; set; }
     }

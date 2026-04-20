@@ -1,9 +1,9 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class Order
     {
         public string? AccountName { get; set; }
-        public Exchanges.Exchange Exchange { get; set; }
+        public Market.Models.Exchange Exchange { get; set; }
         public string? Symbol { get; set; }
         public DateTime CreatedTime { get; set; }
         public DateTime? TransactTime { get; set; }

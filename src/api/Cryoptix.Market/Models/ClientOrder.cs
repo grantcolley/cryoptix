@@ -1,8 +1,8 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class ClientOrder
     {
-        public Exchanges.Exchange Exchange { get; set; }
+        public Exchange Exchange { get; set; }
         public string? Symbol { get; set; }
         public OrderType Type { get; set; }
         public OrderSide Side { get; set; }

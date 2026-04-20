@@ -1,9 +1,9 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class Symbol
     {
         public string? Name { get; set; }
-        public Exchanges.Exchange Exchange { get; set; }
+        public Market.Models.Exchange Exchange { get; set; }
         public string? NameDelimiter { get; set; }
         public string? ExchangeSymbol { get; set; }
         public Asset? BaseAsset { get; set; }

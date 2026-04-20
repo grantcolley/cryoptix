@@ -3,6 +3,7 @@
     <Project Path="Exchanges/Cryoptix.Exchange.Binance/Cryoptix.Exchange.Binance.csproj" />
   </Folder>
   <Project Path="Cryoptix.Exchange/Cryoptix.Exchange.csproj" />
+  <Project Path="Cryoptix.Market/Cryoptix.Market.csproj" Id="05d95008-cc17-4c3e-80b1-1d6c9092358a" />
   <Project Path="Cryoptix.Observer/Cryoptix.Observer.csproj" Id="29b39763-0343-478b-a864-8a442e0d7013" />
   <Project Path="Cryoptix.Strategy/Cryoptix.Strategy.csproj" />
   <Project Path="Cryoptix.Web.API/Cryoptix.Web.API.csproj" />

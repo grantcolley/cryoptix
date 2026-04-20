@@ -1,10 +1,10 @@
-﻿using Cryoptix.Exchange.Models;
+﻿using Cryoptix.Market.Models;
 
 namespace Cryoptix.Exchange.Api
 {
     public interface IExchangeSubscriptionApi
     {
-        Exchanges.Exchange Exchange { get; }
+        Market.Models.Exchange Exchange { get; }
         Task<IAsyncDisposable> SubscribeToAccountUpdatesAsync(Credentials user, Action<AccountEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToKlineUpdatesAsync(string symbol, KlineInterval interval, Action<KlineEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToOrderBookAsync(string symbol, int? limit, Action<OrderBookEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);

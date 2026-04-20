@@ -1,8 +1,8 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class Credentials
     {
-        public Exchanges.Exchange Exchange { get; set; }
+        public Exchange Exchange { get; set; }
         public string? AccountName { get; set; }
         public string? ApiKey { get; set; }
         public string? ApiSecret { get; set; }

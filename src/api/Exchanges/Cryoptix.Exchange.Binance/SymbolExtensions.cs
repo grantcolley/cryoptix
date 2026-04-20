@@ -1,5 +1,5 @@
 ﻿using Binance.Net.Objects.Models.Spot;
-using Cryoptix.Exchange.Models;
+using Cryoptix.Market.Models;
 
 namespace Cryoptix.Exchange.Binance
 {
@@ -15,7 +15,7 @@ namespace Cryoptix.Exchange.Binance
             {
                 Name = $"{s.BaseAsset}{s.QuoteAsset}",
                 ExchangeSymbol = $"{s.BaseAsset}{s.QuoteAsset}",
-                Exchange = Exchange.Exchanges.Exchange.Binance,
+                Exchange = Market.Models.Exchange.Binance,
                 BaseAsset = new Asset { Symbol = s.BaseAsset, Precision = s.BaseAssetPrecision },
                 QuoteAsset = new Asset { Symbol = s.QuoteAsset, Precision = s.QuoteAssetPrecision },
                 OrderTypes = [OrderType.Limit, OrderType.Market, OrderType.StopLoss, OrderType.StopLossLimit, OrderType.TakeProfit, OrderType.TakeProfitLimit],

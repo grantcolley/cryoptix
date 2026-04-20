@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Exchange.Api;
-using Cryoptix.Exchange.Models;
+using Cryoptix.Market.Models;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Event;
 using Microsoft.Extensions.Logging;

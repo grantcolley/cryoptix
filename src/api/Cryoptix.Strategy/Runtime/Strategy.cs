@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Models;
+﻿using Cryoptix.Market.Models;
 using Cryoptix.Strategy.Processor;
 using System.Threading.Channels;
 
@@ -13,7 +13,7 @@ namespace Cryoptix.Strategy.Runtime
         public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
         public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.TradingFlow;
         public StrategyEngineType StrategyEngineType { get; set; } = StrategyEngineType.None;
-        public Exchange.Exchanges.Exchange Exchange { get; set; } = Cryoptix.Exchange.Exchanges.Exchange.Binance;
+        public Market.Models.Exchange Exchange { get; set; } = Market.Models.Exchange.Binance;
         public int FastPeriod { get; init; }
         public int SlowPeriod { get; init; }
 

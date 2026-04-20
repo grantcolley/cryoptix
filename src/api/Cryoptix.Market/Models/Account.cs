@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class Account
     {
@@ -8,7 +8,7 @@
         }
 
         public string? Name { get; set; }
-        public Exchanges.Exchange Exchange { get; set; }
+        public Exchange Exchange { get; set; }
         public DateTime Time { get; set; }
         public decimal BuyerFee { get; set; }
         public decimal SellerFee { get; set; }

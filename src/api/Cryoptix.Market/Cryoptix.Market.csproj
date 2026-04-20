@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Cryoptix.Market\Cryoptix.Market.csproj" />
-  </ItemGroup>
-
 </Project>

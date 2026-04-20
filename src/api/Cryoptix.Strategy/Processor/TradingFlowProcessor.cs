@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Models;
+﻿using Cryoptix.Market.Models;
 using Cryoptix.Observer.Metrics;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Cache;

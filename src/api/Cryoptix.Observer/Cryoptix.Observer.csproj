@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cryoptix.Exchange\Cryoptix.Exchange.csproj" />
+    <ProjectReference Include="..\Cryoptix.Market\Cryoptix.Market.csproj" />
   </ItemGroup>
 
 </Project>

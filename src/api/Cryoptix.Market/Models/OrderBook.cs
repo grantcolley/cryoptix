@@ -1,9 +1,9 @@
-﻿namespace Cryoptix.Exchange.Models
+﻿namespace Cryoptix.Market.Models
 {
     public class OrderBook
     {
         public string? Symbol { get; set; }
-        public Exchanges.Exchange Exchange { get; set; }
+        public Market.Models.Exchange Exchange { get; set; }
         public long LastUpdateId { get; set; }
         public DateTime UpdateTime { get; set; }
         public OrderBookPrice? BestAsk { get; set; }

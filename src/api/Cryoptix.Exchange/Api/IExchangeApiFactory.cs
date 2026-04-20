@@ -2,8 +2,8 @@
 {
     public interface IExchangeApiFactory
     {
-        ExchangeApi GetApi(Exchanges.Exchange exchange);
-        IExchangeRestApi GetRestApi(Exchanges.Exchange exchange);
-        IExchangeSubscriptionApi GetSubscriptionApi(Exchanges.Exchange exchange);
+        ExchangeApi GetApi(Market.Models.Exchange exchange);
+        IExchangeRestApi GetRestApi(Market.Models.Exchange exchange);
+        IExchangeSubscriptionApi GetSubscriptionApi(Market.Models.Exchange exchange);
     }
 }
