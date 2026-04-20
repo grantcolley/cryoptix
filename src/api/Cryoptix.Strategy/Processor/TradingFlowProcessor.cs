@@ -1,4 +1,5 @@
 ﻿using Cryoptix.Exchange.Models;
+using Cryoptix.Observer.Metrics;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Channel;
@@ -19,6 +20,7 @@ namespace Cryoptix.Strategy.Processor
         IStrategyMarketEventSubscriber strategyMarketEventSubscriber,
         IStrategyMarketEventDispatcher strategyMarketEventDispatcher,
         IStrategyEventChannelFactory strategyEventChannelFactory,
+        INotificationMetrics notificationMetrics,
         INotificationPump notificationPump) : IStrategyProcessor
     {
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
@@ -28,6 +30,7 @@ namespace Cryoptix.Strategy.Processor
         private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
         private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
         private readonly IStrategyEventChannelFactory _strategyEventChannelFactory = strategyEventChannelFactory;
+        private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationPump _notificationPump = notificationPump;
 
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
@@ -181,6 +184,10 @@ namespace Cryoptix.Strategy.Processor
                             "Dropped kline broadcast event for {Symbol} {Interval} due to broadcast channel pressure.",
                             klineEvent.Kline.Symbol,
                             klineEvent.Kline.Interval);
+
+                        _notificationMetrics.RecordBroadcastDropKline(
+                            klineEvent.Kline.Symbol,
+                            klineEvent.Kline.Interval);
                     }
 
                     await _strategyMarketEventDispatcher.DispatchAsync(
@@ -202,6 +209,8 @@ namespace Cryoptix.Strategy.Processor
                             "Dropped trade broadcast event for {Symbol} TradeId:{TradeId} due to broadcast channel pressure.",
                             tradeEvent.Trade.Symbol,
                             tradeEvent.Trade.Id);
+
+                        _notificationMetrics.RecordBroadcastDropTrade(tradeEvent.Trade.Symbol);
                     }
 
                     await _strategyMarketEventDispatcher.DispatchAsync(

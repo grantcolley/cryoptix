@@ -1,4 +1,5 @@
 ﻿using Cryoptix.Exchange.Models;
+using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Strategy.Channel;
 using Microsoft.Extensions.Logging;
@@ -8,9 +9,11 @@ namespace Cryoptix.Strategy.Notification
 {
     public sealed class NotificationPump(
         ILogger<NotificationPump> logger,
+        INotificationMetrics notificationMetrics,
         INotificationDispatcher notificationDispatcher) : INotificationPump
     {
         private readonly ILogger<NotificationPump> _logger = logger;
+        private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationDispatcher _notificationDispatcher = notificationDispatcher;
 
         public async Task RunAsync(
@@ -47,6 +50,8 @@ namespace Cryoptix.Strategy.Notification
                             "Failed to publish kline notification for {Symbol} {Interval}",
                             kline.Symbol,
                             kline.Interval);
+
+                        _notificationMetrics.RecordPublishFailureKline(kline.Symbol, kline.Interval, ex);
                     }
                 }
 
@@ -72,6 +77,8 @@ namespace Cryoptix.Strategy.Notification
                             "Failed to publish trade notification for {Symbol} TradeId:{TradeId}",
                             trade.Symbol,
                             trade.Id);
+
+                        _notificationMetrics.RecordPublishFailureTrade(trade.Symbol, ex);
                     }
                 }
 

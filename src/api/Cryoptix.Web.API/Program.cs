@@ -4,6 +4,7 @@ using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Exchange.Models;
 using Cryoptix.Observer.Authorization;
+using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Observer.Subscription;
 using Cryoptix.Strategy.Agent;
@@ -142,6 +143,7 @@ builder.Services.AddSingleton<IUserContextAccessor, Auth0UserContextAccessor>();
 builder.Services.AddSingleton<ISubscriptionManager, InMemorySubscriptionManager>();
 builder.Services.AddSingleton<INotificationBroadcaster, SignalRNotificationBroadcaster>();
 builder.Services.AddSingleton<INotificationDispatcher, NotificationDispatcher>();
+builder.Services.AddSingleton<INotificationMetrics, NotificationMetrics>();
 
 builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
