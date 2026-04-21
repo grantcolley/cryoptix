@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using Cryoptix.Client.Console.Test;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -78,12 +79,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-// Model
-public sealed class NotificationEnvelope
-{
-    public string MessageType { get; set; } = default!;
-    public DateTime TimestampUtc { get; set; }
-    public string Payload { get; set; } = default!;
-}
-
