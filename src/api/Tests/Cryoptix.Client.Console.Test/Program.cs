@@ -1,79 +1,33 @@
 ﻿using Cryoptix.Client.Console.Test;
-using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
 Console.WriteLine("Cryoptix.Client.Console.Test");
 Console.WriteLine();
 
-var hubUrl = "https://localhost:7040/api/strategy/subscribe";
-
-// Paste your Auth0 JWT here
-var bearerToken = "";
+var builder = Host.CreateApplicationBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
+    .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
-var connection = new HubConnectionBuilder()
-    .WithUrl(hubUrl, options =>
-    {
-        options.AccessTokenProvider = () => Task.FromResult(bearerToken)!;
-    })
-    .ConfigureLogging(logging =>
-    {
-        logging.ClearProviders();
-        logging.AddSerilog();
-        logging.SetMinimumLevel(LogLevel.Debug);
-    })
-    .WithAutomaticReconnect()
-    .Build();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog();
 
-// Strongly typed handler (recommended)
-connection.On<NotificationEnvelope>("ReceiveNotification", message =>
-{
-    Log.Information("Received notification {MessageType} at {Timestamp}",
-        message.MessageType,
-        message.TimestampUtc);
+builder.Services.AddHostedService<NotificationClientWorker>();
 
-    Log.Debug("Payload: {Payload}", message.Payload);
-});
-
-// Connection lifecycle logging
-connection.Reconnecting += error =>
-{
-    Log.Warning(error, "Reconnecting...");
-    return Task.CompletedTask;
-};
-
-connection.Reconnected += connectionId =>
-{
-    Log.Information("Reconnected. ConnectionId: {ConnectionId}", connectionId);
-    return Task.CompletedTask;
-};
-
-connection.Closed += async error =>
-{
-    Log.Error(error, "Connection closed");
-
-    await Task.Delay(2000);
-    await connection.StartAsync();
-};
+var host = builder.Build();
 
 try
 {
-    Log.Information("Connecting to {HubUrl}", hubUrl);
-
-    await connection.StartAsync();
-
-    Log.Information("Connected. ConnectionId: {ConnectionId}", connection.ConnectionId);
-
-    await Task.Delay(Timeout.Infinite);
+    Log.Information("Environment: {EnvironmentName}", builder.Environment.EnvironmentName);
+    await host.RunAsync();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Connection failed");
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
 finally
 {
