@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Market.Models
+﻿namespace Cryoptix.Market.Data
 {
     public enum OrderSide
     {

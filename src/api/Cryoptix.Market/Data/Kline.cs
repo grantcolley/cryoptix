@@ -1,9 +1,9 @@
-﻿namespace Cryoptix.Market.Models
+﻿namespace Cryoptix.Market.Data
 {
     public class Kline
     {
         public string? Symbol { get; set; }
-        public Market.Models.Exchange Exchange { get; set; }
+        public Exchange Exchange { get; set; }
         public KlineInterval Interval { get; set; }
         public DateTime OpenTime { get; set; }
         public decimal Open { get; set; }

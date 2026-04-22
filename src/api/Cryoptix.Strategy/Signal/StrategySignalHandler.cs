@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Engine;

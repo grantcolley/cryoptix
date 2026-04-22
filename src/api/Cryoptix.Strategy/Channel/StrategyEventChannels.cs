@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Event;
 using System.Threading.Channels;
 

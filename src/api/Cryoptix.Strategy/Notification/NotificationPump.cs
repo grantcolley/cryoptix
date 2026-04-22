@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Data;
 using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Strategy.Channel;

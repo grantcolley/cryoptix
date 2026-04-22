@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Exchange.Api;
-using Cryoptix.Market.Models;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Strategy.Agent
 {

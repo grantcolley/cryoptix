@@ -2,7 +2,7 @@ using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Binance;
-using Cryoptix.Market.Models;
+using Cryoptix.Market.Data;
 using Cryoptix.Observer.Authorization;
 using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;

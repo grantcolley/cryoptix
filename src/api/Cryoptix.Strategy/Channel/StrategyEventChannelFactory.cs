@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Strategy.Event;
-using Cryoptix.Market.Models;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Strategy.Channel
 {

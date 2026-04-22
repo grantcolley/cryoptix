@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Exchange.Api;
-using Cryoptix.Market.Models;
+using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Snapshot;
 

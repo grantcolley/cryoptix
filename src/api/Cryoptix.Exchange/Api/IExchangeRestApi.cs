@@ -1,10 +1,10 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Data;
 
 namespace Cryoptix.Exchange.Api
 {
     public interface IExchangeRestApi: IDisposable
     {
-        Market.Models.Exchange Exchange { get; }
+        Market.Data.Exchange Exchange { get; }
         Task<Account> GetAccountInfoAsync(CancellationToken cancellationToken = default);
         Task<Order> PlaceOrderAsync(ClientOrder clientOrder, int? recWindow, CancellationToken cancellationToken = default);
         Task<List<Order>> GetOpenOrdersAsync(string symbol, int? recWindow, CancellationToken cancellationToken = default);

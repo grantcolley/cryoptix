@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 using Microsoft.Extensions.Logging;
