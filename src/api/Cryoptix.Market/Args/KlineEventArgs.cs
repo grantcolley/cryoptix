@@ -1,4 +1,6 @@
-﻿namespace Cryoptix.Market.Models
+﻿using Cryoptix.Market.Models;
+
+namespace Cryoptix.Market.Args
 {
     public class KlineEventArgs
     {

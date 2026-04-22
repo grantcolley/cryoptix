@@ -3,6 +3,7 @@ using Binance.Net.Interfaces;
 using Binance.Net.Objects.Models.Spot.Socket;
 using Binance.Net.SymbolOrderBooks;
 using Cryoptix.Exchange.Api;
+using Cryoptix.Market.Args;
 using Cryoptix.Market.Models;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Interfaces;

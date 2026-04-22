@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Subscription
 {
+    using Cryoptix.Market.Args;
     using System.Threading.Channels;
 
     public sealed class StrategyMarketEventSubscriber(

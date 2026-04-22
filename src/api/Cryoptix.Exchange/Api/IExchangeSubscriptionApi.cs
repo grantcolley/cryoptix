@@ -1,4 +1,5 @@
-﻿using Cryoptix.Market.Models;
+﻿using Cryoptix.Market.Args;
+using Cryoptix.Market.Models;
 
 namespace Cryoptix.Exchange.Api
 {
