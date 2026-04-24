@@ -5,6 +5,7 @@
         None,
         MarketDataSnapshot,
         Kline,
-        Trade
+        Trade,
+        StrategyUpdated
     }
 }

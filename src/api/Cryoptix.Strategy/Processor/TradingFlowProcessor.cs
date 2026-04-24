@@ -21,6 +21,7 @@ namespace Cryoptix.Strategy.Processor
         IStrategyMarketEventDispatcher strategyMarketEventDispatcher,
         IStrategyEventChannelFactory strategyEventChannelFactory,
         ITradingFlowSessionAccessor tradingFlowSessionAccessor,
+        IStrategyStatusNotifier strategyStatusNotifier,
         INotificationMetrics notificationMetrics,
         INotificationPump notificationPump) : IStrategyProcessor
     {
@@ -32,6 +33,7 @@ namespace Cryoptix.Strategy.Processor
         private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
         private readonly IStrategyEventChannelFactory _strategyEventChannelFactory = strategyEventChannelFactory;
         private readonly ITradingFlowSessionAccessor _tradingFlowSessionAccessor = tradingFlowSessionAccessor;
+        private readonly IStrategyStatusNotifier _strategyStatusNotifier = strategyStatusNotifier;
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationPump _notificationPump = notificationPump;
 
@@ -140,6 +142,10 @@ namespace Cryoptix.Strategy.Processor
                     _logger.LogInformation(
                         "Applied strategy update for {Symbol}. Subscriptions unchanged.",
                         strategyProcessorSession.Strategy.Symbol);
+
+                    await _strategyStatusNotifier.NotifyUpdatedAsync(
+                        strategyProcessorSession.Strategy,
+                        cancellationToken);
                 }
             }
             finally

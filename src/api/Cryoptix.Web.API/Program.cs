@@ -164,6 +164,7 @@ builder.Services.AddSingleton<IStrategyClock, SystemStrategyClock>();
 builder.Services.AddSingleton<IStrategyMarketSeeder, StrategyMarketSeeder>();
 builder.Services.AddSingleton<ITradingFlowSessionAccessor, TradingFlowSessionAccessor>();
 builder.Services.AddSingleton<IMarketDataSnapshotProvider, MarketDataSnapshotProvider>();
+builder.Services.AddSingleton<IStrategyStatusNotifier, StrategyStatusNotifier>();
 builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
 builder.Services.AddSingleton<IStrategyAnalysisContextFactory, StrategyAnalysisContextFactory>();
 builder.Services.AddSingleton<IOrderSizingService, OrderSizingService>();
