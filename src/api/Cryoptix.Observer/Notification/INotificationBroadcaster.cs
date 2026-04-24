@@ -2,9 +2,9 @@
 {
     public interface INotificationBroadcaster
     {
-        Task BroadcastAsync(
-            string messageType,
-            string payloadJson,
+        Task BroadcastAsync<TPayload>(
+            MessageType messageType,
+            TPayload payload,
             CancellationToken cancellationToken = default);
     }
 }

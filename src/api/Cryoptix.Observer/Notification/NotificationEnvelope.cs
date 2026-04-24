@@ -2,8 +2,8 @@
 {
     public sealed class NotificationEnvelope
     {
-        public string MessageType { get; init; } = default!;
+        public MessageType MessageType { get; init; }
         public DateTime TimestampUtc { get; init; }
-        public string Payload { get; init; } = default!;
+        public object? Payload { get; init; }
     }
 }

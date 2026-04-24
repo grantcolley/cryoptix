@@ -4,72 +4,61 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Cryoptix.Web.API.Notification
 {
-    public sealed class SignalRNotificationBroadcaster : INotificationBroadcaster
+    public sealed class SignalRNotificationBroadcaster(
+        ISubscriptionManager subscriptionManager,
+        IHubContext<NotificationHub> hubContext,
+        ILogger<SignalRNotificationBroadcaster> logger) : INotificationBroadcaster
     {
-        private const string ClientMethodName = "ReceiveNotification";
+        private readonly ISubscriptionManager _subscriptionManager = subscriptionManager;
+        private readonly IHubContext<NotificationHub> _hubContext = hubContext;
+        private readonly ILogger<SignalRNotificationBroadcaster> _logger = logger;
 
-        private readonly ISubscriptionManager _subscriptionManager;
-        private readonly IHubContext<NotificationHub> _hubContext;
-        private readonly ILogger<SignalRNotificationBroadcaster> _logger;
-
-        public SignalRNotificationBroadcaster(
-            ISubscriptionManager subscriptionManager,
-            IHubContext<NotificationHub> hubContext,
-            ILogger<SignalRNotificationBroadcaster> logger)
-        {
-            _subscriptionManager = subscriptionManager;
-            _hubContext = hubContext;
-            _logger = logger;
-        }
-
-        public async Task BroadcastAsync(
-            string messageType,
-            string payloadJson,
+        public async Task BroadcastAsync<TPayload>(
+            MessageType messageType,
+            TPayload payload,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(messageType))
-            {
-                throw new ArgumentException("Message type is required.", nameof(messageType));
-            }
+            if (messageType == MessageType.None)
+                throw new ArgumentException("MessageType.None is not valid for notifications.", nameof(messageType));
 
-            if (string.IsNullOrWhiteSpace(payloadJson))
-            {
-                throw new ArgumentException("Payload JSON is required.", nameof(payloadJson));
-            }
+            ArgumentNullException.ThrowIfNull(payload);
 
-            var envelope = new NotificationEnvelope
+            NotificationEnvelope envelope = new()
             {
                 MessageType = messageType,
                 TimestampUtc = DateTime.UtcNow,
-                Payload = payloadJson
+                Payload = payload
             };
 
-            var subscribers = await _subscriptionManager.GetAllAsync(cancellationToken);
+            IReadOnlyCollection<SubscriberConnection> subscribers =
+                await _subscriptionManager.GetAllAsync(cancellationToken);
 
             if (subscribers.Count == 0)
             {
-                _logger.LogDebug("No subscribers registered. Notification skipped.");
                 return;
             }
 
-            var connectionIds = subscribers
+            string[] connectionIds = [.. subscribers
                 .Select(x => x.ConnectionId)
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToArray();
+                .Where(x => !string.IsNullOrWhiteSpace(x))];
+
+            if (connectionIds.Length == 0)
+            {
+                return;
+            }
 
             try
             {
                 await _hubContext.Clients
                     .Clients(connectionIds)
-                    .SendAsync(ClientMethodName, envelope, cancellationToken);
+                    .SendAsync("ReceiveNotification", envelope, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "Failed broadcasting notification. MessageType={MessageType}. Payload={payloadJson}",
-                    envelope.MessageType,
-                    payloadJson);
+                    "Failed broadcasting notification. MessageType={MessageType}",
+                    envelope.MessageType);
 
                 throw;
             }

@@ -4,6 +4,6 @@
     {
         public string MessageType { get; set; } = default!;
         public DateTime TimestampUtc { get; set; }
-        public string Payload { get; set; } = default!;
+        public object? Payload { get; set; } = default!;
     }
 }

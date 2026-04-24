@@ -3,25 +3,28 @@ using Cryoptix.Observer.Notification;
 
 namespace Cryoptix.Strategy.Notification
 {
-    public sealed class NotificationDispatcher(INotificationBroadcaster notificationBroadcaster) : INotificationDispatcher
+    public sealed class NotificationDispatcher(
+        INotificationBroadcaster notificationBroadcaster) : INotificationDispatcher
     {
         private readonly INotificationBroadcaster _notificationBroadcaster = notificationBroadcaster;
 
         public Task PublishAsync(Kline kline, CancellationToken cancellationToken = default)
         {
-            string payload = System.Text.Json.JsonSerializer.Serialize(kline);
+            ArgumentNullException.ThrowIfNull(kline);
+
             return _notificationBroadcaster.BroadcastAsync(
-                "Kline",
-                payload,
+                MessageType.Kline,
+                kline,
                 cancellationToken);
         }
 
         public Task PublishAsync(Trade trade, CancellationToken cancellationToken = default)
         {
-            string payload = System.Text.Json.JsonSerializer.Serialize(trade);
+            ArgumentNullException.ThrowIfNull(trade);
+
             return _notificationBroadcaster.BroadcastAsync(
-                "Trade",
-                payload,
+                MessageType.Trade,
+                trade,
                 cancellationToken);
         }
     }

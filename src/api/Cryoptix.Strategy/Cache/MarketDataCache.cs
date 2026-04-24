@@ -6,6 +6,7 @@ namespace Cryoptix.Strategy.Cache
     {
         private readonly int _maxTradesPerSymbol;
         private readonly int _maxKlinesPerSeries;
+        private readonly object _gate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
@@ -24,94 +25,110 @@ namespace Cryoptix.Strategy.Cache
         {
             ArgumentNullException.ThrowIfNull(kline);
 
-            string symbol = NormalizeSymbol(kline.Symbol!);
-            var key = (symbol, kline.Interval);
-
-            if (!_klines.TryGetValue(key, out var series))
+            lock (_gate)
             {
-                series = [];
-                _klines[key] = series;
-            }
+                string symbol = NormalizeSymbol(kline.Symbol!);
+                var key = (symbol, kline.Interval);
 
-            bool existed = series.TryGetValue(kline.OpenTime, out Kline? existing);
-            series[kline.OpenTime] = kline;
+                if (!_klines.TryGetValue(key, out var series))
+                {
+                    series = [];
+                    _klines[key] = series;
+                }
 
-            while (series.Count > _maxKlinesPerSeries)
-            {
-                DateTime oldestKey = series.First().Key;
-                series.Remove(oldestKey);
-            }
+                bool existed = series.TryGetValue(kline.OpenTime, out Kline? existing);
+                series[kline.OpenTime] = CloneKline(kline);
 
-            if (!existed)
-            {
+                while (series.Count > _maxKlinesPerSeries)
+                {
+                    DateTime oldestKey = series.First().Key;
+                    series.Remove(oldestKey);
+                }
+
+                if (!existed)
+                {
+                    return new KlineUpsertResult(
+                        inserted: true,
+                        updated: false,
+                        previous: null,
+                        current: CloneKline(kline));
+                }
+
+                bool updated = !AreEquivalent(existing!, kline);
+
                 return new KlineUpsertResult(
-                    inserted: true,
-                    updated: false,
-                    previous: null,
-                    current: kline);
+                    inserted: false,
+                    updated: updated,
+                    previous: existing == null ? null : CloneKline(existing),
+                    current: CloneKline(kline));
             }
-
-            bool updated = !AreEquivalent(existing!, kline);
-
-            return new KlineUpsertResult(
-                inserted: false,
-                updated: updated,
-                previous: existing,
-                current: kline);
         }
 
         public bool AddTrade(Trade trade)
         {
             ArgumentNullException.ThrowIfNull(trade);
 
-            string symbol = NormalizeSymbol(trade.Symbol!);
-
-            if (!_trades.TryGetValue(symbol, out var trades))
+            lock (_gate)
             {
-                trades = [];
-                _trades[symbol] = trades;
+                string symbol = NormalizeSymbol(trade.Symbol!);
+
+                if (!_trades.TryGetValue(symbol, out var trades))
+                {
+                    trades = [];
+                    _trades[symbol] = trades;
+                }
+
+                if (!_tradeIds.TryGetValue(symbol, out var tradeIds))
+                {
+                    tradeIds = [];
+                    _tradeIds[symbol] = tradeIds;
+                }
+
+                if (!tradeIds.Add(trade.Id))
+                    return false;
+
+                trades.AddLast(CloneTrade(trade));
+
+                while (trades.Count > _maxTradesPerSymbol)
+                {
+                    LinkedListNode<Trade>? oldest = trades.First;
+                    if (oldest == null)
+                        break;
+
+                    trades.RemoveFirst();
+                    tradeIds.Remove(oldest.Value.Id);
+                }
+
+                return true;
             }
-
-            if (!_tradeIds.TryGetValue(symbol, out var tradeIds))
-            {
-                tradeIds = [];
-                _tradeIds[symbol] = tradeIds;
-            }
-
-            if (!tradeIds.Add(trade.Id))
-                return false;
-
-            trades.AddLast(trade);
-
-            while (trades.Count > _maxTradesPerSymbol)
-            {
-                LinkedListNode<Trade>? oldest = trades.First;
-                if (oldest == null)
-                    break;
-
-                trades.RemoveFirst();
-                tradeIds.Remove(oldest.Value.Id);
-            }
-
-            return true;
         }
 
         public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
         {
-            var key = (NormalizeSymbol(symbol), interval);
-            if (!_klines.TryGetValue(key, out var series))
-                return [];
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
 
-            return [.. series.Values];
+            lock (_gate)
+            {
+                var key = (NormalizeSymbol(symbol), interval);
+                if (!_klines.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneKline)];
+            }
         }
 
         public IReadOnlyList<Trade> GetTrades(string symbol)
         {
-            symbol = NormalizeSymbol(symbol);
-            if (!_trades.TryGetValue(symbol, out var trades))
-                return [];
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
 
-            return [.. trades];
+            lock (_gate)
+            {
+                symbol = NormalizeSymbol(symbol);
+                if (!_trades.TryGetValue(symbol, out var trades))
+                    return [];
+
+                return [.. trades.Select(CloneTrade)];
+            }
         }
 
         private static string NormalizeSymbol(string symbol) =>
@@ -133,6 +150,42 @@ namespace Cryoptix.Strategy.Cache
                 && x.TakerBuyQuoteAssetVolume == y.TakerBuyQuoteAssetVolume
                 && x.TakerBuyBaseAssetVolume == y.TakerBuyBaseAssetVolume
                 && x.Final == y.Final;
+        }
+
+        private static Kline CloneKline(Kline source)
+        {
+            return new Kline
+            {
+                Symbol = source.Symbol,
+                Exchange = source.Exchange,
+                Interval = source.Interval,
+                OpenTime = source.OpenTime,
+                CloseTime = source.CloseTime,
+                Open = source.Open,
+                High = source.High,
+                Low = source.Low,
+                Close = source.Close,
+                Volume = source.Volume,
+                NumberOfTrades = source.NumberOfTrades,
+                QuoteAssetVolume = source.QuoteAssetVolume,
+                TakerBuyQuoteAssetVolume = source.TakerBuyQuoteAssetVolume,
+                TakerBuyBaseAssetVolume = source.TakerBuyBaseAssetVolume,
+                Final = source.Final
+            };
+        }
+
+        private static Trade CloneTrade(Trade source)
+        {
+            return new Trade
+            {
+                Symbol = source.Symbol,
+                Exchange = source.Exchange,
+                Id = source.Id,
+                Time = source.Time,
+                Price = source.Price,
+                BaseQuantity = source.BaseQuantity,
+                QuoteQuantity = source.QuoteQuantity
+            };
         }
     }
 }

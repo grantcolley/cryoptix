@@ -20,6 +20,7 @@ namespace Cryoptix.Strategy.Processor
         IStrategyMarketEventSubscriber strategyMarketEventSubscriber,
         IStrategyMarketEventDispatcher strategyMarketEventDispatcher,
         IStrategyEventChannelFactory strategyEventChannelFactory,
+        ITradingFlowSessionAccessor tradingFlowSessionAccessor,
         INotificationMetrics notificationMetrics,
         INotificationPump notificationPump) : IStrategyProcessor
     {
@@ -30,6 +31,7 @@ namespace Cryoptix.Strategy.Processor
         private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
         private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
         private readonly IStrategyEventChannelFactory _strategyEventChannelFactory = strategyEventChannelFactory;
+        private readonly ITradingFlowSessionAccessor _tradingFlowSessionAccessor = tradingFlowSessionAccessor;
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationPump _notificationPump = notificationPump;
 
@@ -59,6 +61,8 @@ namespace Cryoptix.Strategy.Processor
                     maxTradesPerSymbol: initialStrategy.CacheMaxTradesPerSymbol,
                     maxKlinesPerSeries: initialStrategy.CacheMaxKlinesPerSeries)
             };
+
+            _tradingFlowSessionAccessor.SetCurrent(strategyProcessorSession);
 
             StrategyEventChannels channels = _strategyEventChannelFactory.Create();
 
@@ -140,6 +144,8 @@ namespace Cryoptix.Strategy.Processor
             }
             finally
             {
+                _tradingFlowSessionAccessor.ClearCurrent();
+
                 if (strategyMarketEventSubscriptions != null)
                 {
                     await strategyMarketEventSubscriptions.DisposeAsync();

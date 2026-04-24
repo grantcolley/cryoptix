@@ -9,6 +9,7 @@ using Cryoptix.Observer.Notification;
 using Cryoptix.Observer.Subscription;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Clock;
@@ -138,7 +139,13 @@ builder.Services.AddSingleton(new StrategyChannelOptions
     TradeBroadcastFullMode = (BoundedChannelFullMode)int.Parse(tradeBroadcastFullMode)
 });
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 builder.Services.AddSingleton<IUserContextAccessor, Auth0UserContextAccessor>();
 builder.Services.AddSingleton<ISubscriptionManager, InMemorySubscriptionManager>();
 builder.Services.AddSingleton<INotificationBroadcaster, SignalRNotificationBroadcaster>();
@@ -155,6 +162,8 @@ builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
 builder.Services.AddSingleton<IStrategyClock, SystemStrategyClock>();
 builder.Services.AddSingleton<IStrategyMarketSeeder, StrategyMarketSeeder>();
+builder.Services.AddSingleton<ITradingFlowSessionAccessor, TradingFlowSessionAccessor>();
+builder.Services.AddSingleton<IMarketDataSnapshotProvider, MarketDataSnapshotProvider>();
 builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
 builder.Services.AddSingleton<IStrategyAnalysisContextFactory, StrategyAnalysisContextFactory>();
 builder.Services.AddSingleton<IOrderSizingService, OrderSizingService>();

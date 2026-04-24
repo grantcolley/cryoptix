@@ -49,7 +49,14 @@ namespace Cryoptix.Client.Console.Test
                     message.MessageType,
                     message.TimestampUtc);
 
-                _logger.LogInformation("Payload: {Payload}", message.Payload);
+                string? payload = message.Payload != null
+                    ? System.Text.Json.JsonSerializer.Serialize(message.Payload, new System.Text.Json.JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    })
+                    : null;
+
+                _logger.LogInformation("Payload: {Payload}", payload);
             });
 
             _connection.Reconnecting += error =>
