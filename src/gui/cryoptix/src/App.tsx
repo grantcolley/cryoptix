@@ -1,10 +1,16 @@
 import "./App.css";
+import { CryoptixLogo } from "./components/CryoptixLogo";
 
 function App() {
   return (
-    <h1 className="text-3xl font-bold text-blue-600">
-      Tailwind is installed and configured!
-    </h1>
+    <>
+      {/* <CryoptixLogo variant="logo" />
+      <CryoptixLogo variant="icon" width={48} />
+      <CryoptixLogo variant="wordmark" width={180} /> */}
+      <CryoptixLogo variant="logo" theme="auto" />
+      {/* <CryoptixLogo variant="logo" theme="light" />
+      <CryoptixLogo variant="logo" theme="dark" /> */}
+    </>
   );
 }
 

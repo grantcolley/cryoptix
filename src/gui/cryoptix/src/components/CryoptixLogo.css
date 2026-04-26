@@ -1,0 +1,20 @@
+.cryoptix-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cryoptix-logo--auto,
+.cryoptix-logo--light {
+  color: #242424;
+}
+
+.cryoptix-logo--dark {
+  color: #e7e7e7;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cryoptix-logo--auto {
+    color: #e7e7e7;
+  }
+}
