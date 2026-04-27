@@ -1,17 +1,29 @@
-import "./App.css";
-import { CryoptixLogo } from "./components/CryoptixLogo";
+import { Outlet } from "react-router-dom";
+import { AppSidebar } from "@/features/sidebar/app-sidebar";
+import { AppSidebarHeader } from "@/features/sidebar/app-sidebar-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-function App() {
+const App = () => {
   return (
-    <>
-      {/* <CryoptixLogo variant="logo" />
-      <CryoptixLogo variant="icon" width={48} />
-      <CryoptixLogo variant="wordmark" width={180} /> */}
-      <CryoptixLogo variant="logo" theme="auto" />
-      {/* <CryoptixLogo variant="logo" theme="light" />
-      <CryoptixLogo variant="logo" theme="dark" /> */}
-    </>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <AppSidebarHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <Outlet />
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
-}
+};
 
 export default App;
