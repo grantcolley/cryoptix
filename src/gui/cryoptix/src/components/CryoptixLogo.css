@@ -2,19 +2,22 @@
   display: block;
   width: 100%;
   height: auto;
+  color: #4a4a4a;
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
 }
 
 .cryoptix-logo--auto,
 .cryoptix-logo--light {
-  color: #242424;
+  color: #4a4a4a;
 }
 
 .cryoptix-logo--dark {
-  color: #e7e7e7;
+  color: #c9c9c9;
 }
 
 @media (prefers-color-scheme: dark) {
   .cryoptix-logo--auto {
-    color: #e7e7e7;
+    color: #c9c9c9;
   }
 }
