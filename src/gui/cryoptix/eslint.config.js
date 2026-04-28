@@ -6,15 +6,12 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
-  // Ignore build output
   {
     ignores: ["dist", "build", "node_modules"],
   },
 
-  // Base JS rules
   js.configs.recommended,
 
-  // TypeScript (type-aware)
   ...tseslint.configs.recommendedTypeChecked,
 
   {
@@ -40,13 +37,27 @@ export default tseslint.config(
     },
 
     rules: {
-      // React hooks rules
       ...reactHooks.configs.recommended.rules,
 
-      // Vite fast refresh rule
       "react-refresh/only-export-components": "warn",
+    },
+  },
 
-      // Enforce Icon wrapper (no direct lucide usage)
+  // shadcn/ui files intentionally export helpers/constants alongside components.
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
+
+  // Restrict direct lucide-react imports in app code only.
+  // Allows shadcn/ui components and your central icon registry.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**/*.{ts,tsx}", "src/lib/icons.ts"],
+
+    rules: {
       "@typescript-eslint/no-restricted-imports": [
         "error",
         {
@@ -54,7 +65,7 @@ export default tseslint.config(
             {
               name: "lucide-react",
               message:
-                "Do not import icons directly from lucide-react. Use '@/components/ui/icon' instead.",
+                "Do not import icons directly from lucide-react. Use '@/components/ui/icon' or '@/lib/icons' instead.",
               allowTypeImports: true,
             },
           ],
@@ -63,6 +74,5 @@ export default tseslint.config(
     },
   },
 
-  // Disable formatting conflicts with Prettier
   prettier
 );
