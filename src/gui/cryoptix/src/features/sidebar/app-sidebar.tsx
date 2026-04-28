@@ -24,11 +24,9 @@ export function AppSidebar({ ...props }: Props) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link to="/">
-                {/* <CryoptixLogo variant="icon" className="w-full max-w-[48px]" /> */}
                 <CryoptixLogo
                   variant="wordmark"
                   className="h-4 w-auto max-h-[32px]"
-                  // className="w-full max-w-[128px]"
                 />
               </Link>
             </SidebarMenuButton>
