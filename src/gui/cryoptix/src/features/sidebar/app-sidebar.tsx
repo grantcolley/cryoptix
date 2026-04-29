@@ -26,7 +26,7 @@ function SidebarLogo() {
     <Link to="/" className="flex w-full items-center justify-center">
       <CryoptixLogo
         variant={collapsed ? "icon" : "wordmark"}
-        className={collapsed ? "h-6 w-6 shrink-0" : "h-4 w-auto max-h-[32px]"}
+        className="h-4 w-auto max-h-[32px]"
       />
     </Link>
   );
@@ -41,7 +41,7 @@ function SidebarFooterText() {
       className={
         collapsed
           ? "absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground writing-vertical rotate-180"
-          : "text-sm text-muted-foreground"
+          : "text-sm text-muted-foreground flex h-full items-end justify-center"
       }
     >
       &copy; 2026 Cryoptix
