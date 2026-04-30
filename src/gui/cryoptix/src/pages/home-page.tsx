@@ -1,4 +1,4 @@
-import { CryoptixLogo } from "@/components/CryoptixLogo";
+import { CryoptixLogo } from "@/components/icon/CryoptixLogo";
 
 export function HomePage() {
   return (

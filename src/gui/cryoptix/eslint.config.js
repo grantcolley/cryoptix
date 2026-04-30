@@ -55,7 +55,7 @@ export default tseslint.config(
   // Allows shadcn/ui components and your central icon registry.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/components/ui/**/*.{ts,tsx}", "src/lib/icons.ts"],
+    ignores: ["src/components/icon/**/*.{ts,tsx}"],
 
     rules: {
       "@typescript-eslint/no-restricted-imports": [
@@ -65,7 +65,7 @@ export default tseslint.config(
             {
               name: "lucide-react",
               message:
-                "Do not import icons directly from lucide-react. Use '@/components/ui/icon' or '@/lib/icons' instead.",
+                "Do not import icons directly from lucide-react. Use '@/components/icon' instead.",
               allowTypeImports: true,
             },
           ],

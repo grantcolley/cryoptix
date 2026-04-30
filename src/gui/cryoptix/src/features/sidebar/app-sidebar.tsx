@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { CryoptixLogo } from "@/components/CryoptixLogo";
+import { CryoptixLogo } from "@/components/icon/CryoptixLogo";
 import type { Module } from "@/routing/module";
 import { AppSidebarContent } from "./app-sidebar-content";
 import {

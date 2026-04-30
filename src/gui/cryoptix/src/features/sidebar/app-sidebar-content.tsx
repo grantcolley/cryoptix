@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { Module } from "@/routing/module";
-import { Icon } from "@/components/ui/icon";
-import type { IconComponent } from "@/lib/icons";
-import { getIcon } from "@/lib/icons";
-import { icons } from "@/lib/icons";
+import { Icon } from "@/components/icon/icon";
+import type { IconComponent } from "@/components/icon/icons";
+import { getIcon } from "@/components/icon/icons";
+import { icons } from "@/components/icon/icons";
 import {
   Collapsible,
   CollapsibleContent,

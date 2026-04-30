@@ -1,6 +1,6 @@
 import { useTheme } from "@/providers/theme-provider";
-import { Icon } from "@/components/ui/icon";
-import { icons } from "@/lib/icons";
+import { Icon } from "@/components/icon/icon";
+import { icons } from "@/components/icon/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

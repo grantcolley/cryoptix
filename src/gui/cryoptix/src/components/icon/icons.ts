@@ -1,16 +1,18 @@
 import {
-  Check,
-  ChevronRight,
+  Boxes, // missing module icon
+  ChartArea,
   ChartCandlestick,
   ChartLine,
+  Check,
+  ChevronRight,
   CircleHelp, // general fallback
   FileQuestion, // missing page icon
   Folder, // missing category icon
-  Boxes, // missing module icon
+  LogIn,
+  LogOut,
   Moon,
   Sun,
   type LucideProps,
-  ChartArea,
 } from "lucide-react";
 import type { ComponentType } from "react";
 
@@ -18,17 +20,19 @@ import type { ComponentType } from "react";
  * Central icon registry
  */
 export const icons = {
-  check: Check,
+  boxes: Boxes,
   chartArea: ChartArea,
   chartCandlestick: ChartCandlestick,
   chartLine: ChartLine,
+  check: Check,
+  cheveronRight: ChevronRight,
   circleHelp: CircleHelp,
   fileQuestion: FileQuestion,
   folder: Folder,
-  boxes: Boxes,
+  logIn: LogIn,
+  logOut: LogOut,
   moon: Moon,
   sun: Sun,
-  cheveronRight: ChevronRight,
 };
 
 /**
