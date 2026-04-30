@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { MODULE_CONFIG } from "./module-config";
 import { mapModulesToRoutesBreadcrumbsAndNav } from "./route-mapper";
+import { HomePage } from "@/pages/home-page";
 import ErrorPage from "@/features/errors/ErrorPage";
 import App from "@/App.tsx";
 
@@ -13,7 +14,13 @@ function buildRoutesFromModules() {
       path: "/",
       element: <App modules={modules} />,
       errorElement: <ErrorPage />,
-      children: routes,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        ...routes,
+      ],
     },
   ];
 }
