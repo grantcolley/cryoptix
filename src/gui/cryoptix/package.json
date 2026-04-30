@@ -12,6 +12,7 @@
     "format": "prettier . --write"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.16.2",
     "@fontsource-variable/geist": "^5.2.8",
     "@tailwindcss/vite": "^4.2.4",
     "class-variance-authority": "^0.7.1",
