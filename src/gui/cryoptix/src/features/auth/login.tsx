@@ -2,6 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
+import { ROUTES } from "@/routing/routes";
 import {
   Tooltip,
   TooltipContent,
@@ -20,7 +21,11 @@ const Login = () => {
             variant="outline"
             size="icon"
             onClick={() => {
-              void loginWithRedirect();
+              void loginWithRedirect({
+                appState: {
+                  returnTo: ROUTES.HOME,
+                },
+              });
             }}
           >
             <Icon icon={icons.logOut} />

@@ -4,6 +4,7 @@ import { Icon } from "@/components/icon/icon";
 import type { IconComponent } from "@/components/icon/icons";
 import { getIcon } from "@/components/icon/icons";
 import { icons } from "@/components/icon/icons";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,6 +31,12 @@ function SidebarIcon({ icon: IconComponent }: { icon?: IconComponent }) {
 }
 
 export function AppSidebarContent({ modules }: Props) {
+  const { isAuthenticated, isLoading } = useAuth0();
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
+
   return (
     <>
       {modules.map((module) => (
@@ -43,6 +50,7 @@ export function AppSidebarContent({ modules }: Props) {
               <Collapsible
                 key={category.categoryId}
                 asChild
+                defaultOpen
                 className="group/collapsible"
               >
                 <SidebarMenuItem>

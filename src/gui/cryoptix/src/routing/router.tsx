@@ -4,6 +4,7 @@ import { mapModulesToRoutesBreadcrumbsAndNav } from "./route-mapper";
 import { HomePage } from "@/pages/home-page";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorPage from "@/features/errors/ErrorPage";
+import { RequireAuth } from "@/features/auth/require-auth";
 import App from "@/App.tsx";
 
 function buildRoutesFromModules() {
@@ -24,7 +25,10 @@ function buildRoutesFromModules() {
           index: true,
           element: <HomePage />,
         },
-        ...routes,
+        ...routes.map((route) => ({
+          ...route,
+          element: <RequireAuth>{route.element}</RequireAuth>,
+        })),
       ],
     },
   ];
