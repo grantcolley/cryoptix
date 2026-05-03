@@ -8,8 +8,8 @@ namespace Cryoptix.Strategy.Controller
     {
         StrategyStatus GetStatus();
         IReadOnlyCollection<StrategyProcessorType> GetAvailableStrategies();
-        Task<StrategyCommandResult> StartAsync(Runtime.Strategy strategy, CancellationToken ct);
-        Task<StrategyCommandResult> UpdateAsync(Runtime.Strategy strategy, CancellationToken ct);
+        Task<StrategyCommandResult> StartAsync(Strategies.Strategy strategy, CancellationToken ct);
+        Task<StrategyCommandResult> UpdateAsync(Strategies.Strategy strategy, CancellationToken ct);
         Task<StrategyCommandResult> StopAsync(CancellationToken ct);
     }
 }

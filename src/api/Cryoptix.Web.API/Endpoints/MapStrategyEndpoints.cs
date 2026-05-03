@@ -34,7 +34,7 @@ namespace Cryoptix.Web.API.Endpoints
         }
 
         private static async Task<IResult> StartStrategy(
-            Strategy.Runtime.Strategy strategy,
+            Strategy.Strategies.Strategy strategy,
             IStrategyController strategyController,
             CancellationToken ct)
         {
@@ -49,7 +49,7 @@ namespace Cryoptix.Web.API.Endpoints
         }
 
         private static async Task<IResult> UpdateStrategy(
-            Strategy.Runtime.Strategy strategy,
+            Strategy.Strategies.Strategy strategy,
             IStrategyController strategyController,
             CancellationToken ct)
         {

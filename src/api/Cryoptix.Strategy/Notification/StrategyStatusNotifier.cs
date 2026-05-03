@@ -7,7 +7,7 @@ namespace Cryoptix.Strategy.Notification
     {
         private readonly INotificationBroadcaster _notificationBroadcaster = notificationBroadcaster;
 
-        public Task NotifyUpdatedAsync(Runtime.Strategy strategy, CancellationToken cancellationToken = default)
+        public Task NotifyUpdatedAsync(Strategies.Strategy strategy, CancellationToken cancellationToken = default)
         {
             return _notificationBroadcaster.BroadcastAsync(
                 MessageType.StrategyUpdated,

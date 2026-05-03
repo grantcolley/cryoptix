@@ -16,7 +16,7 @@ namespace Cryoptix.Strategy.Subscription
         private readonly ILogger<StrategyMarketEventSubscriber> _logger = logger;
 
         public async Task<StrategyMarketEventSubscriptions> SubscribeAsync(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             Credentials? credentials,
             IExchangeSubscriptionApi subscriptionsApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
@@ -127,7 +127,7 @@ namespace Cryoptix.Strategy.Subscription
         }
 
         private void OnKlineCallback(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             ChannelWriter<KlineMarketEvent> writer,
             KlineEventArgs args)
         {
@@ -153,7 +153,7 @@ namespace Cryoptix.Strategy.Subscription
         }
 
         private void OnTradeCallback(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             ChannelWriter<TradeMarketEvent> writer,
             TradeEventArgs args)
         {
@@ -185,7 +185,7 @@ namespace Cryoptix.Strategy.Subscription
         }
 
         private void OnOrderBookCallback(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             OrderBookRealtimeState orderBookRealtimeState,
             OrderBookEventArgs args)
         {
@@ -243,7 +243,7 @@ namespace Cryoptix.Strategy.Subscription
             accountRealtimeState.Update(args.Account);
         }
 
-        private void OnKlineError(Runtime.Strategy strategy, Exception ex)
+        private void OnKlineError(Strategies.Strategy strategy, Exception ex)
         {
             _logger.LogError(ex,
                 "Kline subscription error for {Symbol} {Interval}",
@@ -251,14 +251,14 @@ namespace Cryoptix.Strategy.Subscription
                 strategy.KlineInterval);
         }
 
-        private void OnTradeError(Runtime.Strategy strategy, Exception ex)
+        private void OnTradeError(Strategies.Strategy strategy, Exception ex)
         {
             _logger.LogError(ex,
                 "Trade subscription error for {Symbol}",
                 strategy.Symbol);
         }
 
-        private void OnOrderBookError(Runtime.Strategy strategy, Exception ex)
+        private void OnOrderBookError(Strategies.Strategy strategy, Exception ex)
         {
             _logger.LogError(ex,
                 "Order book subscription error for {Symbol}",

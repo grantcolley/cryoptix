@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Strategy.Runtime
+﻿namespace Cryoptix.Strategy.Strategies
 {
     public static class StrategyExtensions
     {

@@ -9,7 +9,7 @@ namespace Cryoptix.Strategy.Analysis
     {
         public Credentials? Credentials { get; init; }
         public required ExchangeApi ExchangeApi { get; init; }
-        public required Runtime.Strategy Strategy { get; init; }
+        public required Strategies.Strategy Strategy { get; init; }
         public required IReadOnlyList<Kline> Klines { get; init; }
         public required IReadOnlyList<Trade> Trades { get; init; }
         public required MarketEventEnvelope CurrentEvent { get; init; }

@@ -1,8 +1,8 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Processor;
-using Cryoptix.Strategy.Runtime;
 using Cryoptix.Strategy.State;
+using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Agent
 {
@@ -18,7 +18,7 @@ namespace Cryoptix.Strategy.Agent
         private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
         private Task? _activeTask;
-        private Runtime.Strategy? _activeStrategy;
+        private Strategies.Strategy? _activeStrategy;
         private CancellationTokenSource? _activeCancellationTokenSource;
         private AsyncAutoResetEvent? _activeStrategyUpdatedSignal;
 
@@ -27,7 +27,7 @@ namespace Cryoptix.Strategy.Agent
         // Only call while holding _semaphoreSlim.
         private bool HasRunningActiveTask() => _activeTask != null && !_activeTask.IsCompleted;
 
-        public async Task StartAsync(Runtime.Strategy strategy, CancellationToken cancellationToken)
+        public async Task StartAsync(Strategies.Strategy strategy, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -39,7 +39,7 @@ namespace Cryoptix.Strategy.Agent
 
                 if (HasRunningActiveTask())
                 {
-                    Runtime.Strategy? currentStrategy = Volatile.Read(ref _activeStrategy);
+                    Strategies.Strategy? currentStrategy = Volatile.Read(ref _activeStrategy);
 
                     _state.Set(new StrategyStatus
                     {
@@ -101,7 +101,7 @@ namespace Cryoptix.Strategy.Agent
             }
         }
 
-        public async Task UpdateAsync(Runtime.Strategy strategy)
+        public async Task UpdateAsync(Strategies.Strategy strategy)
         {
             ThrowIfDisposed();
 
@@ -124,7 +124,7 @@ namespace Cryoptix.Strategy.Agent
                     return;
                 }
 
-                Runtime.Strategy? currentStrategy = Volatile.Read(ref _activeStrategy);
+                Strategies.Strategy? currentStrategy = Volatile.Read(ref _activeStrategy);
 
                 if (currentStrategy != null && !currentStrategy.CanUpdate(strategy, out string? message))
                 {
@@ -200,7 +200,7 @@ namespace Cryoptix.Strategy.Agent
 
                 taskToAwait = _activeTask;
                 cancellationTokenSourceToCancel = _activeCancellationTokenSource;
-                Runtime.Strategy? strategyToReport = Volatile.Read(ref _activeStrategy);
+                Strategies.Strategy? strategyToReport = Volatile.Read(ref _activeStrategy);
 
                 _state.Set(new StrategyStatus
                 {
@@ -319,7 +319,7 @@ namespace Cryoptix.Strategy.Agent
         }
 
         private async Task RunStrategyAsync(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             IStrategyProcessor strategyProcessor,
             StrategyAgentSession strategyAgentSession,
             CancellationToken cancellationToken)

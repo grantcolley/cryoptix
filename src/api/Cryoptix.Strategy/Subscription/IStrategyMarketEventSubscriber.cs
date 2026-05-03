@@ -9,7 +9,7 @@ namespace Cryoptix.Strategy.Subscription
     public interface IStrategyMarketEventSubscriber
     {
         Task<StrategyMarketEventSubscriptions> SubscribeAsync(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             Credentials? credentials,
             IExchangeSubscriptionApi subscriptionsApi,
             ChannelWriter<KlineMarketEvent> klineWriter,

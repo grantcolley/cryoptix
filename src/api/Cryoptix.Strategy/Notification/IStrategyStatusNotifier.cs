@@ -2,6 +2,6 @@
 {
     public interface IStrategyStatusNotifier
     {
-        Task NotifyUpdatedAsync(Runtime.Strategy strategy, CancellationToken cancellationToken);
+        Task NotifyUpdatedAsync(Strategies.Strategy strategy, CancellationToken cancellationToken);
     }
 }

@@ -2,21 +2,23 @@
 using Cryoptix.Strategy.Processor;
 using System.Threading.Channels;
 
-namespace Cryoptix.Strategy.Runtime
+namespace Cryoptix.Strategy.Strategies
 {
     public class Strategy
     {
+        // Basic strategy info
         public int StrategyId { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Symbol { get; set; }
-        public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
         public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.TradingFlow;
         public StrategyEngineType StrategyEngineType { get; set; } = StrategyEngineType.None;
         public Market.Data.Exchange Exchange { get; set; } = Market.Data.Exchange.Binance;
+
+        // Subscription and cache settings
+        public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
         public int FastPeriod { get; init; }
         public int SlowPeriod { get; init; }
-
         public int? OrderBookLimit { get; set; } = 20;
         public int MaxOrderBookAgeSeconds { get; set; } = 3;
         public int MaxAccountAgeSeconds { get; set; } = 10;
@@ -28,6 +30,7 @@ namespace Cryoptix.Strategy.Runtime
         public bool SubscriptionChannelDropTradesWhenFull { get; set; } = true;
         public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.Wait;
 
+        // Broadcast settings
         public int KlineBroadcastCapacity { get; init; } = 500;
         public int TradeBroadcastCapacity { get; init; } = 10000;
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;

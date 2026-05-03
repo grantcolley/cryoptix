@@ -27,7 +27,7 @@ namespace Cryoptix.Strategy.Cache
                 });
             }
 
-            Runtime.Strategy strategy = session.Strategy;
+            Strategies.Strategy strategy = session.Strategy;
             string symbol = strategy.Symbol ?? string.Empty;
             KlineInterval interval = strategy.KlineInterval;
 

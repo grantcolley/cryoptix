@@ -18,7 +18,7 @@ namespace Cryoptix.Strategy.Controller
 
         public IReadOnlyCollection<StrategyProcessorType> GetAvailableStrategies() => _strategyProcessorCatalog.Keys;
 
-        public async Task<StrategyCommandResult> StartAsync(Runtime.Strategy strategy, CancellationToken ct)
+        public async Task<StrategyCommandResult> StartAsync(Strategies.Strategy strategy, CancellationToken ct)
         {
             if (!_strategyProcessorCatalog.TryCreate(strategy.StrategyProcessorType, out _))
             {
@@ -46,7 +46,7 @@ namespace Cryoptix.Strategy.Controller
             };
         }
 
-        public async Task<StrategyCommandResult> UpdateAsync(Runtime.Strategy strategy, CancellationToken ct)
+        public async Task<StrategyCommandResult> UpdateAsync(Strategies.Strategy strategy, CancellationToken ct)
         {
 
             await _strategyCommandQueue.EnqueueAsync(new StrategyCommand

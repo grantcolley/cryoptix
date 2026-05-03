@@ -3,6 +3,6 @@
     public class StrategyCommand
     {
         public StrategyCommandType StrategyCommandType { get; set; }
-        public Runtime.Strategy? Strategy { get; set; }
+        public Strategies.Strategy? Strategy { get; set; }
     }
 }

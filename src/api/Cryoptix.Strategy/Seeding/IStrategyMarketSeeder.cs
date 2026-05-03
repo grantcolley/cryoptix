@@ -7,7 +7,7 @@ namespace Cryoptix.Strategy.Seeding
     public interface IStrategyMarketSeeder
     {
         Task SeedAsync(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             IExchangeRestApi restApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
             CancellationToken cancellationToken);

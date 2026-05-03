@@ -49,7 +49,7 @@ namespace Cryoptix.Strategy.Processor
             if (strategyAgentSession.WaitForStrategyUpdateAsync is null)
                 throw new ArgumentNullException($"{nameof(strategyAgentSession)}.WaitForStrategyUpdateAsync");
 
-            Runtime.Strategy? initialStrategy = strategyAgentSession.GetStrategy();
+            Strategies.Strategy? initialStrategy = strategyAgentSession.GetStrategy();
             ValidateInitialStrategy(initialStrategy);
 
             StrategyProcessorSession strategyProcessorSession = new()
@@ -128,7 +128,7 @@ namespace Cryoptix.Strategy.Processor
                         break;
                     }
 
-                    Runtime.Strategy? updatedStrategy = strategyAgentSession.GetStrategy();
+                    Strategies.Strategy? updatedStrategy = strategyAgentSession.GetStrategy();
                     if (updatedStrategy == null)
                     {
                         _logger.LogWarning("Received null strategy update; ignoring.");
@@ -259,7 +259,7 @@ namespace Cryoptix.Strategy.Processor
             }
         }
 
-        private static void ValidateInitialStrategy(Runtime.Strategy? strategy)
+        private static void ValidateInitialStrategy(Strategies.Strategy? strategy)
         {
             if (strategy == null)
                 throw new InvalidOperationException("Strategy is required.");
@@ -271,7 +271,7 @@ namespace Cryoptix.Strategy.Processor
                 throw new InvalidOperationException("Strategy kline interval is required.");
         }
 
-        private static void ValidateCompatibleStrategyUpdate(Runtime.Strategy current, Runtime.Strategy updated)
+        private static void ValidateCompatibleStrategyUpdate(Strategies.Strategy current, Strategies.Strategy updated)
         {
             if (!string.Equals(current.Symbol, updated.Symbol, StringComparison.OrdinalIgnoreCase))
             {

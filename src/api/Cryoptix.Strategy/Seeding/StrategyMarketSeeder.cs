@@ -15,7 +15,7 @@ namespace Cryoptix.Strategy.Seeding
         private readonly IStrategyClock _clock = clock;
 
         public async Task SeedAsync(
-            Runtime.Strategy strategy,
+            Strategies.Strategy strategy,
             IExchangeRestApi restApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
             CancellationToken cancellationToken)
@@ -64,7 +64,7 @@ namespace Cryoptix.Strategy.Seeding
                 strategy.KlineInterval);
         }
 
-        private static DateTime GetSeedStartTime(Runtime.Strategy strategy, DateTime endTimeUtc)
+        private static DateTime GetSeedStartTime(Strategies.Strategy strategy, DateTime endTimeUtc)
         {
             return endTimeUtc.AddDays(-2);
         }
