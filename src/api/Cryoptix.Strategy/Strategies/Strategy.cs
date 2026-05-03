@@ -11,9 +11,9 @@ namespace Cryoptix.Strategy.Strategies
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Symbol { get; set; }
-        public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.TradingFlow;
+        public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.None;
         public StrategyEngineType StrategyEngineType { get; set; } = StrategyEngineType.None;
-        public Market.Data.Exchange Exchange { get; set; } = Market.Data.Exchange.Binance;
+        public Market.Data.Exchange Exchange { get; set; } = Market.Data.Exchange.None;
 
         // Subscription and cache settings
         public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
