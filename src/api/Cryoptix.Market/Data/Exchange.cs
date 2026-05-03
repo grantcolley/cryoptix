@@ -2,7 +2,7 @@
 {
     public enum Exchange
     {
-        None,
-        Binance
+        None = 0,
+        Binance = 1
     }
 }
