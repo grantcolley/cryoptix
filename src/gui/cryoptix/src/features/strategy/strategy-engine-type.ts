@@ -8,3 +8,8 @@ export const StrategyEngineType = {
 export const StrategyEngineTypeSchema = z.enum(StrategyEngineType);
 
 export type StrategyEngineType = z.infer<typeof StrategyEngineTypeSchema>;
+
+export const StrategyEngineTypeLabels: Record<StrategyEngineType, string> = {
+  [StrategyEngineType.None]: "None",
+  [StrategyEngineType.MovingAverage]: "Moving Average",
+};

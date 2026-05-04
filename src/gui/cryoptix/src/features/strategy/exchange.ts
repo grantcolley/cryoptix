@@ -8,3 +8,8 @@ export const Exchange = {
 export const ExchangeSchema = z.enum(Exchange);
 
 export type Exchange = z.infer<typeof ExchangeSchema>;
+
+export const ExchangeLabels: Record<Exchange, string> = {
+  [Exchange.None]: "None",
+  [Exchange.Binance]: "Binance",
+};

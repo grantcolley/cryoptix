@@ -8,3 +8,11 @@ export const StrategyProcessorType = {
 export const StrategyProcessorTypeSchema = z.enum(StrategyProcessorType);
 
 export type StrategyProcessorType = z.infer<typeof StrategyProcessorTypeSchema>;
+
+export const StrategyProcessorTypeLabels: Record<
+  StrategyProcessorType,
+  string
+> = {
+  [StrategyProcessorType.None]: "None",
+  [StrategyProcessorType.TradingFlow]: "Trading Flow",
+};

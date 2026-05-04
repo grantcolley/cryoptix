@@ -22,3 +22,22 @@ export const KlineInterval = {
 export const KlineIntervalSchema = z.enum(KlineInterval);
 
 export type KlineInterval = z.infer<typeof KlineIntervalSchema>;
+
+export const KlineIntervalLabels: Record<KlineInterval, string> = {
+  [KlineInterval.Unknown]: "Unknown",
+  [KlineInterval.Minute]: "1 Minute",
+  [KlineInterval.Minutes3]: "3 Minutes",
+  [KlineInterval.Minutes5]: "5 Minutes",
+  [KlineInterval.Minutes15]: "15 Minutes",
+  [KlineInterval.Minutes30]: "30 Minutes",
+  [KlineInterval.Hour]: "1 Hour",
+  [KlineInterval.Hours2]: "2 Hours",
+  [KlineInterval.Hours4]: "4 Hours",
+  [KlineInterval.Hours6]: "6 Hours",
+  [KlineInterval.Hours8]: "8 Hours",
+  [KlineInterval.Hours12]: "12 Hours",
+  [KlineInterval.Day]: "1 Day",
+  [KlineInterval.Days3]: "3 Days",
+  [KlineInterval.Week]: "1 Week",
+  [KlineInterval.Month]: "1 Month",
+};

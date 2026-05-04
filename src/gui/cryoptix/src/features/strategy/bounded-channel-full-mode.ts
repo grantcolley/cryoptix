@@ -12,3 +12,13 @@ export const BoundedChannelFullModeSchema = z.enum(BoundedChannelFullMode);
 export type BoundedChannelFullMode = z.infer<
   typeof BoundedChannelFullModeSchema
 >;
+
+export const BoundedChannelFullModeLabels: Record<
+  BoundedChannelFullMode,
+  string
+> = {
+  [BoundedChannelFullMode.Wait]: "Wait",
+  [BoundedChannelFullMode.DropNewest]: "Drop Newest",
+  [BoundedChannelFullMode.DropOldest]: "Drop Oldest",
+  [BoundedChannelFullMode.DropWrite]: "Drop Write",
+};
