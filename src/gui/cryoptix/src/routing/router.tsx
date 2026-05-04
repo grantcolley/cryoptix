@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import { MODULE_CONFIG } from "./module-config";
+import { MODULE_CONFIG } from "../data/module-config";
 import { mapModulesToRoutesBreadcrumbsAndNav } from "./route-mapper";
 import { HomePage } from "@/pages/home-page";
 import { ErrorBoundary } from "react-error-boundary";

@@ -1,6 +1,6 @@
-import type { Module } from "./module";
-import Strategy from "@/features/strategy/strategy";
+import type { Module } from "@/routing/module";
 import GenericError from "@/features/errors/generic-error";
+import StrategyPage from "@/pages/strategy-page";
 
 export const MODULE_CONFIG: Module[] = [
   {
@@ -18,7 +18,7 @@ export const MODULE_CONFIG: Module[] = [
           {
             routeId: 1,
             path: "Strategy",
-            element: Strategy,
+            element: StrategyPage,
             errorElement: GenericError,
             args: "",
             name: "Strategy",
