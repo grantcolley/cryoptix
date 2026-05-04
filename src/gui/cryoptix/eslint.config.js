@@ -55,7 +55,10 @@ export default tseslint.config(
   // Allows shadcn/ui components and your central icon registry.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/components/icon/**/*.{ts,tsx}"],
+    ignores: [
+      "src/components/icon/**/*.{ts,tsx}",
+      "src/components/ui/**/*.{ts,tsx}",
+    ],
 
     rules: {
       "@typescript-eslint/no-restricted-imports": [
