@@ -11,6 +11,7 @@ import {
   LogIn,
   LogOut,
   Moon,
+  Plug,
   Sun,
   type LucideProps,
 } from "lucide-react";
@@ -32,6 +33,7 @@ export const icons = {
   logIn: LogIn,
   logOut: LogOut,
   moon: Moon,
+  plug: Plug,
   sun: Sun,
 };
 
