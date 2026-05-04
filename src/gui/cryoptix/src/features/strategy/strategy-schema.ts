@@ -8,7 +8,7 @@ import { BoundedChannelFullMode } from "./bounded-channel-full-mode";
 export const StrategySchema = z.object({
   // Strategy fields
   strategyId: z.number().int(),
-  name: z.string().nullable().optional(),
+  name: z.string().nonempty(),
   description: z.string().nullable().optional(),
   symbol: z.string().nullable().optional(),
   strategyProcessorType: z
