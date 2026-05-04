@@ -17,7 +17,7 @@ export function AppSidebarHeader() {
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
-              className="mx-2 data-[orientation=vertical]:h-4"
+              className="mx-2 data-[orientation=vertical]:h-8"
             />
           </>
         ) : (

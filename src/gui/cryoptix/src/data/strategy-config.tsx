@@ -1,0 +1,30 @@
+import type { Strategy } from "@/features/strategy/strategy";
+
+export const STRATEGY_CONFIG: Strategy[] = [
+  {
+    strategyId: 1,
+    name: "Moving Average Crossover",
+    description: "A simple moving average crossover strategy.",
+    symbol: "BTCUSDT",
+    strategyProcessorType: 1,
+    strategyEngineType: 1,
+    exchange: 1,
+    klineInterval: 1,
+    fastPeriod: 0,
+    slowPeriod: 0,
+    orderBookLimit: 20,
+    maxOrderBookAgeSeconds: 3,
+    maxAccountAgeSeconds: 10,
+    cacheMaxKlinesPerSeries: 5000,
+    cacheMaxTradesPerSymbol: 10000,
+    strategyProcessorMaxTradesPerPass: 256,
+    subscriptionChannelKlineCapacity: 500,
+    subscriptionChannelTradeCapacity: 10000,
+    subscriptionChannelDropTradesWhenFull: true,
+    subscriptionChannelKlineFullMode: 0,
+    klineBroadcastCapacity: 500,
+    tradeBroadcastCapacity: 10000,
+    klineBroadcastFullMode: 2,
+    tradeBroadcastFullMode: 2,
+  },
+];
