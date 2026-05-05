@@ -6,12 +6,15 @@ import {
   Check,
   ChevronRight,
   CircleHelp, // general fallback
+  Ellipsis,
   FileQuestion, // missing page icon
   Folder, // missing category icon
   LogIn,
   LogOut,
+  Minus,
   Moon,
   Plug,
+  Plus,
   Sun,
   type LucideProps,
 } from "lucide-react";
@@ -28,12 +31,15 @@ export const icons = {
   check: Check,
   cheveronRight: ChevronRight,
   circleHelp: CircleHelp,
+  ellipsis: Ellipsis,
   fileQuestion: FileQuestion,
   folder: Folder,
   logIn: LogIn,
   logOut: LogOut,
+  minus: Minus,
   moon: Moon,
   plug: Plug,
+  plus: Plus,
   sun: Sun,
 };
 
