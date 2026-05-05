@@ -1,7 +1,6 @@
 import * as React from "react";
 import StrategyForm from "@/features/strategy/strategy-form";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
-import { Label } from "@/components/ui/label";
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
 import { Button } from "@/components/ui/button";
