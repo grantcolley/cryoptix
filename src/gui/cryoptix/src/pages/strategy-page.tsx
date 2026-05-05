@@ -41,6 +41,7 @@ export function StrategyPage() {
       <div className="flex-1 rounded-xl bg-muted/50 md:min-h-min">
         <div className="flex items-center gap-1 px-4 pt-4 pb-2">
           <Input
+            id="server-url"
             type="text"
             placeholder="Server url..."
             aria-label="Enter server url"
