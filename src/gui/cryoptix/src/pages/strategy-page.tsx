@@ -4,6 +4,7 @@ import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -39,9 +40,10 @@ export function StrategyPage() {
     <div className="flex flex-1 flex-col p-2">
       <div className="flex-1 rounded-xl bg-muted/50 md:min-h-min">
         <div className="flex items-center gap-1 px-4 pt-4 pb-2">
-          <input
+          <Input
             type="text"
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder="Server url..."
+            aria-label="Enter server url"
           />
           <Button variant="outline" size="icon" aria-label="Connect to server">
             <Icon icon={icons.plug} className="rotate-90" />
@@ -57,6 +59,7 @@ export function StrategyPage() {
             <Select
               value={selectedStrategyId}
               onValueChange={handleStrategyChange}
+              aria-label="Select a strategy"
             >
               <SelectTrigger className="w-[255px]">
                 <SelectValue placeholder="Select a strategy" />
