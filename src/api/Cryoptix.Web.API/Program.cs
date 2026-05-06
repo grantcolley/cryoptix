@@ -33,6 +33,7 @@ using Cryoptix.Web.API.Notification;
 using Cryoptix.Web.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Threading.Channels;
@@ -58,6 +59,9 @@ string tradeBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNE
 string domain = builder.Configuration[ConfigKeys.AUTH_DOMAIN] ?? throw new NullReferenceException(ConfigKeys.AUTH_DOMAIN);
 string audience = builder.Configuration[ConfigKeys.AUTH_AUDIENCE] ?? throw new NullReferenceException(ConfigKeys.AUTH_AUDIENCE);
 string issuer = builder.Configuration[ConfigKeys.AUTH_ISSUER] ?? throw new NullReferenceException(ConfigKeys.AUTH_ISSUER);
+
+string corsPolicy = builder.Configuration[ConfigKeys.CORS_POLICY] ?? throw new NullReferenceException(ConfigKeys.CORS_POLICY);
+string corsOriginUrls = builder.Configuration[ConfigKeys.CORS_ORIGINS_URLS] ?? throw new NullReferenceException(ConfigKeys.CORS_ORIGINS_URLS);
 
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetRequiredSection("Auth"));
 
@@ -105,6 +109,20 @@ builder.Services.AddAuthorizationBuilder()
     {
         policy.RequireAuthenticatedUser().RequireClaim("permissions", Claims.CRYOPTIX_DEVELOPER_CLAIM);
     });
+
+if (!string.IsNullOrWhiteSpace(corsPolicy)
+    && !string.IsNullOrWhiteSpace(corsOriginUrls))
+{
+    builder.Services.AddCors(options =>
+    {
+        string[] urls = corsOriginUrls.Split(';');
+
+        options.AddPolicy(corsPolicy,
+            builder =>
+                builder.WithOrigins(urls)
+                .AllowAnyHeader());
+    });
+}
 
 builder.Services.AddApiExceptionHandling();
 
@@ -190,6 +208,11 @@ WebApplication app = builder.Build();
 app.UseApiExceptionHandling();
 
 app.UseHttpsRedirection();
+
+if (!string.IsNullOrWhiteSpace(corsPolicy))
+{
+    app.UseCors(corsPolicy);
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
