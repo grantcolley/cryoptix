@@ -1,22 +1,20 @@
 import { z } from "zod";
 import { StrategySchema } from "./strategy-schema";
-import { StrategyStateSchema } from "./strategy-state";
-import { StrategyProcessorTypeSchema } from "./strategy-processor-type";
+import { StrategyState } from "./strategy-state";
+import { StrategyProcessorType } from "./strategy-processor-type";
 
 export const StrategyStatusApiSchema = z.object({
-  StrategyState: StrategyStateSchema,
-  StrategyProcessorType: StrategyProcessorTypeSchema,
-  Strategy: StrategySchema.nullable(),
-  Message: z.string().nullable(),
+  strategyState: z.enum(StrategyState).default(StrategyState.Idle),
+
+  strategyProcessorType: z
+    .enum(StrategyProcessorType)
+    .default(StrategyProcessorType.None),
+
+  strategy: StrategySchema.nullable(),
+
+  message: z.string().nullable(),
 });
 
-export const StrategyStatusSchema = StrategyStatusApiSchema.transform(
-  (data) => ({
-    strategyState: data.StrategyState,
-    strategyProcessorType: data.StrategyProcessorType,
-    strategy: data.Strategy,
-    message: data.Message,
-  })
-);
+export const StrategyStatusSchema = StrategyStatusApiSchema;
 
 export type StrategyStatus = z.infer<typeof StrategyStatusSchema>;
