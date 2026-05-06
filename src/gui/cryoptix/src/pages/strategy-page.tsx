@@ -112,17 +112,56 @@ export function StrategyPage() {
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
             </div>
           ) : (
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Connect to server"
-              onClick={() => {
-                void handleConnect();
-              }}
-              disabled={!serverUrl.trim()}
-            >
-              <Icon icon={icons.plug} className="rotate-90" />
-            </Button>
+            <>
+              <Button
+                id="btn-connect"
+                variant="outline"
+                size="icon"
+                aria-label="Connect to server"
+                onClick={() => {
+                  void handleConnect();
+                }}
+                disabled={!serverUrl.trim()}
+              >
+                <Icon icon={icons.plug} className="rotate-90" />
+              </Button>
+              <Button
+                id="btn-start"
+                variant="outline"
+                size="icon"
+                aria-label="Start strategy"
+                onClick={() => {
+                  void handleConnect();
+                }}
+                disabled={!serverUrl.trim()}
+              >
+                <Icon icon={icons.play} />
+              </Button>
+              <Button
+                id="btn-update"
+                variant="outline"
+                size="icon"
+                aria-label="Update strategy parameters"
+                onClick={() => {
+                  void handleConnect();
+                }}
+                disabled={!serverUrl.trim()}
+              >
+                <Icon icon={icons.slidersHorizontal} />
+              </Button>
+              <Button
+                id="btn-stop"
+                variant="outline"
+                size="icon"
+                aria-label="Stop strategy"
+                onClick={() => {
+                  void handleConnect();
+                }}
+                disabled={!serverUrl.trim()}
+              >
+                <Icon icon={icons.square} />
+              </Button>
+            </>
           )}
         </div>
 
