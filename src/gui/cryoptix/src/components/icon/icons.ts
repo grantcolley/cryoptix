@@ -16,7 +16,7 @@ import {
   Plug,
   Plus,
   SlidersHorizontal,
-  StopCircle,
+  Square,
   Sun,
   type LucideProps,
 } from "lucide-react";
@@ -43,7 +43,7 @@ export const icons = {
   plug: Plug,
   plus: Plus,
   slidersHorizontal: SlidersHorizontal,
-  stopCircle: StopCircle,
+  square: Square,
   sun: Sun,
 };
 
