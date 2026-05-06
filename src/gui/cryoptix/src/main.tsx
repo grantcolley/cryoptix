@@ -5,7 +5,7 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import { ThemeProvider } from "./providers/theme-provider.tsx";
 import { ROUTES } from "@/routing/routes.ts";
 import { router } from "@/routing/router";
-import { config } from "@/config/config";
+import { Config } from "@/config/config";
 import "@/components/icon/CryoptixLogo.css";
 import "./index.css";
 
@@ -13,11 +13,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="system" storageKey="cryoptix-theme">
       <Auth0Provider
-        domain={config.AUTH_DOMAIN}
-        clientId={config.AUTH_CLIENT_ID}
+        domain={Config.AUTH_DOMAIN}
+        clientId={Config.AUTH_CLIENT_ID}
         authorizationParams={{
           redirect_uri: window.location.origin,
-          audience: config.AUTH_AUDIENCE || undefined,
+          audience: Config.AUTH_AUDIENCE || undefined,
         }}
         onRedirectCallback={(appState) => {
           void router.navigate(appState?.returnTo || ROUTES.HOME);
