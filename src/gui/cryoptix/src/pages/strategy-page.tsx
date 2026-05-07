@@ -23,6 +23,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -38,6 +44,12 @@ export function StrategyPage() {
   const strategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
     null;
+
+  const strategyState = strategyStatus?.strategyState;
+
+  const showStartButton = strategyState === 0;
+  const showUpdateAndStopButtons = strategyState === 2;
+  const showConnectButton = !showStartButton && !showUpdateAndStopButtons;
 
   const getStrategyStatusUrl = (baseUrl: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -71,12 +83,22 @@ export function StrategyPage() {
 
       setStrategyStatus(parsedStatus);
     } catch (error) {
-      setConnectError(
-        error instanceof Error ? error.message : "Failed to connect to server"
-      );
+      setConnectError(getErrorMessage(error));
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      return "Failed to connect to server";
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return "An unexpected error occurred";
   };
 
   const handleStrategyChange = (value: string) => {
@@ -112,56 +134,87 @@ export function StrategyPage() {
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
             </div>
           ) : (
-            <>
-              <Button
-                id="btn-connect"
-                variant="outline"
-                size="icon"
-                aria-label="Connect to server"
-                onClick={() => {
-                  void handleConnect();
-                }}
-                disabled={!serverUrl.trim()}
-              >
-                <Icon icon={icons.plug} className="rotate-90" />
-              </Button>
-              <Button
-                id="btn-start"
-                variant="outline"
-                size="icon"
-                aria-label="Start strategy"
-                onClick={() => {
-                  void handleConnect();
-                }}
-                disabled={!serverUrl.trim()}
-              >
-                <Icon icon={icons.play} />
-              </Button>
-              <Button
-                id="btn-update"
-                variant="outline"
-                size="icon"
-                aria-label="Update strategy parameters"
-                onClick={() => {
-                  void handleConnect();
-                }}
-                disabled={!serverUrl.trim()}
-              >
-                <Icon icon={icons.slidersHorizontal} />
-              </Button>
-              <Button
-                id="btn-stop"
-                variant="outline"
-                size="icon"
-                aria-label="Stop strategy"
-                onClick={() => {
-                  void handleConnect();
-                }}
-                disabled={!serverUrl.trim()}
-              >
-                <Icon icon={icons.square} />
-              </Button>
-            </>
+            <TooltipProvider>
+              {showConnectButton ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      id="btn-connect"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Connect to server"
+                      onClick={() => {
+                        void handleConnect();
+                      }}
+                      disabled={!serverUrl.trim()}
+                    >
+                      <Icon icon={icons.plug} className="rotate-90" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Connect to server</TooltipContent>
+                </Tooltip>
+              ) : null}
+
+              {showStartButton ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      id="btn-start"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Start strategy"
+                      onClick={() => {
+                        void handleConnect();
+                      }}
+                      disabled={!serverUrl.trim()}
+                    >
+                      <Icon icon={icons.play} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Start strategy</TooltipContent>
+                </Tooltip>
+              ) : null}
+
+              {showUpdateAndStopButtons ? (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        id="btn-update"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Update strategy parameters"
+                        onClick={() => {
+                          void handleConnect();
+                        }}
+                        disabled={!serverUrl.trim()}
+                      >
+                        <Icon icon={icons.slidersHorizontal} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Update strategy parameters</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        id="btn-stop"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Stop strategy"
+                        onClick={() => {
+                          void handleConnect();
+                        }}
+                        disabled={!serverUrl.trim()}
+                      >
+                        <Icon icon={icons.square} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Stop strategy</TooltipContent>
+                  </Tooltip>
+                </>
+              ) : null}
+            </TooltipProvider>
           )}
         </div>
 
@@ -180,7 +233,7 @@ export function StrategyPage() {
           onOpenChange={setIsOpen}
           className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
         >
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 py-2">
             <Select
               value={selectedStrategyId}
               onValueChange={handleStrategyChange}
@@ -213,14 +266,8 @@ export function StrategyPage() {
           </div>
 
           {strategy && (
-            <CollapsibleContent className="flex flex-col gap-2">
-              <StrategyForm
-                defaultValues={strategy}
-                submitLabel="Update strategy"
-                onSubmit={(updated) => {
-                  console.log(updated);
-                }}
-              />
+            <CollapsibleContent className="flex flex-col gap-2 pt-2 pb-2">
+              <StrategyForm defaultValues={strategy} showSubmitButton={false} />
             </CollapsibleContent>
           )}
         </Collapsible>
