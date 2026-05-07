@@ -1,9 +1,9 @@
 "use client";
 
+import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -24,6 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Icon } from "@/components/icon/icon";
+import { icons } from "@/components/icon/icons";
 
 import {
   BoundedChannelFullMode,
@@ -76,7 +83,8 @@ type StrategyEnumFieldName = Extract<
 type StrategyFormProps = {
   defaultValues?: Partial<Strategy>;
   submitLabel?: string;
-  onSubmit: (strategy: Strategy) => void | Promise<void>;
+  showSubmitButton?: boolean;
+  onSubmit?: (strategy: Strategy) => void | Promise<void>;
 };
 
 const strategyProcessorTypeOptions = enumToOptions(
@@ -96,7 +104,7 @@ const boundedChannelFullModeOptions = enumToOptions(
 
 const fallbackDefaultValues: Strategy = {
   strategyId: 0,
-  name: null,
+  name: "",
   description: null,
   symbol: null,
   strategyProcessorType: StrategyProcessorType.None,
@@ -159,6 +167,7 @@ function parseNullableIntegerInput(value: string): number | null | undefined {
 export function StrategyForm({
   defaultValues,
   submitLabel = "Save strategy",
+  showSubmitButton = true,
   onSubmit,
 }: StrategyFormProps) {
   const form = useForm<StrategyFormValues, unknown, Strategy>({
@@ -168,6 +177,10 @@ export function StrategyForm({
       ...defaultValues,
     },
   });
+
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(false);
+  const [isStrategyOpen, setIsStrategyOpen] = React.useState(false);
+  const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
 
   async function handleSubmit(values: Strategy) {
     const normalizedValues = StrategySchema.parse({
@@ -179,165 +192,243 @@ export function StrategyForm({
       symbol: inputTextToNullable(nullableTextToInputValue(values.symbol)),
     });
 
-    await onSubmit(normalizedValues);
+    await onSubmit?.(normalizedValues);
   }
 
   return (
     <form
-      onSubmit={(event) => {
-        void form.handleSubmit(handleSubmit)(event);
-      }}
+      onSubmit={
+        onSubmit
+          ? (event) => {
+              void form.handleSubmit(handleSubmit)(event);
+            }
+          : undefined
+      }
       className="space-y-6"
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
-            <div>
-              <h2 className="text-lg font-semibold">Strategy</h2>
-              <p className="text-sm text-muted-foreground">
-                Core strategy metadata and runtime selections.
-              </p>
-            </div>
+            <Collapsible
+              open={isStrategyOpen}
+              onOpenChange={setIsStrategyOpen}
+              className="group/collapsible"
+            >
+              <div className="flex items-center gap-1 space-y-6">
+                <div>
+                  <p className="text-md">Strategy</p>
+                  <p className="text-sm text-muted-foreground">
+                    Core strategy metadata and runtime selections.
+                  </p>
+                </div>
 
-            <IntegerField name="strategyId" label="Strategy ID" />
-            <TextField name="name" label="Name" />
-            <TextField name="symbol" label="Symbol" />
-            <TextAreaField name="description" label="Description" />
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Toggle details"
+                    className="p-0"
+                  >
+                    <Icon icon={isStrategyOpen ? icons.minus : icons.plus} />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
 
-            <EnumSelectField
-              name="strategyProcessorType"
-              label="Strategy processor type"
-              options={strategyProcessorTypeOptions}
-            />
+              <CollapsibleContent className="space-y-6">
+                <IntegerField name="strategyId" label="Strategy ID" />
+                <TextField name="name" label="Name" />
+                <TextField name="symbol" label="Symbol" />
+                <TextAreaField name="description" label="Description" />
 
-            <EnumSelectField
-              name="strategyEngineType"
-              label="Strategy engine type"
-              options={strategyEngineTypeOptions}
-            />
+                <EnumSelectField
+                  name="strategyProcessorType"
+                  label="Strategy processor type"
+                  options={strategyProcessorTypeOptions}
+                />
 
-            <EnumSelectField
-              name="exchange"
-              label="Exchange"
-              options={exchangeOptions}
-            />
+                <EnumSelectField
+                  name="strategyEngineType"
+                  label="Strategy engine type"
+                  options={strategyEngineTypeOptions}
+                />
+
+                <EnumSelectField
+                  name="exchange"
+                  label="Exchange"
+                  options={exchangeOptions}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </FieldGroup>
         </FieldSet>
 
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
-            <div>
-              <h2 className="text-lg font-semibold">
-                Subscription and caching
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Kline, trade, cache, and processor buffer settings.
-              </p>
-            </div>
+            <Collapsible
+              open={isSubscriptionOpen}
+              onOpenChange={setIsSubscriptionOpen}
+              className="group/collapsible"
+            >
+              <div className="flex items-center gap-1 space-y-6">
+                <div>
+                  <p className="text-md">Subscription and caching</p>
+                  <p className="text-sm text-muted-foreground">
+                    Kline, trade, cache, and processor buffer settings.
+                  </p>
+                </div>
 
-            <EnumSelectField
-              name="klineInterval"
-              label="Kline interval"
-              options={klineIntervalOptions}
-            />
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Toggle details"
+                    className="p-0"
+                  >
+                    <Icon
+                      icon={isSubscriptionOpen ? icons.minus : icons.plus}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
 
-            <IntegerField name="fastPeriod" label="Fast period" />
-            <IntegerField name="slowPeriod" label="Slow period" />
+              <CollapsibleContent className="space-y-6">
+                <EnumSelectField
+                  name="klineInterval"
+                  label="Kline interval"
+                  options={klineIntervalOptions}
+                />
 
-            <NullableIntegerField
-              name="orderBookLimit"
-              label="Order book limit"
-              description="Leave empty to submit null."
-            />
+                <IntegerField name="fastPeriod" label="Fast period" />
+                <IntegerField name="slowPeriod" label="Slow period" />
 
-            <IntegerField
-              name="maxOrderBookAgeSeconds"
-              label="Max order book age seconds"
-            />
+                <NullableIntegerField
+                  name="orderBookLimit"
+                  label="Order book limit"
+                  description="Leave empty to submit null."
+                />
 
-            <IntegerField
-              name="maxAccountAgeSeconds"
-              label="Max account age seconds"
-            />
+                <IntegerField
+                  name="maxOrderBookAgeSeconds"
+                  label="Max order book age seconds"
+                />
 
-            <IntegerField
-              name="cacheMaxKlinesPerSeries"
-              label="Cache max klines per series"
-            />
+                <IntegerField
+                  name="maxAccountAgeSeconds"
+                  label="Max account age seconds"
+                />
 
-            <IntegerField
-              name="cacheMaxTradesPerSymbol"
-              label="Cache max trades per symbol"
-            />
+                <IntegerField
+                  name="cacheMaxKlinesPerSeries"
+                  label="Cache max klines per series"
+                />
 
-            <IntegerField
-              name="strategyProcessorMaxTradesPerPass"
-              label="Strategy processor max trades per pass"
-            />
+                <IntegerField
+                  name="cacheMaxTradesPerSymbol"
+                  label="Cache max trades per symbol"
+                />
 
-            <IntegerField
-              name="subscriptionChannelKlineCapacity"
-              label="Subscription channel kline capacity"
-            />
+                <IntegerField
+                  name="strategyProcessorMaxTradesPerPass"
+                  label="Strategy processor max trades per pass"
+                />
 
-            <IntegerField
-              name="subscriptionChannelTradeCapacity"
-              label="Subscription channel trade capacity"
-            />
+                <IntegerField
+                  name="subscriptionChannelKlineCapacity"
+                  label="Subscription channel kline capacity"
+                />
 
-            <BooleanField
-              name="subscriptionChannelDropTradesWhenFull"
-              label="Drop trades when full"
-              description="Drops incoming trades when the subscription channel reaches capacity."
-            />
+                <IntegerField
+                  name="subscriptionChannelTradeCapacity"
+                  label="Subscription channel trade capacity"
+                />
 
-            <EnumSelectField
-              name="subscriptionChannelKlineFullMode"
-              label="Subscription channel kline full mode"
-              options={boundedChannelFullModeOptions}
-            />
+                <BooleanField
+                  name="subscriptionChannelDropTradesWhenFull"
+                  label="Drop trades when full"
+                  description="Drops incoming trades when the subscription channel reaches capacity."
+                />
+
+                <EnumSelectField
+                  name="subscriptionChannelKlineFullMode"
+                  label="Subscription channel kline full mode"
+                  options={boundedChannelFullModeOptions}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </FieldGroup>
         </FieldSet>
 
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
-            <div>
-              <h2 className="text-lg font-semibold">Broadcast</h2>
-              <p className="text-sm text-muted-foreground">
-                Broadcast channel capacities and overflow behavior.
-              </p>
-            </div>
+            <Collapsible
+              open={isBroadcastOpen}
+              onOpenChange={setIsBroadcastOpen}
+              className="group/collapsible"
+            >
+              <div className="flex items-center gap-1 space-y-6">
+                <div>
+                  <p className="text-md">Broadcast</p>
+                  <p className="text-sm text-muted-foreground">
+                    Broadcast channel capacities and overflow behavior.
+                  </p>
+                </div>
 
-            <IntegerField
-              name="klineBroadcastCapacity"
-              label="Kline broadcast capacity"
-            />
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Toggle details"
+                    className="p-0"
+                  >
+                    <Icon icon={isBroadcastOpen ? icons.minus : icons.plus} />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
 
-            <IntegerField
-              name="tradeBroadcastCapacity"
-              label="Trade broadcast capacity"
-            />
+              <CollapsibleContent className="space-y-6">
+                <EnumSelectField
+                  name="klineInterval"
+                  label="Kline interval"
+                  options={klineIntervalOptions}
+                />
 
-            <EnumSelectField
-              name="klineBroadcastFullMode"
-              label="Kline broadcast full mode"
-              options={boundedChannelFullModeOptions}
-            />
+                <IntegerField
+                  name="klineBroadcastCapacity"
+                  label="Kline broadcast capacity"
+                />
 
-            <EnumSelectField
-              name="tradeBroadcastFullMode"
-              label="Trade broadcast full mode"
-              options={boundedChannelFullModeOptions}
-            />
+                <IntegerField
+                  name="tradeBroadcastCapacity"
+                  label="Trade broadcast capacity"
+                />
+
+                <EnumSelectField
+                  name="klineBroadcastFullMode"
+                  label="Kline broadcast full mode"
+                  options={boundedChannelFullModeOptions}
+                />
+
+                <EnumSelectField
+                  name="tradeBroadcastFullMode"
+                  label="Trade broadcast full mode"
+                  options={boundedChannelFullModeOptions}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </FieldGroup>
         </FieldSet>
       </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Saving..." : submitLabel}
-        </Button>
-      </div>
+      {showSubmitButton ? (
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            disabled={!onSubmit || form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? "Saving..." : submitLabel}
+          </Button>
+        </div>
+      ) : null}
     </form>
   );
 
