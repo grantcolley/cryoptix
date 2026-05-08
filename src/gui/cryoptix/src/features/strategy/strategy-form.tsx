@@ -35,19 +35,19 @@ import { icons } from "@/components/icon/icons";
 import {
   BoundedChannelFullMode,
   BoundedChannelFullModeLabels,
-} from "./bounded-channel-full-mode";
+} from "./schema/bounded-channel-full-mode";
 
-import { Exchange, ExchangeLabels } from "./exchange";
-import { KlineInterval, KlineIntervalLabels } from "./kline-interval";
+import { Exchange, ExchangeLabels } from "./schema/exchange";
+import { KlineInterval, KlineIntervalLabels } from "./schema/kline-interval";
 import {
   StrategyEngineType,
   StrategyEngineTypeLabels,
-} from "./strategy-engine-type";
+} from "./schema/strategy-engine-type";
 import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
-} from "./strategy-processor-type";
-import { StrategySchema, type Strategy } from "./strategy-schema";
+} from "./schema/strategy-processor-type";
+import { StrategySchema, type Strategy } from "./schema/strategy-schema";
 
 import { enumToOptions, type EnumOption } from "@/lib/enum-helper";
 

@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Config } from "@/config/config";
+import { ExchangeLabels } from "@/features/strategy/schema/exchange";
+// import  { type Strategy } from "@/features/strategy/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import { Icon } from "@/components/icon/icon";
@@ -10,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import {
   StrategyStatusSchema,
   type StrategyStatus,
-} from "@/features/strategy/strategy-status";
+} from "@/features/strategy/schema/strategy-status";
 import {
   Select,
   SelectContent,
@@ -18,11 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,
@@ -41,9 +39,11 @@ export function StrategyPage() {
     React.useState<StrategyStatus | null>(null);
   const [connectError, setConnectError] = React.useState<string | null>(null);
 
-  const strategy =
+  const selectedStrategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
     null;
+
+  const strategy = strategyStatus?.strategy ?? selectedStrategy;
 
   const strategyState = strategyStatus?.strategyState;
 
@@ -77,11 +77,14 @@ export function StrategyPage() {
 
       const json: unknown = await response.json();
 
-      console.log("Raw strategy status response:", json);
-
       const parsedStatus = StrategyStatusSchema.parse(json);
 
       setStrategyStatus(parsedStatus);
+
+      if (parsedStatus.strategy) {
+        setSelectedStrategyId(String(parsedStatus.strategy.strategyId));
+        setIsOpen(true);
+      }
     } catch (error) {
       setConnectError(getErrorMessage(error));
     } finally {
@@ -105,10 +108,7 @@ export function StrategyPage() {
     const nextStrategyId = value === "__none__" ? "" : value;
 
     setSelectedStrategyId(nextStrategyId);
-
-    if (!nextStrategyId) {
-      setIsOpen(false);
-    }
+    setIsOpen(Boolean(nextStrategyId));
   };
 
   return (
@@ -122,7 +122,7 @@ export function StrategyPage() {
             aria-label="Enter server url"
             value={serverUrl}
             onChange={(event) => setServerUrl(event.target.value)}
-            disabled={isConnecting}
+            disabled={isConnecting || !showConnectButton}
           />
 
           {isConnecting ? (
@@ -234,34 +234,36 @@ export function StrategyPage() {
           className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
         >
           <div className="flex items-center gap-1 py-2">
-            <Select
-              value={selectedStrategyId}
-              onValueChange={handleStrategyChange}
-              aria-label="Select a strategy"
-            >
-              <SelectTrigger className="w-[255px]">
-                <SelectValue placeholder="Select a strategy" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">No strategy</SelectItem>
-                {STRATEGY_CONFIG.map((s) => (
-                  <SelectItem key={s.strategyId} value={String(s.strategyId)}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {showStartButton && (
+              <Select
+                value={selectedStrategyId}
+                onValueChange={handleStrategyChange}
+                aria-label="Select a strategy"
+              >
+                <SelectTrigger className="w-[255px]">
+                  <SelectValue placeholder="Select a strategy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No strategy</SelectItem>
+                  {STRATEGY_CONFIG.map((s) => (
+                    <SelectItem key={s.strategyId} value={String(s.strategyId)}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
-            {strategy && (
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Toggle details"
-                >
-                  <Icon icon={isOpen ? icons.minus : icons.plus} />
-                </Button>
-              </CollapsibleTrigger>
+            {strategy && showUpdateAndStopButtons && (
+              <div className="flex flex-row items-baseline gap-4">
+                <h4 className="text-md text-foreground">{strategy.name}</h4>
+                <h4 className="text-sm text-foreground-semimuted">
+                  {strategy.symbol}
+                </h4>
+                <h4 className="text-sm text-foreground-semimuted">
+                  {ExchangeLabels[strategy.exchange]}
+                </h4>
+              </div>
             )}
           </div>
 
