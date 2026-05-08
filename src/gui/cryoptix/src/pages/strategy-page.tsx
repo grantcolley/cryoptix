@@ -2,7 +2,6 @@ import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Config } from "@/config/config";
 import { ExchangeLabels } from "@/features/strategy/schema/exchange";
-// import  { type Strategy } from "@/features/strategy/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import { Icon } from "@/components/icon/icon";
@@ -56,6 +55,18 @@ export function StrategyPage() {
     return new URL(Config.API_ROUTE_STATUS, normalizedBaseUrl).toString();
   };
 
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      return "Failed to connect to server";
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return "An unexpected error occurred";
+  };
+
   const handleConnect = async () => {
     setIsConnecting(true);
     setConnectError(null);
@@ -76,7 +87,6 @@ export function StrategyPage() {
       }
 
       const json: unknown = await response.json();
-
       const parsedStatus = StrategyStatusSchema.parse(json);
 
       setStrategyStatus(parsedStatus);
@@ -92,16 +102,16 @@ export function StrategyPage() {
     }
   };
 
-  const getErrorMessage = (error: unknown): string => {
-    if (error instanceof TypeError && error.message === "Failed to fetch") {
-      return "Failed to connect to server";
+  const handleServerConnectSubmit = (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!showConnectButton || isConnecting || !serverUrl.trim()) {
+      return;
     }
 
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    return "An unexpected error occurred";
+    void handleConnect();
   };
 
   const handleStrategyChange = (value: string) => {
@@ -114,7 +124,10 @@ export function StrategyPage() {
   return (
     <div className="flex flex-1 flex-col p-2">
       <div className="flex-1 rounded-xl bg-muted/50 md:min-h-min">
-        <div className="flex items-center gap-1 px-4 pt-4 pb-2">
+        <form
+          className="flex items-center gap-1 px-4 pt-4 pb-2"
+          onSubmit={handleServerConnectSubmit}
+        >
           <Input
             id="server-url"
             type="text"
@@ -140,12 +153,10 @@ export function StrategyPage() {
                   <TooltipTrigger asChild>
                     <Button
                       id="btn-connect"
+                      type="submit"
                       variant="outline"
                       size="icon"
                       aria-label="Connect to server"
-                      onClick={() => {
-                        void handleConnect();
-                      }}
                       disabled={!serverUrl.trim()}
                     >
                       <Icon icon={icons.plug} className="rotate-90" />
@@ -160,6 +171,7 @@ export function StrategyPage() {
                   <TooltipTrigger asChild>
                     <Button
                       id="btn-start"
+                      type="button"
                       variant="outline"
                       size="icon"
                       aria-label="Start strategy"
@@ -181,6 +193,7 @@ export function StrategyPage() {
                     <TooltipTrigger asChild>
                       <Button
                         id="btn-update"
+                        type="button"
                         variant="outline"
                         size="icon"
                         aria-label="Update strategy parameters"
@@ -199,6 +212,7 @@ export function StrategyPage() {
                     <TooltipTrigger asChild>
                       <Button
                         id="btn-stop"
+                        type="button"
                         variant="outline"
                         size="icon"
                         aria-label="Stop strategy"
@@ -216,7 +230,7 @@ export function StrategyPage() {
               ) : null}
             </TooltipProvider>
           )}
-        </div>
+        </form>
 
         {connectError && (
           <p className="px-4 text-sm text-destructive">{connectError}</p>
