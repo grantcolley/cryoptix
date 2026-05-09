@@ -50,9 +50,9 @@ export function StrategyPage() {
   const showUpdateAndStopButtons = strategyState === 2;
   const showConnectButton = !showStartButton && !showUpdateAndStopButtons;
 
-  const getStrategyStatusUrl = (baseUrl: string) => {
+  const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-    return new URL(Config.API_ROUTE_STATUS, normalizedBaseUrl).toString();
+    return new URL(route, normalizedBaseUrl).toString();
   };
 
   const getErrorMessage = (error: unknown): string => {
@@ -67,6 +67,36 @@ export function StrategyPage() {
     return "An unexpected error occurred";
   };
 
+  const applyStrategyStatus = (nextStatus: StrategyStatus) => {
+    setStrategyStatus(nextStatus);
+
+    if (nextStatus.strategy) {
+      setSelectedStrategyId(String(nextStatus.strategy.strategyId));
+      setIsOpen(true);
+    }
+  };
+
+  const fetchStrategyStatus = async (accessToken: string) => {
+    const response = await fetch(
+      getApiUrl(serverUrl, Config.API_ROUTE_STATUS),
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const json: unknown = await response.json();
+    const parsedStatus = StrategyStatusSchema.parse(json);
+
+    applyStrategyStatus(parsedStatus);
+  };
+
   const handleConnect = async () => {
     setIsConnecting(true);
     setConnectError(null);
@@ -74,27 +104,38 @@ export function StrategyPage() {
 
     try {
       const accessToken = await getAccessTokenSilently();
+      await fetchStrategyStatus(accessToken);
+    } catch (error) {
+      setConnectError(getErrorMessage(error));
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
-      const response = await fetch(getStrategyStatusUrl(serverUrl), {
-        method: "GET",
+  const handleStrategyAction = async (
+    route: string,
+    strategyBody?: typeof strategy
+  ) => {
+    setIsConnecting(true);
+    setConnectError(null);
+
+    try {
+      const accessToken = await getAccessTokenSilently();
+
+      const response = await fetch(getApiUrl(serverUrl, route), {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          ...(strategyBody ? { "Content-Type": "application/json" } : {}),
         },
+        body: strategyBody ? JSON.stringify(strategyBody) : undefined,
       });
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      const json: unknown = await response.json();
-      const parsedStatus = StrategyStatusSchema.parse(json);
-
-      setStrategyStatus(parsedStatus);
-
-      if (parsedStatus.strategy) {
-        setSelectedStrategyId(String(parsedStatus.strategy.strategyId));
-        setIsOpen(true);
-      }
+      await fetchStrategyStatus(accessToken);
     } catch (error) {
       setConnectError(getErrorMessage(error));
     } finally {
@@ -176,9 +217,13 @@ export function StrategyPage() {
                       size="icon"
                       aria-label="Start strategy"
                       onClick={() => {
-                        void handleConnect();
+                        if (!strategy) return;
+                        void handleStrategyAction(
+                          Config.API_ROUTE_START,
+                          strategy
+                        );
                       }}
-                      disabled={!serverUrl.trim()}
+                      disabled={!serverUrl.trim() || !strategy}
                     >
                       <Icon icon={icons.play} />
                     </Button>
@@ -198,9 +243,13 @@ export function StrategyPage() {
                         size="icon"
                         aria-label="Update strategy parameters"
                         onClick={() => {
-                          void handleConnect();
+                          if (!strategy) return;
+                          void handleStrategyAction(
+                            Config.API_ROUTE_UPDATE,
+                            strategy
+                          );
                         }}
-                        disabled={!serverUrl.trim()}
+                        disabled={!serverUrl.trim() || !strategy}
                       >
                         <Icon icon={icons.slidersHorizontal} />
                       </Button>
@@ -217,7 +266,7 @@ export function StrategyPage() {
                         size="icon"
                         aria-label="Stop strategy"
                         onClick={() => {
-                          void handleConnect();
+                          void handleStrategyAction(Config.API_ROUTE_STOP);
                         }}
                         disabled={!serverUrl.trim()}
                       >
