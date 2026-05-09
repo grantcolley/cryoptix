@@ -44,6 +44,8 @@ export function StrategyPage() {
   );
   const [connectError, setConnectError] = React.useState<string | null>(null);
 
+  const latestStrategyRef = React.useRef<Strategy | null>(null);
+
   const selectedStrategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
     null;
@@ -74,23 +76,11 @@ export function StrategyPage() {
     return "An unexpected error occurred";
   };
 
-  const updateEditedStrategy = (nextStrategy: Strategy) => {
-    setEditedStrategy((currentStrategy) => {
-      if (
-        currentStrategy &&
-        JSON.stringify(currentStrategy) === JSON.stringify(nextStrategy)
-      ) {
-        return currentStrategy;
-      }
-
-      return nextStrategy;
-    });
-  };
-
   const applyStrategyStatus = (nextStatus: StrategyStatus) => {
     setStrategyStatus(nextStatus);
 
     if (nextStatus.strategy) {
+      latestStrategyRef.current = nextStatus.strategy;
       setEditedStrategy(nextStatus.strategy);
       setSelectedStrategyId(String(nextStatus.strategy.strategyId));
       setStrategyFormVersion((version) => version + 1);
@@ -124,6 +114,7 @@ export function StrategyPage() {
     setConnectError(null);
     setStrategyStatus(null);
     setEditedStrategy(null);
+    latestStrategyRef.current = null;
 
     try {
       const accessToken = await getAccessTokenSilently();
@@ -186,11 +177,19 @@ export function StrategyPage() {
       STRATEGY_CONFIG.find((s) => String(s.strategyId) === nextStrategyId) ??
       null;
 
+    latestStrategyRef.current = nextStrategy;
     setSelectedStrategyId(nextStrategyId);
     setEditedStrategy(nextStrategy);
     setStrategyFormVersion((version) => version + 1);
     setIsOpen(Boolean(nextStrategyId));
   };
+
+  const handleStrategyFormChange = React.useCallback(
+    (nextStrategy: Strategy) => {
+      latestStrategyRef.current = nextStrategy;
+    },
+    []
+  );
 
   return (
     <div className="flex flex-1 flex-col p-2">
@@ -247,10 +246,14 @@ export function StrategyPage() {
                       size="icon"
                       aria-label="Start strategy"
                       onClick={() => {
-                        if (!strategy) return;
+                        const strategyToSend =
+                          latestStrategyRef.current ?? strategy;
+
+                        if (!strategyToSend) return;
+
                         void handleStrategyAction(
                           Config.API_ROUTE_START,
-                          strategy
+                          strategyToSend
                         );
                       }}
                       disabled={!serverUrl.trim() || !strategy}
@@ -273,10 +276,14 @@ export function StrategyPage() {
                         size="icon"
                         aria-label="Update strategy parameters"
                         onClick={() => {
-                          if (!strategy) return;
+                          const strategyToSend =
+                            latestStrategyRef.current ?? strategy;
+
+                          if (!strategyToSend) return;
+
                           void handleStrategyAction(
                             Config.API_ROUTE_UPDATE,
-                            strategy
+                            strategyToSend
                           );
                         }}
                         disabled={!serverUrl.trim() || !strategy}
@@ -366,7 +373,7 @@ export function StrategyPage() {
                 key={`${strategy.strategyId}-${strategyFormVersion}`}
                 defaultValues={strategy}
                 showSubmitButton={false}
-                onChange={updateEditedStrategy}
+                onChange={handleStrategyFormChange}
               />
             </CollapsibleContent>
           )}
