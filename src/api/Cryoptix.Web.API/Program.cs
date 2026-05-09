@@ -120,7 +120,8 @@ if (!string.IsNullOrWhiteSpace(corsPolicy)
         options.AddPolicy(corsPolicy,
             builder =>
                 builder.WithOrigins(urls)
-                .AllowAnyHeader());
+                .AllowAnyHeader()
+                .WithMethods("GET", "POST"));
     });
 }
 
