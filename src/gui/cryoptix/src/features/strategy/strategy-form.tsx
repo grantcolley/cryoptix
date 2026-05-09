@@ -85,6 +85,7 @@ type StrategyFormProps = {
   submitLabel?: string;
   showSubmitButton?: boolean;
   onSubmit?: (strategy: Strategy) => void | Promise<void>;
+  onChange?: (strategy: Strategy) => void;
 };
 
 const strategyProcessorTypeOptions = enumToOptions(
@@ -138,6 +139,17 @@ function inputTextToNullable(value: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
+function normalizeStrategyValues(values: StrategyFormValues): Strategy {
+  return StrategySchema.parse({
+    ...values,
+    name: inputTextToNullable(nullableTextToInputValue(values.name)),
+    description: inputTextToNullable(
+      nullableTextToInputValue(values.description)
+    ),
+    symbol: inputTextToNullable(nullableTextToInputValue(values.symbol)),
+  });
+}
+
 function numberToSelectValue(value: number): string {
   return String(value);
 }
@@ -169,28 +181,52 @@ export function StrategyForm({
   submitLabel = "Save strategy",
   showSubmitButton = true,
   onSubmit,
+  onChange,
 }: StrategyFormProps) {
-  const form = useForm<StrategyFormValues, unknown, Strategy>({
-    resolver: zodResolver(StrategySchema),
-    defaultValues: {
+  const mergedDefaultValues = React.useMemo<Strategy>(
+    () => ({
       ...fallbackDefaultValues,
       ...defaultValues,
-    },
+    }),
+    [defaultValues]
+  );
+
+  const form = useForm<StrategyFormValues, unknown, Strategy>({
+    resolver: zodResolver(StrategySchema),
+    defaultValues: mergedDefaultValues,
   });
 
   const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = React.useState(false);
   const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
 
-  async function handleSubmit(values: Strategy) {
-    const normalizedValues = StrategySchema.parse({
-      ...values,
-      name: inputTextToNullable(nullableTextToInputValue(values.name)),
-      description: inputTextToNullable(
-        nullableTextToInputValue(values.description)
-      ),
-      symbol: inputTextToNullable(nullableTextToInputValue(values.symbol)),
+  React.useEffect(() => {
+    form.reset(mergedDefaultValues);
+  }, [form, mergedDefaultValues]);
+
+  React.useEffect(() => {
+    if (!onChange) return;
+
+    const subscription = form.watch((values) => {
+      const parsed = StrategySchema.safeParse({
+        ...values,
+        name: inputTextToNullable(nullableTextToInputValue(values.name)),
+        description: inputTextToNullable(
+          nullableTextToInputValue(values.description)
+        ),
+        symbol: inputTextToNullable(nullableTextToInputValue(values.symbol)),
+      });
+
+      if (parsed.success) {
+        onChange(parsed.data);
+      }
     });
+
+    return () => subscription.unsubscribe();
+  }, [form, onChange]);
+
+  async function handleSubmit(values: Strategy) {
+    const normalizedValues = normalizeStrategyValues(values);
 
     await onSubmit?.(normalizedValues);
   }
@@ -386,26 +422,20 @@ export function StrategyForm({
               </div>
 
               <CollapsibleContent className="space-y-6">
-                <EnumSelectField
-                  name="klineInterval"
-                  label="Kline interval"
-                  options={klineIntervalOptions}
-                />
-
                 <IntegerField
                   name="klineBroadcastCapacity"
                   label="Kline broadcast capacity"
-                />
-
-                <IntegerField
-                  name="tradeBroadcastCapacity"
-                  label="Trade broadcast capacity"
                 />
 
                 <EnumSelectField
                   name="klineBroadcastFullMode"
                   label="Kline broadcast full mode"
                   options={boundedChannelFullModeOptions}
+                />
+
+                <IntegerField
+                  name="tradeBroadcastCapacity"
+                  label="Trade broadcast capacity"
                 />
 
                 <EnumSelectField
