@@ -2,6 +2,7 @@ import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Config } from "@/config/config";
 import { ExchangeLabels } from "@/features/strategy/schema/exchange";
+import type { Strategy } from "@/features/strategy/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import { Icon } from "@/components/icon/icon";
@@ -29,20 +30,26 @@ import {
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
+
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
+  const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
 
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [strategyStatus, setStrategyStatus] =
     React.useState<StrategyStatus | null>(null);
+  const [editedStrategy, setEditedStrategy] = React.useState<Strategy | null>(
+    null
+  );
   const [connectError, setConnectError] = React.useState<string | null>(null);
 
   const selectedStrategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
     null;
 
-  const strategy = strategyStatus?.strategy ?? selectedStrategy;
+  const sourceStrategy = strategyStatus?.strategy ?? selectedStrategy;
+  const strategy = editedStrategy ?? sourceStrategy;
 
   const strategyState = strategyStatus?.strategyState;
 
@@ -67,11 +74,26 @@ export function StrategyPage() {
     return "An unexpected error occurred";
   };
 
+  const updateEditedStrategy = (nextStrategy: Strategy) => {
+    setEditedStrategy((currentStrategy) => {
+      if (
+        currentStrategy &&
+        JSON.stringify(currentStrategy) === JSON.stringify(nextStrategy)
+      ) {
+        return currentStrategy;
+      }
+
+      return nextStrategy;
+    });
+  };
+
   const applyStrategyStatus = (nextStatus: StrategyStatus) => {
     setStrategyStatus(nextStatus);
 
     if (nextStatus.strategy) {
+      setEditedStrategy(nextStatus.strategy);
       setSelectedStrategyId(String(nextStatus.strategy.strategyId));
+      setStrategyFormVersion((version) => version + 1);
       setIsOpen(true);
     }
   };
@@ -101,9 +123,11 @@ export function StrategyPage() {
     setIsConnecting(true);
     setConnectError(null);
     setStrategyStatus(null);
+    setEditedStrategy(null);
 
     try {
       const accessToken = await getAccessTokenSilently();
+
       await fetchStrategyStatus(accessToken);
     } catch (error) {
       setConnectError(getErrorMessage(error));
@@ -114,7 +138,7 @@ export function StrategyPage() {
 
   const handleStrategyAction = async (
     route: string,
-    strategyBody?: typeof strategy
+    strategyBody?: Strategy
   ) => {
     setIsConnecting(true);
     setConnectError(null);
@@ -158,7 +182,13 @@ export function StrategyPage() {
   const handleStrategyChange = (value: string) => {
     const nextStrategyId = value === "__none__" ? "" : value;
 
+    const nextStrategy =
+      STRATEGY_CONFIG.find((s) => String(s.strategyId) === nextStrategyId) ??
+      null;
+
     setSelectedStrategyId(nextStrategyId);
+    setEditedStrategy(nextStrategy);
+    setStrategyFormVersion((version) => version + 1);
     setIsOpen(Boolean(nextStrategyId));
   };
 
@@ -332,7 +362,12 @@ export function StrategyPage() {
 
           {strategy && (
             <CollapsibleContent className="flex flex-col gap-2 pt-2 pb-2">
-              <StrategyForm defaultValues={strategy} showSubmitButton={false} />
+              <StrategyForm
+                key={`${strategy.strategyId}-${strategyFormVersion}`}
+                defaultValues={strategy}
+                showSubmitButton={false}
+                onChange={updateEditedStrategy}
+              />
             </CollapsibleContent>
           )}
         </Collapsible>
