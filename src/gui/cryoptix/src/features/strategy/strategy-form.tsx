@@ -201,10 +201,6 @@ export function StrategyForm({
   const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
 
   React.useEffect(() => {
-    form.reset(mergedDefaultValues);
-  }, [form, mergedDefaultValues]);
-
-  React.useEffect(() => {
     if (!onChange) return;
 
     const subscription = form.watch((values) => {
