@@ -43,6 +43,7 @@ export function StrategyPage() {
     null
   );
   const [connectError, setConnectError] = React.useState<string | null>(null);
+  const [showLiveCharts, setShowLiveCharts] = React.useState(false);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
 
@@ -58,6 +59,10 @@ export function StrategyPage() {
   const showStartButton = strategyState === 0;
   const showUpdateAndStopButtons = strategyState === 2;
   const showConnectButton = !showStartButton && !showUpdateAndStopButtons;
+
+  React.useEffect(() => {
+    setShowLiveCharts(strategyState === 2 && Boolean(strategy));
+  }, [strategyState, strategy]);
 
   const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -127,9 +132,18 @@ export function StrategyPage() {
     }
   };
 
+  const clearCurrentStrategy = () => {
+    latestStrategyRef.current = null;
+    setEditedStrategy(null);
+    setStrategyStatus(null);
+    setSelectedStrategyId("");
+    setIsOpen(false);
+  };
+
   const handleStrategyAction = async (
     route: string,
-    strategyBody?: Strategy
+    strategyBody?: Strategy,
+    clearStrategyAfterSuccess = false
   ) => {
     setIsConnecting(true);
     setConnectError(null);
@@ -148,6 +162,11 @@ export function StrategyPage() {
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      if (clearStrategyAfterSuccess) {
+        clearCurrentStrategy();
+        return;
       }
 
       await fetchStrategyStatus(accessToken);
@@ -303,7 +322,11 @@ export function StrategyPage() {
                         size="icon"
                         aria-label="Stop strategy"
                         onClick={() => {
-                          void handleStrategyAction(Config.API_ROUTE_STOP);
+                          void handleStrategyAction(
+                            Config.API_ROUTE_STOP,
+                            undefined,
+                            true
+                          );
                         }}
                         disabled={!serverUrl.trim()}
                       >
@@ -379,9 +402,11 @@ export function StrategyPage() {
           )}
         </Collapsible>
 
-        <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
-          Live Charts...
-        </div>
+        {showLiveCharts ? (
+          <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
+            Live Charts...
+          </div>
+        ) : null}
       </div>
     </div>
   );
