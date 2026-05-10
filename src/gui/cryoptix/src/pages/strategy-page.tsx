@@ -43,7 +43,6 @@ export function StrategyPage() {
     null
   );
   const [connectError, setConnectError] = React.useState<string | null>(null);
-  const [showLiveCharts, setShowLiveCharts] = React.useState(false);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
 
@@ -59,10 +58,7 @@ export function StrategyPage() {
   const showStartButton = strategyState === 0;
   const showUpdateAndStopButtons = strategyState === 2;
   const showConnectButton = !showStartButton && !showUpdateAndStopButtons;
-
-  React.useEffect(() => {
-    setShowLiveCharts(strategyState === 2 && Boolean(strategy));
-  }, [strategyState, strategy]);
+  const showLiveCharts = strategyState === 2 && Boolean(strategy);
 
   const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -178,7 +174,7 @@ export function StrategyPage() {
   };
 
   const handleServerConnectSubmit = (
-    event: React.FormEvent<HTMLFormElement>
+    event: React.SyntheticEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
