@@ -8,6 +8,7 @@ const envSchema = z.object({
   VITE_API_ROUTE_START: z.string().min(1),
   VITE_API_ROUTE_STOP: z.string().min(1),
   VITE_API_ROUTE_UPDATE: z.string().min(1),
+  VITE_API_ROUTE_SUBSCRIBE: z.string().min(1),
 });
 
 const env = envSchema.parse(import.meta.env);
@@ -20,4 +21,5 @@ export const Config = {
   API_ROUTE_START: env.VITE_API_ROUTE_START,
   API_ROUTE_STOP: env.VITE_API_ROUTE_STOP,
   API_ROUTE_UPDATE: env.VITE_API_ROUTE_UPDATE,
+  API_ROUTE_SUBSCRIBE: env.VITE_API_ROUTE_SUBSCRIBE,
 };
