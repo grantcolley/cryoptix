@@ -10,14 +10,14 @@ export const KlineSchema = z.object({
   closeTime: z.coerce.date(),
 
   // decimal -> string for exact precision
-  open: z.string(),
-  high: z.string(),
-  low: z.string(),
-  close: z.string(),
-  volume: z.string(),
-  quoteAssetVolume: z.string(),
-  takerBuyBaseAssetVolume: z.string(),
-  takerBuyQuoteAssetVolume: z.string(),
+  open: z.number(),
+  high: z.number(),
+  low: z.number(),
+  close: z.number(),
+  volume: z.number(),
+  quoteAssetVolume: z.number(),
+  takerBuyBaseAssetVolume: z.number(),
+  takerBuyQuoteAssetVolume: z.number(),
 
   final: z.boolean(),
   numberOfTrades: z.number().int(),
