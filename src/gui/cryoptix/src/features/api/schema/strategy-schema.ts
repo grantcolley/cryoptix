@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { KlineInterval } from "./kline-interval";
+import { Exchange } from "./exchange";
 import { StrategyProcessorType } from "./strategy-processor-type";
 import { StrategyEngineType } from "./strategy-engine-type";
-import { Exchange } from "./exchange";
 import { BoundedChannelFullMode } from "./bounded-channel-full-mode";
 
 export const StrategySchema = z.object({

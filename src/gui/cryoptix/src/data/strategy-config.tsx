@@ -1,4 +1,4 @@
-import type { Strategy } from "@/features/strategy/schema/strategy-schema";
+import type { Strategy } from "@/features/api/schema/strategy-schema";
 
 export const STRATEGY_CONFIG: Strategy[] = [
   {

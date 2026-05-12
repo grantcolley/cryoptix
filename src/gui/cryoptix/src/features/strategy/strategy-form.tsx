@@ -31,23 +31,27 @@ import {
 } from "@/components/ui/collapsible";
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
-
+import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
+import {
+  KlineInterval,
+  KlineIntervalLabels,
+} from "@/features/api/schema/kline-interval";
 import {
   BoundedChannelFullMode,
   BoundedChannelFullModeLabels,
-} from "./schema/bounded-channel-full-mode";
-
-import { Exchange, ExchangeLabels } from "./schema/exchange";
-import { KlineInterval, KlineIntervalLabels } from "./schema/kline-interval";
+} from "@/features/api/schema/bounded-channel-full-mode";
 import {
   StrategyEngineType,
   StrategyEngineTypeLabels,
-} from "./schema/strategy-engine-type";
+} from "@/features/api/schema/strategy-engine-type";
 import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
-} from "./schema/strategy-processor-type";
-import { StrategySchema, type Strategy } from "./schema/strategy-schema";
+} from "@/features/api/schema/strategy-processor-type";
+import {
+  StrategySchema,
+  type Strategy,
+} from "@/features/api/schema/strategy-schema";
 
 import { enumToOptions, type EnumOption } from "@/lib/enum-helper";
 

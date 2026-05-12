@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Config } from "@/config/config";
-import { ExchangeLabels } from "@/features/strategy/schema/exchange";
-import type { Strategy } from "@/features/strategy/schema/strategy-schema";
-import StrategyForm from "@/features/strategy/strategy-form";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
+import { ExchangeLabels } from "@/features/api/schema/exchange";
+import type { Strategy } from "@/features/api/schema/strategy-schema";
+import StrategyForm from "@/features/strategy/strategy-form";
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import {
   StrategyStatusSchema,
   type StrategyStatus,
-} from "@/features/strategy/schema/strategy-status";
+} from "@/features/api/schema/strategy-status";
 import {
   Select,
   SelectContent,
