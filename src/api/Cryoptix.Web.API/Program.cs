@@ -121,7 +121,8 @@ if (!string.IsNullOrWhiteSpace(corsPolicy)
             builder =>
                 builder.WithOrigins(urls)
                 .AllowAnyHeader()
-                .WithMethods("GET", "POST"));
+                .WithMethods("GET", "POST", "OPTIONS")
+                .AllowCredentials());
     });
 }
 
@@ -158,12 +159,7 @@ builder.Services.AddSingleton(new StrategyChannelOptions
     TradeBroadcastFullMode = (BoundedChannelFullMode)int.Parse(tradeBroadcastFullMode)
 });
 
-builder.Services.AddSignalR()
-    .AddJsonProtocol(options =>
-    {
-        options.PayloadSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<IUserContextAccessor, Auth0UserContextAccessor>();
 builder.Services.AddSingleton<ISubscriptionManager, InMemorySubscriptionManager>();
