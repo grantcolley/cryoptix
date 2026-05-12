@@ -9,6 +9,12 @@ import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createSignalRConnection } from "@/signalr/signalRConnection";
+import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
+import type { Trade } from "@/features/api/schema/trade-schema";
+import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
+import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
+import { MessageType } from "@/features/api/messages/message-type";
 import {
   StrategyStatusSchema,
   type StrategyStatus,
@@ -45,6 +51,12 @@ export function StrategyPage() {
   const [connectError, setConnectError] = React.useState<string | null>(null);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
+  const notificationConnectionRef = React.useRef<ReturnType<
+    typeof createSignalRConnection
+  > | null>(null);
+  const [notificationMessage, setNotificationMessage] = React.useState<
+    string | null
+  >(null);
 
   const selectedStrategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
@@ -89,6 +101,97 @@ export function StrategyPage() {
     }
   };
 
+  const stopSignalRSubscription = React.useCallback(async () => {
+    const connection = notificationConnectionRef.current;
+
+    if (!connection) {
+      return;
+    }
+
+    notificationConnectionRef.current = null;
+
+    try {
+      await connection.stop();
+    } catch (error) {
+      console.warn("Failed to stop SignalR subscription", error);
+    }
+  }, []);
+
+  const handleNotification = (envelope: NotificationEnvelope) => {
+    switch (envelope.messageType) {
+      case MessageType.MarketDataSnapshot: {
+        const payload = envelope.payload as MarketDataSnapshot | undefined;
+        const snapshotTime =
+          payload?.snapshotTimeUtc instanceof Date
+            ? payload.snapshotTimeUtc.toISOString()
+            : undefined;
+
+        setNotificationMessage(
+          snapshotTime
+            ? `Market data snapshot received at ${snapshotTime}.`
+            : "Market data snapshot received."
+        );
+        break;
+      }
+      case MessageType.Kline:
+        setNotificationMessage("Kline update received.");
+        break;
+      case MessageType.Trade: {
+        const payload = envelope.payload as Trade | undefined;
+        const price = payload?.price;
+
+        setNotificationMessage(
+          price !== undefined
+            ? `Trade update received at ${price}.`
+            : "Trade update received."
+        );
+        break;
+      }
+      case MessageType.StrategyUpdated:
+        setNotificationMessage("Strategy update received.");
+        break;
+      case MessageType.None:
+      default:
+        setNotificationMessage("No notifications available.");
+        break;
+    }
+  };
+
+  const startSignalRSubscription = async (accessToken: string) => {
+    await stopSignalRSubscription();
+
+    if (!serverUrl.trim()) {
+      return;
+    }
+
+    const connection = createSignalRConnection(
+      serverUrl,
+      Config.API_ROUTE_SUBSCRIBE,
+      () => accessToken
+    );
+
+    connection.on("ReceiveNotification", (message: unknown) => {
+      const parsed = NotificationEnvelopeSchema.safeParse(message);
+      if (!parsed.success) {
+        console.warn("Invalid notification envelope", parsed.error);
+        return;
+      }
+
+      handleNotification(parsed.data);
+    });
+
+    notificationConnectionRef.current = connection;
+
+    try {
+      await connection.start();
+    } catch (error) {
+      notificationConnectionRef.current = null;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setConnectError(`SignalR connection failed: ${errorMessage}`);
+    }
+  };
+
   const fetchStrategyStatus = async (accessToken: string) => {
     const response = await fetch(
       getApiUrl(serverUrl, Config.API_ROUTE_STATUS),
@@ -108,6 +211,14 @@ export function StrategyPage() {
     const parsedStatus = StrategyStatusSchema.parse(json);
 
     applyStrategyStatus(parsedStatus);
+
+    if (parsedStatus.strategyState === 2) {
+      await startSignalRSubscription(accessToken);
+      return;
+    }
+
+    await stopSignalRSubscription();
+    setNotificationMessage(null);
   };
 
   const handleConnect = async () => {
@@ -134,7 +245,15 @@ export function StrategyPage() {
     setStrategyStatus(null);
     setSelectedStrategyId("");
     setIsOpen(false);
+    setNotificationMessage(null);
+    void stopSignalRSubscription();
   };
+
+  React.useEffect(() => {
+    return () => {
+      void stopSignalRSubscription();
+    };
+  }, [stopSignalRSubscription]);
 
   const handleStrategyAction = async (
     route: string,
@@ -344,6 +463,12 @@ export function StrategyPage() {
         {strategyStatus?.message && (
           <p className="px-4 text-sm text-muted-foreground">
             {strategyStatus.message}
+          </p>
+        )}
+
+        {notificationMessage && (
+          <p className="px-4 text-sm text-muted-foreground">
+            {notificationMessage}
           </p>
         )}
 
