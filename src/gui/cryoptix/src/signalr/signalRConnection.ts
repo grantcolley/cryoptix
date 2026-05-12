@@ -11,7 +11,10 @@ export const createSignalRConnection = (
   console.log("[SignalR] Connecting to:", fullUrl);
 
   return new signalR.HubConnectionBuilder()
-    .withUrl(fullUrl, { accessTokenFactory })
+    .withUrl(fullUrl, {
+      accessTokenFactory,
+      withCredentials: true,
+    })
     .withAutomaticReconnect()
     .configureLogging(signalR.LogLevel.Information)
     .build();
