@@ -6,9 +6,9 @@ export const TradeSchema = z.object({
   exchange: z.enum(Exchange).default(Exchange.None),
   time: z.coerce.date(),
   id: z.number().int(),
-  price: z.string(),
-  baseQuantity: z.string(),
-  quoteQuantity: z.string(),
+  price: z.number(),
+  baseQuantity: z.number(),
+  quoteQuantity: z.number(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
