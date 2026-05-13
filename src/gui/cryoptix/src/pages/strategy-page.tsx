@@ -5,10 +5,7 @@ import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import { ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
-import { Icon } from "@/components/icon/icon";
-import { icons } from "@/components/icon/icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { StrategyHeader } from "@/features/strategy/strategy-header";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
 import type { Trade } from "@/features/api/schema/trade-schema";
@@ -27,12 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -332,128 +323,28 @@ export function StrategyPage() {
           className="flex items-center gap-1 px-4 pt-4 pb-2"
           onSubmit={handleServerConnectSubmit}
         >
-          <Input
-            id="server-url"
-            type="text"
-            placeholder="Server url..."
-            aria-label="Enter server url"
-            value={serverUrl}
-            onChange={(event) => setServerUrl(event.target.value)}
-            disabled={isConnecting || !showConnectButton}
+          <StrategyHeader
+            isConnecting={isConnecting}
+            showConnectButton={showConnectButton}
+            showStartButton={showStartButton}
+            showUpdateAndStopButtons={showUpdateAndStopButtons}
+            serverUrl={serverUrl}
+            strategy={strategy}
+            onServerUrlChange={setServerUrl}
+            onStart={() => {
+              const strategyToSend = latestStrategyRef.current ?? strategy;
+              if (!strategyToSend) return;
+              void handleStrategyAction(Config.API_ROUTE_START, strategyToSend);
+            }}
+            onUpdate={() => {
+              const strategyToSend = latestStrategyRef.current ?? strategy;
+              if (!strategyToSend) return;
+              void handleStrategyAction(Config.API_ROUTE_UPDATE, strategyToSend);
+            }}
+            onStop={() => {
+              void handleStrategyAction(Config.API_ROUTE_STOP, undefined, true);
+            }}
           />
-
-          {isConnecting ? (
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-md border"
-              aria-label="Connecting to server"
-              role="status"
-            >
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-            </div>
-          ) : (
-            <TooltipProvider>
-              {showConnectButton ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      id="btn-connect"
-                      type="submit"
-                      variant="outline"
-                      size="icon"
-                      aria-label="Connect to server"
-                      disabled={!serverUrl.trim()}
-                    >
-                      <Icon icon={icons.plug} className="rotate-90" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Connect to server</TooltipContent>
-                </Tooltip>
-              ) : null}
-
-              {showStartButton ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      id="btn-start"
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label="Start strategy"
-                      onClick={() => {
-                        const strategyToSend =
-                          latestStrategyRef.current ?? strategy;
-
-                        if (!strategyToSend) return;
-
-                        void handleStrategyAction(
-                          Config.API_ROUTE_START,
-                          strategyToSend
-                        );
-                      }}
-                      disabled={!serverUrl.trim() || !strategy}
-                    >
-                      <Icon icon={icons.play} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Start strategy</TooltipContent>
-                </Tooltip>
-              ) : null}
-
-              {showUpdateAndStopButtons ? (
-                <>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        id="btn-update"
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Update strategy parameters"
-                        onClick={() => {
-                          const strategyToSend =
-                            latestStrategyRef.current ?? strategy;
-
-                          if (!strategyToSend) return;
-
-                          void handleStrategyAction(
-                            Config.API_ROUTE_UPDATE,
-                            strategyToSend
-                          );
-                        }}
-                        disabled={!serverUrl.trim() || !strategy}
-                      >
-                        <Icon icon={icons.slidersHorizontal} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Update strategy parameters</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        id="btn-stop"
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Stop strategy"
-                        onClick={() => {
-                          void handleStrategyAction(
-                            Config.API_ROUTE_STOP,
-                            undefined,
-                            true
-                          );
-                        }}
-                        disabled={!serverUrl.trim()}
-                      >
-                        <Icon icon={icons.square} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Stop strategy</TooltipContent>
-                  </Tooltip>
-                </>
-              ) : null}
-            </TooltipProvider>
-          )}
         </form>
 
         {connectError && (
