@@ -2,10 +2,9 @@ import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Config } from "@/config/config";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
-import { ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
-import StrategyForm from "@/features/strategy/strategy-form";
 import { StrategyHeader } from "@/features/strategy/strategy-header";
+import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
 import type { Trade } from "@/features/api/schema/trade-schema";
@@ -16,14 +15,6 @@ import {
   StrategyStatusSchema,
   type StrategyStatus,
 } from "@/features/api/schema/strategy-status";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -339,7 +330,10 @@ export function StrategyPage() {
             onUpdate={() => {
               const strategyToSend = latestStrategyRef.current ?? strategy;
               if (!strategyToSend) return;
-              void handleStrategyAction(Config.API_ROUTE_UPDATE, strategyToSend);
+              void handleStrategyAction(
+                Config.API_ROUTE_UPDATE,
+                strategyToSend
+              );
             }}
             onStop={() => {
               void handleStrategyAction(Config.API_ROUTE_STOP, undefined, true);
@@ -363,56 +357,17 @@ export function StrategyPage() {
           </p>
         )}
 
-        <Collapsible
-          open={isOpen}
+        <StrategySelect
+          isOpen={isOpen}
+          showStartButton={showStartButton}
+          selectedStrategyId={selectedStrategyId}
+          showUpdateAndStopButtons={showUpdateAndStopButtons}
+          strategy={strategy}
+          strategyFormVersion={strategyFormVersion}
           onOpenChange={setIsOpen}
-          className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
-        >
-          <div className="flex items-center gap-1 py-2">
-            {showStartButton && (
-              <Select
-                value={selectedStrategyId}
-                onValueChange={handleStrategyChange}
-                aria-label="Select a strategy"
-              >
-                <SelectTrigger className="w-[255px]">
-                  <SelectValue placeholder="Select a strategy" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">No strategy</SelectItem>
-                  {STRATEGY_CONFIG.map((s) => (
-                    <SelectItem key={s.strategyId} value={String(s.strategyId)}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {strategy && showUpdateAndStopButtons && (
-              <div className="flex flex-row items-baseline gap-4">
-                <h4 className="text-md text-foreground">{strategy.name}</h4>
-                <h4 className="text-sm text-foreground-semimuted">
-                  {strategy.symbol}
-                </h4>
-                <h4 className="text-sm text-foreground-semimuted">
-                  {ExchangeLabels[strategy.exchange]}
-                </h4>
-              </div>
-            )}
-          </div>
-
-          {strategy && (
-            <CollapsibleContent className="flex flex-col gap-2 pt-2 pb-2">
-              <StrategyForm
-                key={`${strategy.strategyId}-${strategyFormVersion}`}
-                defaultValues={strategy}
-                showSubmitButton={false}
-                onChange={handleStrategyFormChange}
-              />
-            </CollapsibleContent>
-          )}
-        </Collapsible>
+          onStrategyChange={handleStrategyChange}
+          onStrategyFormChange={handleStrategyFormChange}
+        />
 
         {showLiveCharts ? (
           <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
