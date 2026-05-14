@@ -18,6 +18,7 @@ import {
   SlidersHorizontal,
   Square,
   Sun,
+  Unplug,
   type LucideProps,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -45,6 +46,7 @@ export const icons = {
   slidersHorizontal: SlidersHorizontal,
   square: Square,
   sun: Sun,
+  unplug: Unplug,
 };
 
 /**
