@@ -1,5 +1,4 @@
-﻿using Cryoptix.Market.Data;
-using Cryoptix.Strategy.Clock;
+﻿using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Cache
@@ -19,8 +18,7 @@ namespace Cryoptix.Strategy.Cache
             {
                 return Task.FromResult(new MarketDataSnapshot
                 {
-                    Symbol = string.Empty,
-                    Interval = default,
+                    Strategy = new Strategies.Strategy(),
                     SnapshotTimeUtc = _strategyClock.UtcNow,
                     Klines = [],
                     Trades = []
@@ -28,16 +26,13 @@ namespace Cryoptix.Strategy.Cache
             }
 
             Strategies.Strategy strategy = session.Strategy;
-            string symbol = strategy.Symbol ?? string.Empty;
-            KlineInterval interval = strategy.KlineInterval;
 
             return Task.FromResult(new MarketDataSnapshot
             {
-                Symbol = symbol,
-                Interval = interval,
+                Strategy = strategy,
                 SnapshotTimeUtc = _strategyClock.UtcNow,
-                Klines = [.. session.Cache.GetKlines(symbol, interval)],
-                Trades = [.. session.Cache.GetTrades(symbol)]
+                Klines = [.. session.Cache.GetKlines(strategy.Symbol ?? string.Empty, strategy.KlineInterval)],
+                Trades = [.. session.Cache.GetTrades(strategy.Symbol ?? string.Empty)]
             });
         }
     }
