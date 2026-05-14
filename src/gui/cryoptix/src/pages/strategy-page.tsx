@@ -20,6 +20,7 @@ export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
 
   const [isOpen, setIsOpen] = React.useState(false);
+  const [showDisconnectButton, setShowDisconnectButton] = React.useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
 
@@ -84,6 +85,8 @@ export function StrategyPage() {
   };
 
   const stopSignalRSubscription = React.useCallback(async () => {
+    setShowDisconnectButton(false);
+
     const connection = notificationConnectionRef.current;
 
     if (!connection) {
@@ -166,6 +169,7 @@ export function StrategyPage() {
 
     try {
       await connection.start();
+      setShowDisconnectButton(true);
     } catch (error) {
       notificationConnectionRef.current = null;
       const errorMessage =
@@ -240,7 +244,9 @@ export function StrategyPage() {
   const handleStrategyAction = async (
     route: string,
     strategyBody?: Strategy,
-    clearStrategyAfterSuccess = false
+    isStart = false,
+    isUpdate = false,
+    isStop = false
   ) => {
     setIsConnecting(true);
     setConnectError(null);
@@ -261,12 +267,19 @@ export function StrategyPage() {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      if (clearStrategyAfterSuccess) {
+      if (isStart) {
+        await startSignalRSubscription(accessToken);
+        return;
+      }
+
+      if (isStop) {
         clearCurrentStrategy();
         return;
       }
 
-      await fetchStrategyStatus(accessToken);
+      if (isUpdate) {
+        await fetchStrategyStatus(accessToken);
+      }
     } catch (error) {
       setConnectError(getErrorMessage(error));
     } finally {
@@ -319,24 +332,43 @@ export function StrategyPage() {
             showConnectButton={showConnectButton}
             showStartButton={showStartButton}
             showUpdateAndStopButtons={showUpdateAndStopButtons}
+            showDisconnectButton={showDisconnectButton}
             serverUrl={serverUrl}
             strategy={strategy}
             onServerUrlChange={setServerUrl}
             onStart={() => {
               const strategyToSend = latestStrategyRef.current ?? strategy;
               if (!strategyToSend) return;
-              void handleStrategyAction(Config.API_ROUTE_START, strategyToSend);
+              void handleStrategyAction(
+                Config.API_ROUTE_START,
+                strategyToSend,
+                true,
+                false,
+                false
+              );
+            }}
+            onDisconnect={() => {
+              clearCurrentStrategy();
             }}
             onUpdate={() => {
               const strategyToSend = latestStrategyRef.current ?? strategy;
               if (!strategyToSend) return;
               void handleStrategyAction(
                 Config.API_ROUTE_UPDATE,
-                strategyToSend
+                strategyToSend,
+                false,
+                true,
+                false
               );
             }}
             onStop={() => {
-              void handleStrategyAction(Config.API_ROUTE_STOP, undefined, true);
+              void handleStrategyAction(
+                Config.API_ROUTE_STOP,
+                undefined,
+                false,
+                false,
+                true
+              );
             }}
           />
         </form>
@@ -359,9 +391,8 @@ export function StrategyPage() {
 
         <StrategySelect
           isOpen={isOpen}
-          showStartButton={showStartButton}
+          showSelect={showStartButton}
           selectedStrategyId={selectedStrategyId}
-          showUpdateAndStopButtons={showUpdateAndStopButtons}
           strategy={strategy}
           strategyFormVersion={strategyFormVersion}
           onOpenChange={setIsOpen}
