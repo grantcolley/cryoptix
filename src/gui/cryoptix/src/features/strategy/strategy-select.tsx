@@ -13,9 +13,8 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface StrategySelectProps {
   isOpen: boolean;
-  showStartButton: boolean;
+  showSelect: boolean;
   selectedStrategyId: string;
-  showUpdateAndStopButtons: boolean;
   strategy: Strategy | null;
   strategyFormVersion: number;
   onOpenChange: (open: boolean) => void;
@@ -25,9 +24,8 @@ interface StrategySelectProps {
 
 export function StrategySelect({
   isOpen,
-  showStartButton,
+  showSelect,
   selectedStrategyId,
-  showUpdateAndStopButtons,
   strategy,
   strategyFormVersion,
   onOpenChange,
@@ -41,7 +39,7 @@ export function StrategySelect({
       className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
     >
       <div className="flex items-center gap-1 py-2">
-        {showStartButton && (
+        {showSelect && (
           <Select
             value={selectedStrategyId}
             onValueChange={onStrategyChange}
@@ -61,7 +59,7 @@ export function StrategySelect({
           </Select>
         )}
 
-        {strategy && showUpdateAndStopButtons && (
+        {strategy && !showSelect && (
           <div className="flex flex-row items-baseline gap-4">
             <h4 className="text-md text-foreground">{strategy.name}</h4>
             <h4 className="text-sm text-foreground-semimuted">
