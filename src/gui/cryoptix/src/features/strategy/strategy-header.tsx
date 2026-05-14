@@ -15,10 +15,12 @@ interface StrategyHeaderProps {
   showConnectButton: boolean;
   showStartButton: boolean;
   showUpdateAndStopButtons: boolean;
+  showDisconnectButton: boolean;
   serverUrl: string;
   strategy: Strategy | null;
   onServerUrlChange: (url: string) => void;
   onStart: () => void;
+  onDisconnect: () => void;
   onUpdate: () => void;
   onStop: () => void;
 }
@@ -28,10 +30,12 @@ export function StrategyHeader({
   showConnectButton,
   showStartButton,
   showUpdateAndStopButtons,
+  showDisconnectButton,
   serverUrl,
   strategy,
   onServerUrlChange,
   onStart,
+  onDisconnect,
   onUpdate,
   onStop,
 }: StrategyHeaderProps) {
@@ -130,6 +134,25 @@ export function StrategyHeader({
                 <TooltipContent>Stop strategy</TooltipContent>
               </Tooltip>
             </>
+          ) : null}
+
+          {showDisconnectButton ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  id="btn-disconnect"
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Disconnect from server"
+                  onClick={onDisconnect}
+                  disabled={!serverUrl.trim()}
+                >
+                  <Icon icon={icons.unplug} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Disconnect from server</TooltipContent>
+            </Tooltip>
           ) : null}
         </TooltipProvider>
       )}
