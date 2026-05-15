@@ -23,6 +23,7 @@ export function StrategyPage() {
   const [showDisconnectButton, setShowDisconnectButton] = React.useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
+  const [showStartButton, setShowStartButton] = React.useState(false);
 
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -50,9 +51,9 @@ export function StrategyPage() {
 
   const strategyState = strategyStatus?.strategyState;
 
-  const showStartButton = strategyState === 0;
   const showUpdateAndStopButtons = strategyState === 2;
-  const showConnectButton = !showStartButton && !showUpdateAndStopButtons;
+  const showConnectButton =
+    !showStartButton && !showUpdateAndStopButtons && !showDisconnectButton;
   const showLiveCharts = strategyState === 2 && Boolean(strategy);
 
   const getApiUrl = (baseUrl: string, route: string) => {
@@ -74,6 +75,7 @@ export function StrategyPage() {
 
   const applyStrategyStatus = (nextStatus: StrategyStatus) => {
     setStrategyStatus(nextStatus);
+    setShowStartButton(nextStatus.strategyState === 0);
 
     if (nextStatus.strategy) {
       latestStrategyRef.current = nextStatus.strategy;
@@ -199,7 +201,9 @@ export function StrategyPage() {
     applyStrategyStatus(parsedStatus);
 
     if (parsedStatus.strategyState === 2) {
-      await startSignalRSubscription(accessToken);
+      if (!notificationConnectionRef.current) {
+        await startSignalRSubscription(accessToken);
+      }
       return;
     }
 
@@ -211,6 +215,7 @@ export function StrategyPage() {
     setIsConnecting(true);
     setConnectError(null);
     setStrategyStatus(null);
+    setShowStartButton(false);
     setEditedStrategy(null);
     latestStrategyRef.current = null;
 
@@ -229,6 +234,7 @@ export function StrategyPage() {
     latestStrategyRef.current = null;
     setEditedStrategy(null);
     setStrategyStatus(null);
+    setShowStartButton(false);
     setSelectedStrategyId("");
     setIsOpen(false);
     setNotificationMessage(null);
@@ -268,6 +274,7 @@ export function StrategyPage() {
       }
 
       if (isStart) {
+        setShowStartButton(false);
         await startSignalRSubscription(accessToken);
         return;
       }
