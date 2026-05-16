@@ -51,10 +51,9 @@ export function StrategyPage() {
 
   const strategyState = strategyStatus?.strategyState;
 
-  const showUpdateAndStopButtons = strategyState === 2;
+  const showStrategyRunning = strategyState === 2;
   const showConnectButton =
-    !showStartButton && !showUpdateAndStopButtons && !showDisconnectButton;
-  const showLiveCharts = strategyState === 2 && Boolean(strategy);
+    !showStartButton && !showStrategyRunning && !showDisconnectButton;
 
   const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -108,6 +107,18 @@ export function StrategyPage() {
     switch (envelope.messageType) {
       case MessageType.MarketDataSnapshot: {
         const payload = envelope.payload as MarketDataSnapshot | undefined;
+
+        if (payload) {
+          const nextStatus: StrategyStatus = {
+            strategyState: payload.strategyState,
+            strategy: payload.strategy,
+            strategyProcessorType: payload.strategy.strategyProcessorType,
+            message: null,
+          };
+
+          applyStrategyStatus(nextStatus);
+        }
+
         const snapshotTime =
           payload?.snapshotTimeUtc instanceof Date
             ? payload.snapshotTimeUtc.toISOString()
@@ -338,7 +349,7 @@ export function StrategyPage() {
             isConnecting={isConnecting}
             showConnectButton={showConnectButton}
             showStartButton={showStartButton}
-            showUpdateAndStopButtons={showUpdateAndStopButtons}
+            showUpdateAndStopButtons={showStrategyRunning}
             showDisconnectButton={showDisconnectButton}
             serverUrl={serverUrl}
             strategy={strategy}
@@ -407,7 +418,7 @@ export function StrategyPage() {
           onStrategyFormChange={handleStrategyFormChange}
         />
 
-        {showLiveCharts ? (
+        {showStrategyRunning ? (
           <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
             Live Charts...
           </div>
