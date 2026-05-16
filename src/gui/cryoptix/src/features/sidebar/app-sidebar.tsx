@@ -41,7 +41,7 @@ function SidebarFooterText() {
       className={
         collapsed
           ? "absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground writing-vertical rotate-180"
-          : "text-sm text-muted-foreground flex h-full items-end justify-center"
+          : "text-sm text-muted-foreground flex h-full items-end justify-left"
       }
     >
       &copy; 2026 Cryoptix
