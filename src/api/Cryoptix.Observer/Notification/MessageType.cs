@@ -6,6 +6,7 @@
         MarketDataSnapshot,
         Kline,
         Trade,
+        StrategyStarted,
         StrategyUpdated
     }
 }

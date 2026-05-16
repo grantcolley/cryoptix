@@ -74,11 +74,17 @@ namespace Cryoptix.Strategy.Processor
 
             try
             {
+                await _strategyStatusNotifier.NotifyStartedAsync(
+                    strategyProcessorSession.Strategy,
+                    cancellationToken);
+
                 await _strategyMarketSeeder.SeedAsync(
                     strategy: strategyProcessorSession.Strategy,
                     restApi: strategyProcessorSession.ExchangeApi.RestApi!,
                     klineWriter: channels.Klines.Writer,
                     cancellationToken: cancellationToken);
+
+                await _strategyStatusNotifier.NotifyMarketDataSnapshotAsync(cancellationToken);
 
                 strategyMarketEventSubscriptions = await _strategyMarketEventSubscriber.SubscribeAsync(
                     strategy: strategyProcessorSession.Strategy,
