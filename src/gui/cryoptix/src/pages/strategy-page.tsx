@@ -15,6 +15,7 @@ import {
   StrategyStatusSchema,
   type StrategyStatus,
 } from "@/features/api/schema/strategy-status";
+import { StrategyState } from "@/features/api/schema/strategy-state";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -72,6 +73,20 @@ export function StrategyPage() {
     return "An unexpected error occurred";
   };
 
+  const applyRunningStrategyStatus = (
+    strategy: Strategy,
+    message: string | null
+  ) => {
+    const nextStatus: StrategyStatus = {
+      strategyState: StrategyState.Running,
+      strategy: strategy,
+      strategyProcessorType: strategy.strategyProcessorType,
+      message: message,
+    };
+
+    applyStrategyStatus(nextStatus);
+  };
+
   const applyStrategyStatus = (nextStatus: StrategyStatus) => {
     setStrategyStatus(nextStatus);
     setShowStartButton(nextStatus.strategyState === 0);
@@ -109,26 +124,20 @@ export function StrategyPage() {
         const payload = envelope.payload as MarketDataSnapshot | undefined;
 
         if (payload) {
-          const nextStatus: StrategyStatus = {
-            strategyState: payload.strategyState,
-            strategy: payload.strategy,
-            strategyProcessorType: payload.strategy.strategyProcessorType,
-            message: null,
-          };
+          const snapshotTime =
+            payload?.snapshotTimeUtc instanceof Date
+              ? payload.snapshotTimeUtc.toISOString()
+              : undefined;
 
-          applyStrategyStatus(nextStatus);
+          const message = snapshotTime
+            ? `Market data snapshot received at ${snapshotTime}.`
+            : "Market data snapshot received.";
+
+          applyRunningStrategyStatus(payload.strategy, message);
+
+          setNotificationMessage(message);
         }
 
-        const snapshotTime =
-          payload?.snapshotTimeUtc instanceof Date
-            ? payload.snapshotTimeUtc.toISOString()
-            : undefined;
-
-        setNotificationMessage(
-          snapshotTime
-            ? `Market data snapshot received at ${snapshotTime}.`
-            : "Market data snapshot received."
-        );
         break;
       }
       case MessageType.Kline:
@@ -145,9 +154,46 @@ export function StrategyPage() {
         );
         break;
       }
-      case MessageType.StrategyUpdated:
-        setNotificationMessage("Strategy update received.");
+      case MessageType.StrategyStarted: {
+        const payload = envelope.payload as Strategy | undefined;
+
+        if (payload) {
+          const envelopeTime =
+            envelope?.timestampUtc instanceof Date
+              ? envelope.timestampUtc.toISOString()
+              : undefined;
+
+          const message = envelopeTime
+            ? `Strategy started at ${envelopeTime}.`
+            : "Strategy started.";
+
+          applyRunningStrategyStatus(payload, message);
+
+          setNotificationMessage(message);
+        }
+
         break;
+      }
+      case MessageType.StrategyUpdated: {
+        const payload = envelope.payload as Strategy | undefined;
+
+        if (payload) {
+          const envelopeTime =
+            envelope?.timestampUtc instanceof Date
+              ? envelope.timestampUtc.toISOString()
+              : undefined;
+
+          const message = envelopeTime
+            ? `Strategy updated at ${envelopeTime}.`
+            : "Strategy updated.";
+
+          applyRunningStrategyStatus(payload, message);
+
+          setNotificationMessage(message);
+        }
+
+        break;
+      }
       case MessageType.None:
       default:
         setNotificationMessage("No notifications available.");
@@ -271,6 +317,11 @@ export function StrategyPage() {
     try {
       const accessToken = await getAccessTokenSilently();
 
+      if (isStart) {
+        setShowStartButton(false);
+        await startSignalRSubscription(accessToken);
+      }
+
       const response = await fetch(getApiUrl(serverUrl, route), {
         method: "POST",
         headers: {
@@ -282,12 +333,6 @@ export function StrategyPage() {
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      if (isStart) {
-        setShowStartButton(false);
-        await startSignalRSubscription(accessToken);
-        return;
       }
 
       if (isStop) {
