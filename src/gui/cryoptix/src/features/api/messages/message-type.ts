@@ -5,7 +5,8 @@ export const MessageType = {
   MarketDataSnapshot: 1,
   Kline: 2,
   Trade: 3,
-  StrategyUpdated: 4,
+  StrategyStarted: 4,
+  StrategyUpdated: 5,
 } as const;
 
 export const MessageTypeSchema = z.enum(MessageType);
