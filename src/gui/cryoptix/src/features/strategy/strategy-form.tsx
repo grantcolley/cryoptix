@@ -3,7 +3,7 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Control } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -180,6 +180,254 @@ function parseNullableIntegerInput(value: string): number | null | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+function TextField({
+  control,
+  name,
+  label,
+}: {
+  control: Control<StrategyFormValues>;
+  name: Extract<keyof StrategyFormValues, "name" | "symbol">;
+  label: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <Input
+            id={field.name}
+            name={field.name}
+            ref={field.ref}
+            value={nullableTextToInputValue(field.value)}
+            onBlur={field.onBlur}
+            onChange={(event) => field.onChange(event.target.value)}
+            aria-invalid={fieldState.invalid}
+          />
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+function TextAreaField({
+  control,
+  name,
+  label,
+}: {
+  control: Control<StrategyFormValues>;
+  name: Extract<keyof StrategyFormValues, "description">;
+  label: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <Textarea
+            id={field.name}
+            name={field.name}
+            ref={field.ref}
+            value={nullableTextToInputValue(field.value)}
+            onBlur={field.onBlur}
+            onChange={(event) => field.onChange(event.target.value)}
+            aria-invalid={fieldState.invalid}
+          />
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+function IntegerField({
+  control,
+  name,
+  label,
+}: {
+  control: Control<StrategyFormValues>;
+  name: StrategyIntegerFieldName;
+  label: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <Input
+            id={field.name}
+            name={field.name}
+            ref={field.ref}
+            type="number"
+            inputMode="numeric"
+            step={1}
+            value={nullableNumberInputValue(field.value)}
+            onBlur={field.onBlur}
+            onChange={(event) =>
+              field.onChange(parseIntegerInput(event.target.value))
+            }
+            aria-invalid={fieldState.invalid}
+          />
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+function NullableIntegerField({
+  control,
+  name,
+  label,
+  description,
+}: {
+  control: Control<StrategyFormValues>;
+  name: Extract<keyof StrategyFormValues, "orderBookLimit">;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <Input
+            id={field.name}
+            name={field.name}
+            ref={field.ref}
+            type="number"
+            inputMode="numeric"
+            step={1}
+            value={nullableNumberInputValue(field.value)}
+            onBlur={field.onBlur}
+            onChange={(event) =>
+              field.onChange(parseNullableIntegerInput(event.target.value))
+            }
+            aria-invalid={fieldState.invalid}
+          />
+          {description ? (
+            <FieldDescription>{description}</FieldDescription>
+          ) : null}
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+function BooleanField({
+  control,
+  name,
+  label,
+  description,
+}: {
+  control: Control<StrategyFormValues>;
+  name: Extract<
+    keyof StrategyFormValues,
+    "subscriptionChannelDropTradesWhenFull"
+  >;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field
+          orientation="horizontal"
+          data-invalid={fieldState.invalid}
+          className="rounded-md border p-3"
+        >
+          <Checkbox
+            id={field.name}
+            name={field.name}
+            ref={field.ref}
+            checked={field.value}
+            onBlur={field.onBlur}
+            onCheckedChange={(checked) => field.onChange(checked === true)}
+            aria-invalid={fieldState.invalid}
+          />
+          <FieldContent>
+            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            {description ? (
+              <FieldDescription>{description}</FieldDescription>
+            ) : null}
+            {fieldState.invalid ? (
+              <FieldError errors={[fieldState.error]} />
+            ) : null}
+          </FieldContent>
+        </Field>
+      )}
+    />
+  );
+}
+
+function EnumSelectField<TName extends StrategyEnumFieldName>({
+  control,
+  name,
+  label,
+  options,
+}: {
+  control: Control<StrategyFormValues>;
+  name: TName;
+  label: string;
+  options: EnumOption<Extract<Strategy[TName], number>>[];
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel>{label}</FieldLabel>
+          <Select
+            value={numberToSelectValue(field.value as number)}
+            onValueChange={(value) =>
+              field.onChange(
+                selectValueToNumber<Extract<Strategy[TName], number>>(value)
+              )
+            }
+          >
+            <SelectTrigger aria-invalid={fieldState.invalid}>
+              <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={numberToSelectValue(option.value)}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
 export function StrategyForm({
   defaultValues,
   submitLabel = "Save strategy",
@@ -271,24 +519,39 @@ export function StrategyForm({
               </div>
 
               <CollapsibleContent className="space-y-6">
-                <IntegerField name="strategyId" label="Strategy ID" />
-                <TextField name="name" label="Name" />
-                <TextField name="symbol" label="Symbol" />
-                <TextAreaField name="description" label="Description" />
+                <IntegerField
+                  control={form.control}
+                  name="strategyId"
+                  label="Strategy ID"
+                />
+                <TextField control={form.control} name="name" label="Name" />
+                <TextField
+                  control={form.control}
+                  name="symbol"
+                  label="Symbol"
+                />
+                <TextAreaField
+                  control={form.control}
+                  name="description"
+                  label="Description"
+                />
 
                 <EnumSelectField
+                  control={form.control}
                   name="strategyProcessorType"
                   label="Strategy processor type"
                   options={strategyProcessorTypeOptions}
                 />
 
                 <EnumSelectField
+                  control={form.control}
                   name="strategyEngineType"
                   label="Strategy engine type"
                   options={strategyEngineTypeOptions}
                 />
 
                 <EnumSelectField
+                  control={form.control}
                   name="exchange"
                   label="Exchange"
                   options={exchangeOptions}
@@ -329,62 +592,81 @@ export function StrategyForm({
 
               <CollapsibleContent className="space-y-6">
                 <EnumSelectField
+                  control={form.control}
                   name="klineInterval"
                   label="Kline interval"
                   options={klineIntervalOptions}
                 />
 
-                <IntegerField name="fastPeriod" label="Fast period" />
-                <IntegerField name="slowPeriod" label="Slow period" />
+                <IntegerField
+                  control={form.control}
+                  name="fastPeriod"
+                  label="Fast period"
+                />
+                <IntegerField
+                  control={form.control}
+                  name="slowPeriod"
+                  label="Slow period"
+                />
 
                 <NullableIntegerField
+                  control={form.control}
                   name="orderBookLimit"
                   label="Order book limit"
                   description="Leave empty to submit null."
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="maxOrderBookAgeSeconds"
                   label="Max order book age seconds"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="maxAccountAgeSeconds"
                   label="Max account age seconds"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="cacheMaxKlinesPerSeries"
                   label="Cache max klines per series"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="cacheMaxTradesPerSymbol"
                   label="Cache max trades per symbol"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="strategyProcessorMaxTradesPerPass"
                   label="Strategy processor max trades per pass"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="subscriptionChannelKlineCapacity"
                   label="Subscription channel kline capacity"
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="subscriptionChannelTradeCapacity"
                   label="Subscription channel trade capacity"
                 />
 
                 <BooleanField
+                  control={form.control}
                   name="subscriptionChannelDropTradesWhenFull"
                   label="Drop trades when full"
                   description="Drops incoming trades when the subscription channel reaches capacity."
                 />
 
                 <EnumSelectField
+                  control={form.control}
                   name="subscriptionChannelKlineFullMode"
                   label="Subscription channel kline full mode"
                   options={boundedChannelFullModeOptions}
@@ -423,22 +705,26 @@ export function StrategyForm({
 
               <CollapsibleContent className="space-y-6">
                 <IntegerField
+                  control={form.control}
                   name="klineBroadcastCapacity"
                   label="Kline broadcast capacity"
                 />
 
                 <EnumSelectField
+                  control={form.control}
                   name="klineBroadcastFullMode"
                   label="Kline broadcast full mode"
                   options={boundedChannelFullModeOptions}
                 />
 
                 <IntegerField
+                  control={form.control}
                   name="tradeBroadcastCapacity"
                   label="Trade broadcast capacity"
                 />
 
                 <EnumSelectField
+                  control={form.control}
                   name="tradeBroadcastFullMode"
                   label="Trade broadcast full mode"
                   options={boundedChannelFullModeOptions}
@@ -461,242 +747,6 @@ export function StrategyForm({
       ) : null}
     </form>
   );
-
-  function TextField({
-    name,
-    label,
-  }: {
-    name: Extract<keyof StrategyFormValues, "name" | "symbol">;
-    label: string;
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-            <Input
-              id={field.name}
-              name={field.name}
-              ref={field.ref}
-              value={nullableTextToInputValue(field.value)}
-              onBlur={field.onBlur}
-              onChange={(event) => field.onChange(event.target.value)}
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </Field>
-        )}
-      />
-    );
-  }
-
-  function TextAreaField({
-    name,
-    label,
-  }: {
-    name: Extract<keyof StrategyFormValues, "description">;
-    label: string;
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-            <Textarea
-              id={field.name}
-              name={field.name}
-              ref={field.ref}
-              value={nullableTextToInputValue(field.value)}
-              onBlur={field.onBlur}
-              onChange={(event) => field.onChange(event.target.value)}
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </Field>
-        )}
-      />
-    );
-  }
-
-  function IntegerField({
-    name,
-    label,
-  }: {
-    name: StrategyIntegerFieldName;
-    label: string;
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-            <Input
-              id={field.name}
-              name={field.name}
-              ref={field.ref}
-              type="number"
-              inputMode="numeric"
-              step={1}
-              value={nullableNumberInputValue(field.value)}
-              onBlur={field.onBlur}
-              onChange={(event) =>
-                field.onChange(parseIntegerInput(event.target.value))
-              }
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </Field>
-        )}
-      />
-    );
-  }
-
-  function NullableIntegerField({
-    name,
-    label,
-    description,
-  }: {
-    name: Extract<keyof StrategyFormValues, "orderBookLimit">;
-    label: string;
-    description?: string;
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-            <Input
-              id={field.name}
-              name={field.name}
-              ref={field.ref}
-              type="number"
-              inputMode="numeric"
-              step={1}
-              value={nullableNumberInputValue(field.value)}
-              onBlur={field.onBlur}
-              onChange={(event) =>
-                field.onChange(parseNullableIntegerInput(event.target.value))
-              }
-              aria-invalid={fieldState.invalid}
-            />
-            {description ? (
-              <FieldDescription>{description}</FieldDescription>
-            ) : null}
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </Field>
-        )}
-      />
-    );
-  }
-
-  function BooleanField({
-    name,
-    label,
-    description,
-  }: {
-    name: Extract<
-      keyof StrategyFormValues,
-      "subscriptionChannelDropTradesWhenFull"
-    >;
-    label: string;
-    description?: string;
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field
-            orientation="horizontal"
-            data-invalid={fieldState.invalid}
-            className="rounded-md border p-3"
-          >
-            <Checkbox
-              id={field.name}
-              name={field.name}
-              ref={field.ref}
-              checked={field.value}
-              onBlur={field.onBlur}
-              onCheckedChange={(checked) => field.onChange(checked === true)}
-              aria-invalid={fieldState.invalid}
-            />
-            <FieldContent>
-              <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-              {description ? (
-                <FieldDescription>{description}</FieldDescription>
-              ) : null}
-              {fieldState.invalid ? (
-                <FieldError errors={[fieldState.error]} />
-              ) : null}
-            </FieldContent>
-          </Field>
-        )}
-      />
-    );
-  }
-
-  function EnumSelectField<TName extends StrategyEnumFieldName>({
-    name,
-    label,
-    options,
-  }: {
-    name: TName;
-    label: string;
-    options: EnumOption<Extract<Strategy[TName], number>>[];
-  }) {
-    return (
-      <Controller
-        control={form.control}
-        name={name}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>{label}</FieldLabel>
-            <Select
-              value={numberToSelectValue(field.value as number)}
-              onValueChange={(value) =>
-                field.onChange(
-                  selectValueToNumber<Extract<Strategy[TName], number>>(value)
-                )
-              }
-            >
-              <SelectTrigger aria-invalid={fieldState.invalid}>
-                <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={numberToSelectValue(option.value)}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </Field>
-        )}
-      />
-    );
-  }
 }
 
 export default StrategyForm;
