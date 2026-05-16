@@ -88,8 +88,14 @@ type StrategyFormProps = {
   defaultValues?: Partial<Strategy>;
   submitLabel?: string;
   showSubmitButton?: boolean;
+  isSubscriptionOpen?: boolean;
+  isStrategyOpen?: boolean;
+  isBroadcastOpen?: boolean;
   onSubmit?: (strategy: Strategy) => void | Promise<void>;
   onChange?: (strategy: Strategy) => void;
+  onSubscriptionOpenChange?: (open: boolean) => void;
+  onStrategyOpenChange?: (open: boolean) => void;
+  onBroadcastOpenChange?: (open: boolean) => void;
 };
 
 const strategyProcessorTypeOptions = enumToOptions(
@@ -432,8 +438,14 @@ export function StrategyForm({
   defaultValues,
   submitLabel = "Save strategy",
   showSubmitButton = true,
+  isSubscriptionOpen,
+  isStrategyOpen,
+  isBroadcastOpen,
   onSubmit,
   onChange,
+  onSubscriptionOpenChange,
+  onStrategyOpenChange,
+  onBroadcastOpenChange,
 }: StrategyFormProps) {
   const mergedDefaultValues = React.useMemo<Strategy>(
     () => ({
@@ -448,9 +460,31 @@ export function StrategyForm({
     defaultValues: mergedDefaultValues,
   });
 
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(false);
-  const [isStrategyOpen, setIsStrategyOpen] = React.useState(false);
-  const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
+  const [uncontrolledSubscriptionOpen, setUncontrolledSubscriptionOpen] =
+    React.useState(false);
+  const [uncontrolledStrategyOpen, setUncontrolledStrategyOpen] =
+    React.useState(false);
+  const [uncontrolledBroadcastOpen, setUncontrolledBroadcastOpen] =
+    React.useState(false);
+
+  const subscriptionOpen = isSubscriptionOpen ?? uncontrolledSubscriptionOpen;
+  const strategyOpen = isStrategyOpen ?? uncontrolledStrategyOpen;
+  const broadcastOpen = isBroadcastOpen ?? uncontrolledBroadcastOpen;
+
+  const handleSubscriptionOpenChange = (open: boolean) => {
+    setUncontrolledSubscriptionOpen(open);
+    onSubscriptionOpenChange?.(open);
+  };
+
+  const handleStrategyOpenChange = (open: boolean) => {
+    setUncontrolledStrategyOpen(open);
+    onStrategyOpenChange?.(open);
+  };
+
+  const handleBroadcastOpenChange = (open: boolean) => {
+    setUncontrolledBroadcastOpen(open);
+    onBroadcastOpenChange?.(open);
+  };
 
   React.useEffect(() => {
     if (!onChange) return;
@@ -494,8 +528,8 @@ export function StrategyForm({
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
             <Collapsible
-              open={isStrategyOpen}
-              onOpenChange={setIsStrategyOpen}
+              open={strategyOpen}
+              onOpenChange={handleStrategyOpenChange}
               className="group/collapsible"
             >
               <div className="flex items-center gap-1 space-y-6">
@@ -513,7 +547,7 @@ export function StrategyForm({
                     aria-label="Toggle details"
                     className="p-0"
                   >
-                    <Icon icon={isStrategyOpen ? icons.minus : icons.plus} />
+                    <Icon icon={strategyOpen ? icons.minus : icons.plus} />
                   </Button>
                 </CollapsibleTrigger>
               </div>
@@ -564,8 +598,8 @@ export function StrategyForm({
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
             <Collapsible
-              open={isSubscriptionOpen}
-              onOpenChange={setIsSubscriptionOpen}
+              open={subscriptionOpen}
+              onOpenChange={handleSubscriptionOpenChange}
               className="group/collapsible"
             >
               <div className="flex items-center gap-1 space-y-6">
@@ -583,9 +617,7 @@ export function StrategyForm({
                     aria-label="Toggle details"
                     className="p-0"
                   >
-                    <Icon
-                      icon={isSubscriptionOpen ? icons.minus : icons.plus}
-                    />
+                    <Icon icon={subscriptionOpen ? icons.minus : icons.plus} />
                   </Button>
                 </CollapsibleTrigger>
               </div>
@@ -679,8 +711,8 @@ export function StrategyForm({
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
             <Collapsible
-              open={isBroadcastOpen}
-              onOpenChange={setIsBroadcastOpen}
+              open={broadcastOpen}
+              onOpenChange={handleBroadcastOpenChange}
               className="group/collapsible"
             >
               <div className="flex items-center gap-1 space-y-6">
@@ -698,7 +730,7 @@ export function StrategyForm({
                     aria-label="Toggle details"
                     className="p-0"
                   >
-                    <Icon icon={isBroadcastOpen ? icons.minus : icons.plus} />
+                    <Icon icon={broadcastOpen ? icons.minus : icons.plus} />
                   </Button>
                 </CollapsibleTrigger>
               </div>

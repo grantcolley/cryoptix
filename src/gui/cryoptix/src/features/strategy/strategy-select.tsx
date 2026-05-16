@@ -1,4 +1,5 @@
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
+import * as React from "react";
 import { ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
@@ -32,6 +33,10 @@ export function StrategySelect({
   onStrategyChange,
   onStrategyFormChange,
 }: StrategySelectProps) {
+  const [isStrategyOpen, setIsStrategyOpen] = React.useState(false);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(false);
+  const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
+
   return (
     <Collapsible
       open={isOpen}
@@ -78,7 +83,13 @@ export function StrategySelect({
             key={`${strategy.strategyId}-${strategyFormVersion}`}
             defaultValues={strategy}
             showSubmitButton={false}
+            isStrategyOpen={isStrategyOpen}
+            isSubscriptionOpen={isSubscriptionOpen}
+            isBroadcastOpen={isBroadcastOpen}
             onChange={onStrategyFormChange}
+            onStrategyOpenChange={setIsStrategyOpen}
+            onSubscriptionOpenChange={setIsSubscriptionOpen}
+            onBroadcastOpenChange={setIsBroadcastOpen}
           />
         </CollapsibleContent>
       )}
