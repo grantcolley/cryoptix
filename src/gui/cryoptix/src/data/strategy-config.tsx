@@ -10,6 +10,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
     strategyEngineType: 1,
     exchange: 1,
     klineInterval: 1,
+    klineSeedSize: 1440, // 1 day of 1-minute klines
+    klineSeedLimit: 1000, // Max klines to seed at once
     fastPeriod: 0,
     slowPeriod: 0,
     orderBookLimit: 20,
@@ -22,7 +24,7 @@ export const STRATEGY_CONFIG: Strategy[] = [
     subscriptionChannelTradeCapacity: 10000,
     subscriptionChannelDropTradesWhenFull: true,
     subscriptionChannelKlineFullMode: 0,
-    klineBroadcastCapacity: 500,
+    klineBroadcastCapacity: 5000,
     tradeBroadcastCapacity: 10000,
     klineBroadcastFullMode: 2,
     tradeBroadcastFullMode: 2,
