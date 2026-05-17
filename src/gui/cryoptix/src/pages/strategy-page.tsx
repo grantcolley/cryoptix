@@ -1,5 +1,21 @@
 import * as React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import {
+  CandlestickSeries,
+  ColorType,
+  CrosshairMode,
+  LineSeries,
+  createChart,
+  createSeriesMarkers,
+  type CandlestickData,
+  type IChartApi,
+  type ISeriesApi,
+  type ISeriesMarkersPluginApi,
+  type LineData,
+  type SeriesMarker,
+  type Time,
+  type UTCTimestamp,
+} from "lightweight-charts";
 import { Config } from "@/config/config";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
@@ -7,6 +23,7 @@ import { StrategyHeader } from "@/features/strategy/strategy-header";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
+import type { Kline } from "@/features/api/schema/kline-schema";
 import type { Trade } from "@/features/api/schema/trade-schema";
 import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
@@ -16,6 +33,7 @@ import {
   type StrategyStatus,
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -36,6 +54,19 @@ export function StrategyPage() {
   const [connectError, setConnectError] = React.useState<string | null>(null);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
+  const chartRef = React.useRef<HTMLDivElement | null>(null);
+  const chartApiRef = React.useRef<IChartApi | null>(null);
+  const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const tradeSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
+  const tradeMarkersApiRef =
+    React.useRef<ISeriesMarkersPluginApi<Time> | null>(null);
+  const candleDataByTimeRef = React.useRef<
+    Map<number, CandlestickData<UTCTimestamp>>
+  >(new Map());
+  const tradeDataByTimeRef = React.useRef<Map<number, LineData<UTCTimestamp>>>(
+    new Map()
+  );
+  const tradeMarkersRef = React.useRef<SeriesMarker<UTCTimestamp>[]>([]);
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
   > | null>(null);
@@ -71,6 +102,93 @@ export function StrategyPage() {
     }
 
     return "An unexpected error occurred";
+  };
+
+  const toChartTime = (date: Date): UTCTimestamp =>
+    Math.floor(date.getTime() / 1000) as UTCTimestamp;
+
+  const toCandleData = (
+    kline: Kline
+  ): CandlestickData<UTCTimestamp> => ({
+    time: toChartTime(kline.openTime),
+    open: kline.open,
+    high: kline.high,
+    low: kline.low,
+    close: kline.close,
+  });
+
+  const toTradeData = (trade: Trade): LineData<UTCTimestamp> => ({
+    time: toChartTime(trade.time),
+    value: trade.price,
+  });
+
+  const sortByTime = <T extends { time: UTCTimestamp }>(items: T[]) =>
+    items.sort((a, b) => a.time - b.time);
+
+  const applyKlinesToChart = (klines: Kline[], replace = false) => {
+    const candleSeries = candleSeriesRef.current;
+
+    if (replace) {
+      candleDataByTimeRef.current = new Map();
+    }
+
+    for (const kline of klines) {
+      const candle = toCandleData(kline);
+      candleDataByTimeRef.current.set(candle.time, candle);
+
+      if (!replace && candleSeries) {
+        candleSeries.update(candle);
+      }
+    }
+
+    if (replace && candleSeries) {
+      candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+      chartApiRef.current?.timeScale().fitContent();
+    }
+  };
+
+  const applyTradesToChart = (trades: Trade[], replace = false) => {
+    const tradeSeries = tradeSeriesRef.current;
+
+    if (replace) {
+      tradeDataByTimeRef.current = new Map();
+      tradeMarkersRef.current = [];
+    }
+
+    for (const trade of trades) {
+      const tradeData = toTradeData(trade);
+      tradeDataByTimeRef.current.set(tradeData.time, tradeData);
+      tradeMarkersRef.current.push({
+        id: String(trade.id),
+        time: tradeData.time,
+        position: "atPriceMiddle",
+        price: trade.price,
+        shape: "circle",
+        color: "#2563eb",
+        size: 0.8,
+      });
+
+      if (!replace && tradeSeries) {
+        tradeSeries.update(tradeData);
+      }
+    }
+
+    if (replace && tradeSeries) {
+      tradeSeries.setData(sortByTime([...tradeDataByTimeRef.current.values()]));
+    }
+
+    tradeMarkersApiRef.current?.setMarkers(
+      sortByTime([...tradeMarkersRef.current])
+    );
+  };
+
+  const resetChartData = () => {
+    candleDataByTimeRef.current = new Map();
+    tradeDataByTimeRef.current = new Map();
+    tradeMarkersRef.current = [];
+    candleSeriesRef.current?.setData([]);
+    tradeSeriesRef.current?.setData([]);
+    tradeMarkersApiRef.current?.setMarkers([]);
   };
 
   const applyRunningStrategyStatus = (
@@ -134,18 +252,31 @@ export function StrategyPage() {
             : "Market data snapshot received.";
 
           applyRunningStrategyStatus(payload.strategy, message);
+          applyKlinesToChart(payload.klines, true);
+          applyTradesToChart(payload.trades, true);
 
           setNotificationMessage(message);
         }
 
         break;
       }
-      case MessageType.Kline:
+      case MessageType.Kline: {
+        const payload = envelope.payload as Kline | undefined;
+
+        if (payload) {
+          applyKlinesToChart([payload]);
+        }
+
         setNotificationMessage("Kline update received.");
         break;
+      }
       case MessageType.Trade: {
         const payload = envelope.payload as Trade | undefined;
         const price = payload?.price;
+
+        if (payload) {
+          applyTradesToChart([payload]);
+        }
 
         setNotificationMessage(
           price !== undefined
@@ -295,6 +426,7 @@ export function StrategyPage() {
     setSelectedStrategyId("");
     setIsOpen(false);
     setNotificationMessage(null);
+    resetChartData();
     void stopSignalRSubscription();
   };
 
@@ -303,6 +435,75 @@ export function StrategyPage() {
       void stopSignalRSubscription();
     };
   }, [stopSignalRSubscription]);
+
+  React.useEffect(() => {
+    const container = chartRef.current;
+
+    if (!showStrategyRunning || !container) {
+      return;
+    }
+
+    const chart = createChart(container, {
+      autoSize: true,
+      layout: {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: "#475569",
+      },
+      grid: {
+        vertLines: { color: "#e2e8f0" },
+        horzLines: { color: "#e2e8f0" },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
+      rightPriceScale: {
+        borderColor: "#cbd5e1",
+      },
+      timeScale: {
+        borderColor: "#cbd5e1",
+        timeVisible: true,
+        secondsVisible: true,
+      },
+    });
+
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: "#16a34a",
+      downColor: "#dc2626",
+      borderUpColor: "#16a34a",
+      borderDownColor: "#dc2626",
+      wickUpColor: "#16a34a",
+      wickDownColor: "#dc2626",
+    });
+
+    const tradeSeries = chart.addSeries(LineSeries, {
+      color: "#2563eb",
+      lineVisible: false,
+      pointMarkersVisible: true,
+      pointMarkersRadius: 3,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+
+    const tradeMarkersApi = createSeriesMarkers(tradeSeries, []);
+
+    chartApiRef.current = chart;
+    candleSeriesRef.current = candleSeries;
+    tradeSeriesRef.current = tradeSeries;
+    tradeMarkersApiRef.current = tradeMarkersApi;
+
+    candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+    tradeSeries.setData(sortByTime([...tradeDataByTimeRef.current.values()]));
+    tradeMarkersApi.setMarkers(sortByTime([...tradeMarkersRef.current]));
+    chart.timeScale().fitContent();
+
+    return () => {
+      chartApiRef.current = null;
+      candleSeriesRef.current = null;
+      tradeSeriesRef.current = null;
+      tradeMarkersApiRef.current = null;
+      chart.remove();
+    };
+  }, [showStrategyRunning, strategy?.symbol]);
 
   const handleStrategyAction = async (
     route: string,
@@ -465,7 +666,14 @@ export function StrategyPage() {
 
         {showStrategyRunning ? (
           <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
-            Live Charts...
+            <Card>
+              <CardHeader>
+                <CardTitle>{strategy?.symbol}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div ref={chartRef} className="h-[500px] w-full" />
+              </CardContent>
+            </Card>
           </div>
         ) : null}
       </div>
