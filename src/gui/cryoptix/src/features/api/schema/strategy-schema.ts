@@ -21,6 +21,8 @@ export const StrategySchema = z.object({
 
   // Subscription and caching fields
   klineInterval: z.enum(KlineInterval).default(KlineInterval.Minute),
+  klineSeedSize: z.number().int(),
+  klineSeedLimit: z.number().int(),
   fastPeriod: z.number().int(),
   slowPeriod: z.number().int(),
   orderBookLimit: z.number().int().nullable().default(20),
