@@ -73,11 +73,46 @@ namespace Cryoptix.Exchange.Binance
 
             global::Binance.Net.Enums.KlineInterval klineInterval = interval.ToKlineInterval();
 
-            WebCallResult<IBinanceKline[]> result = await _binanceRestClient.SpotApi.ExchangeData.GetKlinesAsync(symbol, klineInterval, startTime, endTime, limit, ct: cancellationToken).ConfigureAwait(false);
+            int pageLimit = limit ?? 1000;
 
-            IBinanceKline[] binanceKlines = EnsureSuccess(result, $"GetKlinesAsync({symbol}, {interval}, {startTime}, {endTime}, {limit})");
+            List<IBinanceKline> allBinanceKlines = new();
+            DateTime currentStart = startTime;
 
-            List<Kline> klines = [.. from k in binanceKlines
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                WebCallResult<IBinanceKline[]> result = await _binanceRestClient.SpotApi.ExchangeData.GetKlinesAsync(symbol, klineInterval, currentStart, endTime, pageLimit, ct: cancellationToken).ConfigureAwait(false);
+
+                IBinanceKline[] binanceKlines = EnsureSuccess(result, $"GetKlinesAsync({symbol}, {interval}, {currentStart}, {endTime}, {pageLimit})");
+
+                if (binanceKlines.Length == 0)
+                {
+                    break;
+                }
+
+                allBinanceKlines.AddRange(binanceKlines);
+
+                // If the API returned fewer than the requested limit, assume no more data.
+                if (binanceKlines.Length < pageLimit)
+                {
+                    break;
+                }
+
+                // Advance start to just after the last returned kline
+                DateTime lastOpen = binanceKlines[^1].OpenTime;
+
+                if (lastOpen >= endTime)
+                {
+                    break;
+                }
+
+                // Move to lastOpen + 1 second to avoid overlapping the last candle
+                currentStart = lastOpen.AddSeconds(1);
+
+                // Rate-limit safety: small delay to avoid hammering the API
+                await Task.Delay(200, cancellationToken).ConfigureAwait(false);
+            }
+
+            List<Kline> klines = [.. from k in allBinanceKlines
                           select new Kline
                           {
                               Symbol = symbol,
