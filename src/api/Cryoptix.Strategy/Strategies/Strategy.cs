@@ -17,6 +17,8 @@ namespace Cryoptix.Strategy.Strategies
 
         // Subscription and cache settings
         public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
+        public int KlineSeedSize { get; set; } = 1440; // 1 day of 1-minute klines
+        public int KlineSeedLimit { get; set; } = 1000; // Max klines to fetch per API call during seeding
         public int FastPeriod { get; init; }
         public int SlowPeriod { get; init; }
         public int? OrderBookLimit { get; set; } = 20;
