@@ -1,5 +1,6 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
+using Cryoptix.Market.Extensions;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Event;
 using Microsoft.Extensions.Logging;
@@ -47,7 +48,7 @@ namespace Cryoptix.Strategy.Seeding
                 interval: strategy.KlineInterval,
                 startTime: startTime,
                 endTime: endTime,
-                limit: null,
+                limit: strategy.KlineSeedLimit,
                 cancellationToken: cancellationToken);
 
             foreach (Kline kline in historicalKlines.OrderBy(k => k.OpenTime))
@@ -66,7 +67,10 @@ namespace Cryoptix.Strategy.Seeding
 
         private static DateTime GetSeedStartTime(Strategies.Strategy strategy, DateTime endTimeUtc)
         {
-            return endTimeUtc.AddDays(-2);
+            int klineSeedSize
+                = strategy.KlineSeedSize > 0 ? strategy.KlineSeedSize * strategy.KlineInterval.KlineIntervalToMinutes() : 1000;
+
+            return endTimeUtc.AddMinutes(-klineSeedSize);
         }
     }
 }
