@@ -14,7 +14,7 @@ namespace Cryoptix.Strategy.Channel
         public bool DropTradesWhenFull { get; set; } = true;
         public BoundedChannelFullMode KlineFullMode { get; set; } = BoundedChannelFullMode.Wait;
 
-        public int KlineBroadcastCapacity { get; init; } = 512;
+        public int KlineBroadcastCapacity { get; init; } = 5_000;
         public int TradeBroadcastCapacity { get; init; } = 5_000;
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
