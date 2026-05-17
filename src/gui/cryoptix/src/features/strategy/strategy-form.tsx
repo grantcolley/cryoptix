@@ -60,6 +60,8 @@ type StrategyFormValues = z.input<typeof StrategySchema>;
 type StrategyIntegerFieldName = Extract<
   keyof Strategy,
   | "strategyId"
+  | "klineSeedSize"
+  | "klineSeedLimit"
   | "fastPeriod"
   | "slowPeriod"
   | "maxOrderBookAgeSeconds"
@@ -122,6 +124,8 @@ const fallbackDefaultValues: Strategy = {
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
   klineInterval: KlineInterval.Minute,
+  klineSeedSize: 0,
+  klineSeedLimit: 0,
   fastPeriod: 0,
   slowPeriod: 0,
   orderBookLimit: 20,
@@ -628,6 +632,18 @@ export function StrategyForm({
                   name="klineInterval"
                   label="Kline interval"
                   options={klineIntervalOptions}
+                />
+
+                <IntegerField
+                  control={form.control}
+                  name="klineSeedSize"
+                  label="Kline seed size"
+                />
+
+                <IntegerField
+                  control={form.control}
+                  name="klineSeedLimit"
+                  label="Kline seed limit"
                 />
 
                 <IntegerField
