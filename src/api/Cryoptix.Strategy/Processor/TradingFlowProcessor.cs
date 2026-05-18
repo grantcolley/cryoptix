@@ -66,7 +66,7 @@ namespace Cryoptix.Strategy.Processor
 
             _tradingFlowSessionAccessor.SetCurrent(strategyProcessorSession);
 
-            StrategyEventChannels channels = _strategyEventChannelFactory.Create();
+            StrategyEventChannels channels = _strategyEventChannelFactory.Create(initialStrategy);
 
             StrategyMarketEventSubscriptions? strategyMarketEventSubscriptions = null;
             Task processingTask = Task.CompletedTask;
