@@ -4,16 +4,10 @@ import {
   CandlestickSeries,
   ColorType,
   CrosshairMode,
-  LineSeries,
   createChart,
-  createSeriesMarkers,
   type CandlestickData,
   type IChartApi,
   type ISeriesApi,
-  type ISeriesMarkersPluginApi,
-  type LineData,
-  type SeriesMarker,
-  type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
 import { Config } from "@/config/config";
@@ -57,16 +51,9 @@ export function StrategyPage() {
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const chartApiRef = React.useRef<IChartApi | null>(null);
   const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const tradeSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
-  const tradeMarkersApiRef =
-    React.useRef<ISeriesMarkersPluginApi<Time> | null>(null);
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
-  const tradeDataByTimeRef = React.useRef<Map<number, LineData<UTCTimestamp>>>(
-    new Map()
-  );
-  const tradeMarkersRef = React.useRef<SeriesMarker<UTCTimestamp>[]>([]);
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
   > | null>(null);
@@ -117,11 +104,6 @@ export function StrategyPage() {
     close: kline.close,
   });
 
-  const toTradeData = (trade: Trade): LineData<UTCTimestamp> => ({
-    time: toChartTime(trade.time),
-    value: trade.price,
-  });
-
   const sortByTime = <T extends { time: UTCTimestamp }>(items: T[]) =>
     items.sort((a, b) => a.time - b.time);
 
@@ -147,48 +129,9 @@ export function StrategyPage() {
     }
   };
 
-  const applyTradesToChart = (trades: Trade[], replace = false) => {
-    const tradeSeries = tradeSeriesRef.current;
-
-    if (replace) {
-      tradeDataByTimeRef.current = new Map();
-      tradeMarkersRef.current = [];
-    }
-
-    for (const trade of trades) {
-      const tradeData = toTradeData(trade);
-      tradeDataByTimeRef.current.set(tradeData.time, tradeData);
-      tradeMarkersRef.current.push({
-        id: String(trade.id),
-        time: tradeData.time,
-        position: "atPriceMiddle",
-        price: trade.price,
-        shape: "circle",
-        color: "#2563eb",
-        size: 0.8,
-      });
-
-      if (!replace && tradeSeries) {
-        tradeSeries.update(tradeData);
-      }
-    }
-
-    if (replace && tradeSeries) {
-      tradeSeries.setData(sortByTime([...tradeDataByTimeRef.current.values()]));
-    }
-
-    tradeMarkersApiRef.current?.setMarkers(
-      sortByTime([...tradeMarkersRef.current])
-    );
-  };
-
   const resetChartData = () => {
     candleDataByTimeRef.current = new Map();
-    tradeDataByTimeRef.current = new Map();
-    tradeMarkersRef.current = [];
     candleSeriesRef.current?.setData([]);
-    tradeSeriesRef.current?.setData([]);
-    tradeMarkersApiRef.current?.setMarkers([]);
   };
 
   const applyRunningStrategyStatus = (
@@ -253,7 +196,6 @@ export function StrategyPage() {
 
           applyRunningStrategyStatus(payload.strategy, message);
           applyKlinesToChart(payload.klines, true);
-          applyTradesToChart(payload.trades, true);
 
           setNotificationMessage(message);
         }
@@ -273,11 +215,6 @@ export function StrategyPage() {
       case MessageType.Trade: {
         const payload = envelope.payload as Trade | undefined;
         const price = payload?.price;
-
-        if (payload) {
-          applyTradesToChart([payload]);
-        }
-
         setNotificationMessage(
           price !== undefined
             ? `Trade update received at ${price}.`
@@ -475,32 +412,15 @@ export function StrategyPage() {
       wickDownColor: "#dc2626",
     });
 
-    const tradeSeries = chart.addSeries(LineSeries, {
-      color: "#2563eb",
-      lineVisible: false,
-      pointMarkersVisible: true,
-      pointMarkersRadius: 3,
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    const tradeMarkersApi = createSeriesMarkers(tradeSeries, []);
-
     chartApiRef.current = chart;
     candleSeriesRef.current = candleSeries;
-    tradeSeriesRef.current = tradeSeries;
-    tradeMarkersApiRef.current = tradeMarkersApi;
 
     candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
-    tradeSeries.setData(sortByTime([...tradeDataByTimeRef.current.values()]));
-    tradeMarkersApi.setMarkers(sortByTime([...tradeMarkersRef.current]));
     chart.timeScale().fitContent();
 
     return () => {
       chartApiRef.current = null;
       candleSeriesRef.current = null;
-      tradeSeriesRef.current = null;
-      tradeMarkersApiRef.current = null;
       chart.remove();
     };
   }, [showStrategyRunning, strategy?.symbol]);
