@@ -28,6 +28,15 @@ import {
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { icons } from "@/components/icon/icons";
+import { Icon } from "@/components/icon/icon";
+import { ExchangeLabels } from "@/features/api/schema/exchange";
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -73,6 +82,9 @@ export function StrategyPage() {
   const showStrategyRunning = strategyState === 2;
   const showConnectButton =
     !showStartButton && !showStrategyRunning && !showDisconnectButton;
+  const strategyConfigTooltip = isOpen
+    ? "Hide strategy config"
+    : "Show strategy config";
 
   const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -94,9 +106,7 @@ export function StrategyPage() {
   const toChartTime = (date: Date): UTCTimestamp =>
     Math.floor(date.getTime() / 1000) as UTCTimestamp;
 
-  const toCandleData = (
-    kline: Kline
-  ): CandlestickData<UTCTimestamp> => ({
+  const toCandleData = (kline: Kline): CandlestickData<UTCTimestamp> => ({
     time: toChartTime(kline.openTime),
     open: kline.open,
     high: kline.high,
@@ -124,7 +134,9 @@ export function StrategyPage() {
     }
 
     if (replace && candleSeries) {
-      candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+      candleSeries.setData(
+        sortByTime([...candleDataByTimeRef.current.values()])
+      );
       chartApiRef.current?.timeScale().fitContent();
     }
   };
@@ -157,7 +169,10 @@ export function StrategyPage() {
       setEditedStrategy(nextStatus.strategy);
       setSelectedStrategyId(String(nextStatus.strategy.strategyId));
       setStrategyFormVersion((version) => version + 1);
-      setIsOpen(true);
+
+      if (nextStatus?.strategyState === 2) {
+        setIsOpen(false);
+      }
     }
   };
 
@@ -215,11 +230,7 @@ export function StrategyPage() {
       case MessageType.Trade: {
         const payload = envelope.payload as Trade | undefined;
         const price = payload?.price;
-        setNotificationMessage(
-          price !== undefined
-            ? `Trade update received at ${price}.`
-            : "Trade update received."
-        );
+        setNotificationMessage(`${price}`);
         break;
       }
       case MessageType.StrategyStarted: {
@@ -264,7 +275,7 @@ export function StrategyPage() {
       }
       case MessageType.None:
       default:
-        setNotificationMessage("No notifications available.");
+        setNotificationMessage(null);
         break;
     }
   };
@@ -439,6 +450,7 @@ export function StrategyPage() {
       const accessToken = await getAccessTokenSilently();
 
       if (isStart) {
+        setIsOpen(false);
         setShowStartButton(false);
         await startSignalRSubscription(accessToken);
       }
@@ -561,21 +573,47 @@ export function StrategyPage() {
           <p className="px-4 text-sm text-destructive">{connectError}</p>
         )}
 
-        {strategyStatus?.message && (
-          <p className="px-4 text-sm text-muted-foreground">
-            {strategyStatus.message}
-          </p>
-        )}
-
         {notificationMessage && (
           <p className="px-4 text-sm text-muted-foreground">
             {notificationMessage}
           </p>
         )}
 
+        {showStrategyRunning && strategy ? (
+          <div className="flex flex-row items-baseline gap-4 px-4 py-2">
+            <div className="flex items-center gap-1">
+              <h4 className="text-sm text-foreground-semimuted">
+                {ExchangeLabels[strategy.exchange]}
+              </h4>
+              <h4 className="text-sm text-foreground-semimuted">
+                {strategy.symbol}
+              </h4>
+            </div>
+            <div className="ml-auto flex items-center gap-1">
+              <h4 className="text-sm text-foreground-semimuted">
+                {strategy.name}
+              </h4>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    id="btnStrategyConfig"
+                    variant="outline"
+                    size="icon"
+                    aria-label={strategyConfigTooltip}
+                    onClick={() => setIsOpen((open) => !open)}
+                  >
+                    <Icon icon={isOpen ? icons.minimize2 : icons.cog} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{strategyConfigTooltip}</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+        ) : null}
+
         <StrategySelect
+          canSelectStrategy={showStartButton}
           isOpen={isOpen}
-          showSelect={showStartButton}
           selectedStrategyId={selectedStrategyId}
           strategy={strategy}
           strategyFormVersion={strategyFormVersion}
