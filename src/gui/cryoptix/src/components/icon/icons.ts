@@ -6,10 +6,12 @@ import {
   Check,
   ChevronRight,
   CircleHelp, // general fallback
+  Cog,
   FileQuestion, // missing page icon
   Folder, // missing category icon
   LogIn,
   LogOut,
+  Minimize2,
   Minus,
   Moon,
   Play,
@@ -34,10 +36,12 @@ export const icons = {
   check: Check,
   cheveronRight: ChevronRight,
   circleHelp: CircleHelp,
+  cog: Cog,
   fileQuestion: FileQuestion,
   folder: Folder,
   logIn: LogIn,
   logOut: LogOut,
+  minimize2: Minimize2,
   minus: Minus,
   moon: Moon,
   play: Play,
