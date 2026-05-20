@@ -1,6 +1,5 @@
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import * as React from "react";
-import { ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 import StrategyForm from "@/features/strategy/strategy-form";
 import {
@@ -14,7 +13,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface StrategySelectProps {
   isOpen: boolean;
-  showSelect: boolean;
+  canSelectStrategy: boolean;
   selectedStrategyId: string;
   strategy: Strategy | null;
   strategyFormVersion: number;
@@ -25,7 +24,7 @@ interface StrategySelectProps {
 
 export function StrategySelect({
   isOpen,
-  showSelect,
+  canSelectStrategy,
   selectedStrategyId,
   strategy,
   strategyFormVersion,
@@ -33,9 +32,9 @@ export function StrategySelect({
   onStrategyChange,
   onStrategyFormChange,
 }: StrategySelectProps) {
-  const [isStrategyOpen, setIsStrategyOpen] = React.useState(false);
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(false);
-  const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(false);
+  const [isStrategyOpen, setIsStrategyOpen] = React.useState(true);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(true);
+  const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(true);
 
   return (
     <Collapsible
@@ -43,8 +42,8 @@ export function StrategySelect({
       onOpenChange={onOpenChange}
       className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
     >
-      <div className="flex items-center gap-1 py-2">
-        {showSelect && (
+      {canSelectStrategy && (
+        <div className="flex items-center gap-1 py-2">
           <Select
             value={selectedStrategyId}
             onValueChange={onStrategyChange}
@@ -62,20 +61,8 @@ export function StrategySelect({
               ))}
             </SelectContent>
           </Select>
-        )}
-
-        {strategy && !showSelect && (
-          <div className="flex flex-row items-baseline gap-4">
-            <h4 className="text-md text-foreground">{strategy.name}</h4>
-            <h4 className="text-sm text-foreground-semimuted">
-              {strategy.symbol}
-            </h4>
-            <h4 className="text-sm text-foreground-semimuted">
-              {ExchangeLabels[strategy.exchange]}
-            </h4>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {strategy && (
         <CollapsibleContent className="flex flex-col gap-2 pt-2 pb-2">
