@@ -55,6 +55,10 @@ export function StrategyPage() {
     null
   );
   const [connectError, setConnectError] = React.useState<string | null>(null);
+  const [notificationMessage, setNotificationMessage] = React.useState<
+    string | null
+  >(null);
+  const [price, setPrice] = React.useState<string | null>(null);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const chartRef = React.useRef<HTMLDivElement | null>(null);
@@ -66,9 +70,6 @@ export function StrategyPage() {
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
   > | null>(null);
-  const [notificationMessage, setNotificationMessage] = React.useState<
-    string | null
-  >(null);
 
   const selectedStrategy =
     STRATEGY_CONFIG.find((s) => String(s.strategyId) === selectedStrategyId) ??
@@ -224,13 +225,14 @@ export function StrategyPage() {
           applyKlinesToChart([payload]);
         }
 
-        setNotificationMessage("Kline update received.");
+        setNotificationMessage(null);
         break;
       }
       case MessageType.Trade: {
         const payload = envelope.payload as Trade | undefined;
         const price = payload?.price;
-        setNotificationMessage(`${price}`);
+        setPrice(`${price}`);
+        setNotificationMessage(null);
         break;
       }
       case MessageType.StrategyStarted: {
@@ -373,6 +375,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setSelectedStrategyId("");
     setIsOpen(false);
+    setPrice(null);
     setNotificationMessage(null);
     resetChartData();
     void stopSignalRSubscription();
@@ -580,17 +583,20 @@ export function StrategyPage() {
         )}
 
         {showStrategyRunning && strategy ? (
-          <div className="flex flex-row items-baseline gap-4 px-4 py-2">
+          <div className="flex flex-row items-baseline gap-4 px-4 py-1">
             <div className="flex items-center gap-1">
-              <h4 className="text-sm text-foreground-semimuted">
+              <h4 className="text-sm text-foreground-semimuted mr-2">
                 {ExchangeLabels[strategy.exchange]}
               </h4>
               <h4 className="text-sm text-foreground-semimuted">
                 {strategy.symbol}
               </h4>
+              {price && (
+                <p className="px-4 text-sm text-muted-foreground">{price}</p>
+              )}
             </div>
             <div className="ml-auto flex items-center gap-1">
-              <h4 className="text-sm text-foreground-semimuted">
+              <h4 className="text-sm text-foreground-semimuted mr-2">
                 {strategy.name}
               </h4>
               <Tooltip>
