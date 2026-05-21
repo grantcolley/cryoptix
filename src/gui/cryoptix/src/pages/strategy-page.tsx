@@ -38,6 +38,8 @@ import { icons } from "@/components/icon/icons";
 import { Icon } from "@/components/icon/icon";
 import { ExchangeLabels } from "@/features/api/schema/exchange";
 
+type PriceDirection = "up" | "down" | "flat";
+
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
 
@@ -59,8 +61,11 @@ export function StrategyPage() {
     string | null
   >(null);
   const [price, setPrice] = React.useState<string | null>(null);
+  const [priceDirection, setPriceDirection] =
+    React.useState<PriceDirection>("flat");
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
+  const previousPriceRef = React.useRef<number | null>(null);
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const chartApiRef = React.useRef<IChartApi | null>(null);
   const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -86,6 +91,18 @@ export function StrategyPage() {
   const strategyConfigTooltip = isOpen
     ? "Hide strategy config"
     : "Show strategy config";
+  const priceClassName =
+    priceDirection === "down"
+      ? "text-destructive"
+      : priceDirection === "up"
+        ? "text-green-600 dark:text-green-400"
+        : "text-foreground";
+
+  const resetPriceComparison = () => {
+    previousPriceRef.current = null;
+    setPrice(null);
+    setPriceDirection("flat");
+  };
 
   const getApiUrl = (baseUrl: string, route: string) => {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
@@ -230,8 +247,22 @@ export function StrategyPage() {
       }
       case MessageType.Trade: {
         const payload = envelope.payload as Trade | undefined;
-        const price = payload?.price;
-        setPrice(`${price}`);
+
+        if (payload) {
+          const nextPrice = payload.price;
+          const previousPrice = previousPriceRef.current;
+
+          setPrice(`${nextPrice}`);
+          setPriceDirection(
+            previousPrice === null || nextPrice === previousPrice
+              ? "flat"
+              : nextPrice > previousPrice
+                ? "up"
+                : "down"
+          );
+          previousPriceRef.current = nextPrice;
+        }
+
         setNotificationMessage(null);
         break;
       }
@@ -356,6 +387,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setEditedStrategy(null);
     latestStrategyRef.current = null;
+    resetPriceComparison();
 
     try {
       const accessToken = await getAccessTokenSilently();
@@ -375,7 +407,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setSelectedStrategyId("");
     setIsOpen(false);
-    setPrice(null);
+    resetPriceComparison();
     setNotificationMessage(null);
     resetChartData();
     void stopSignalRSubscription();
@@ -510,6 +542,7 @@ export function StrategyPage() {
     setEditedStrategy(nextStrategy);
     setStrategyFormVersion((version) => version + 1);
     setIsOpen(Boolean(nextStrategyId));
+    resetPriceComparison();
   };
 
   const handleStrategyFormChange = React.useCallback(
@@ -592,7 +625,7 @@ export function StrategyPage() {
                 {strategy.symbol}
               </h4>
               {price && (
-                <p className="px-4 text-sm text-muted-foreground">{price}</p>
+                <p className={`px-4 text-sm ${priceClassName}`}>{price}</p>
               )}
             </div>
             <div className="ml-auto flex items-center gap-1">
