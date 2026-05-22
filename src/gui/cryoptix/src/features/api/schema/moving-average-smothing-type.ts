@@ -13,7 +13,10 @@ export type MovingAverageSmoothingType = z.infer<
   typeof MovingAverageSmoothingTypeSchema
 >;
 
-export const ExchangeLabels: Record<MovingAverageSmoothingType, string> = {
+export const MovingAverageSmoothingTypeLabels: Record<
+  MovingAverageSmoothingType,
+  string
+> = {
   [MovingAverageSmoothingType.Sma]: "SMA",
   [MovingAverageSmoothingType.Ema]: "EMA",
 };
