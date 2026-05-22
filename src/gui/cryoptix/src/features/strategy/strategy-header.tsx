@@ -40,16 +40,23 @@ export function StrategyHeader({
   onStop,
 }: StrategyHeaderProps) {
   return (
-    <>
-      <Input
-        id="server-url"
-        type="text"
-        placeholder="Server url..."
-        aria-label="Enter server url"
-        value={serverUrl}
-        onChange={(event) => onServerUrlChange(event.target.value)}
-        disabled={isConnecting || !showConnectButton}
-      />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="block w-full">
+            <Input
+              id="server-url"
+              type="text"
+              placeholder="Server url..."
+              aria-label="Server url"
+              value={serverUrl}
+              onChange={(event) => onServerUrlChange(event.target.value)}
+              disabled={isConnecting || !showConnectButton}
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Enter server url</TooltipContent>
+      </Tooltip>
 
       {isConnecting ? (
         <div
@@ -60,7 +67,7 @@ export function StrategyHeader({
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
         </div>
       ) : (
-        <TooltipProvider>
+        <>
           {showConnectButton ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -154,8 +161,8 @@ export function StrategyHeader({
               <TooltipContent>Disconnect from server</TooltipContent>
             </Tooltip>
           ) : null}
-        </TooltipProvider>
+        </>
       )}
-    </>
+    </TooltipProvider>
   );
 }
