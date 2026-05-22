@@ -4,6 +4,7 @@ import { Exchange } from "./exchange";
 import { StrategyProcessorType } from "./strategy-processor-type";
 import { StrategyEngineType } from "./strategy-engine-type";
 import { BoundedChannelFullMode } from "./bounded-channel-full-mode";
+import { MovingAverageSmoothingType } from "./moving-average-smothing-type";
 
 export const StrategySchema = z.object({
   // Strategy fields
@@ -23,8 +24,6 @@ export const StrategySchema = z.object({
   klineInterval: z.enum(KlineInterval).default(KlineInterval.Minute),
   klineSeedSize: z.number().int(),
   klineSeedLimit: z.number().int(),
-  fastPeriod: z.number().int(),
-  slowPeriod: z.number().int(),
   orderBookLimit: z.number().int().nullable().default(20),
   maxOrderBookAgeSeconds: z.number().int().default(3),
   maxAccountAgeSeconds: z.number().int().default(10),
@@ -47,6 +46,13 @@ export const StrategySchema = z.object({
   tradeBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
+
+  // Parameters for strategy logic
+  fastPeriod: z.number().int(),
+  slowPeriod: z.number().int(),
+  smoothingType: z
+    .enum(MovingAverageSmoothingType)
+    .default(MovingAverageSmoothingType.Sma),
 });
 
 export type Strategy = z.infer<typeof StrategySchema>;
