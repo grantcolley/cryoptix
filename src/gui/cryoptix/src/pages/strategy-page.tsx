@@ -553,8 +553,8 @@ export function StrategyPage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col p-2">
-      <div className="flex-1 rounded-xl bg-muted/50 md:min-h-min">
+    <div className="flex h-[calc(100svh-var(--header-height))] min-h-0 flex-1 flex-col p-2 md:h-[calc(100svh-var(--header-height)-1rem)]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-muted/50">
         <form
           className="flex items-center gap-1 px-4 pt-4 pb-2"
           onSubmit={handleServerConnectSubmit}
@@ -662,13 +662,13 @@ export function StrategyPage() {
         />
 
         {showStrategyRunning ? (
-          <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min px-4 py-2">
-            <Card>
+          <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
+            <Card className="min-h-0 flex-1">
               <CardHeader>
                 <CardTitle>{strategy?.symbol}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div ref={chartRef} className="h-[500px] w-full" />
+              <CardContent className="min-h-0 flex-1">
+                <div ref={chartRef} className="h-full w-full" />
               </CardContent>
             </Card>
           </div>
