@@ -34,6 +34,7 @@ export function StrategySelect({
 }: StrategySelectProps) {
   const [isStrategyOpen, setIsStrategyOpen] = React.useState(true);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(true);
+  const [isParametersOpen, setIsParametersOpen] = React.useState(true);
   const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(true);
 
   return (
@@ -72,9 +73,11 @@ export function StrategySelect({
             showSubmitButton={false}
             isStrategyOpen={isStrategyOpen}
             isSubscriptionOpen={isSubscriptionOpen}
+            isParametersOpen={isParametersOpen}
             isBroadcastOpen={isBroadcastOpen}
             onChange={onStrategyFormChange}
             onStrategyOpenChange={setIsStrategyOpen}
+            onParametersOpenChange={setIsParametersOpen}
             onSubscriptionOpenChange={setIsSubscriptionOpen}
             onBroadcastOpenChange={setIsBroadcastOpen}
           />
