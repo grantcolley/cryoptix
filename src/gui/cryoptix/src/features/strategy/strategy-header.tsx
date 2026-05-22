@@ -118,7 +118,7 @@ export function StrategyHeader({
                     onClick={onUpdate}
                     disabled={!serverUrl.trim() || !strategy}
                   >
-                    <Icon icon={icons.slidersHorizontal} />
+                    <Icon icon={icons.cloudUpload} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Update strategy parameters</TooltipContent>
