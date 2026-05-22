@@ -17,6 +17,7 @@ using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
 using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Notification;
 using Cryoptix.Strategy.Order;
 using Cryoptix.Strategy.Processor;

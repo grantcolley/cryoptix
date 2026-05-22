@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Strategy.Engine
+﻿namespace Cryoptix.Strategy.Engine.MovingAverage
 {
     public static class MovingAverageKeys
     {
