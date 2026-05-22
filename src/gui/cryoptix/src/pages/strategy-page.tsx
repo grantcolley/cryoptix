@@ -43,7 +43,8 @@ type PriceDirection = "up" | "down" | "flat";
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
 
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isStrategyConfigOpen, setIsStrategyConfigOpen] =
+    React.useState(false);
   const [showDisconnectButton, setShowDisconnectButton] = React.useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
@@ -88,7 +89,7 @@ export function StrategyPage() {
   const showStrategyRunning = strategyState === 2;
   const showConnectButton =
     !showStartButton && !showStrategyRunning && !showDisconnectButton;
-  const strategyConfigTooltip = isOpen
+  const strategyConfigTooltip = isStrategyConfigOpen
     ? "Hide strategy config"
     : "Show strategy config";
   const priceClassName =
@@ -189,7 +190,7 @@ export function StrategyPage() {
       setStrategyFormVersion((version) => version + 1);
 
       if (nextStatus?.strategyState === 2) {
-        setIsOpen(false);
+        setIsStrategyConfigOpen(false);
       }
     }
   };
@@ -406,7 +407,7 @@ export function StrategyPage() {
     setStrategyStatus(null);
     setShowStartButton(false);
     setSelectedStrategyId("");
-    setIsOpen(false);
+    setIsStrategyConfigOpen(false);
     resetPriceComparison();
     setNotificationMessage(null);
     resetChartData();
@@ -485,7 +486,7 @@ export function StrategyPage() {
       const accessToken = await getAccessTokenSilently();
 
       if (isStart) {
-        setIsOpen(false);
+        setIsStrategyConfigOpen(false);
         setShowStartButton(false);
         await startSignalRSubscription(accessToken);
       }
@@ -541,7 +542,7 @@ export function StrategyPage() {
     setSelectedStrategyId(nextStrategyId);
     setEditedStrategy(nextStrategy);
     setStrategyFormVersion((version) => version + 1);
-    setIsOpen(Boolean(nextStrategyId));
+    setIsStrategyConfigOpen(Boolean(nextStrategyId));
     resetPriceComparison();
   };
 
@@ -639,9 +640,13 @@ export function StrategyPage() {
                     variant="outline"
                     size="icon"
                     aria-label={strategyConfigTooltip}
-                    onClick={() => setIsOpen((open) => !open)}
+                    onClick={() => setIsStrategyConfigOpen((open) => !open)}
                   >
-                    <Icon icon={isOpen ? icons.minimize2 : icons.cog} />
+                    <Icon
+                      icon={
+                        isStrategyConfigOpen ? icons.minimize2 : icons.cog
+                      }
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{strategyConfigTooltip}</TooltipContent>
@@ -652,11 +657,11 @@ export function StrategyPage() {
 
         <StrategySelect
           canSelectStrategy={showStartButton}
-          isOpen={isOpen}
+          isOpen={isStrategyConfigOpen}
           selectedStrategyId={selectedStrategyId}
           strategy={strategy}
           strategyFormVersion={strategyFormVersion}
-          onOpenChange={setIsOpen}
+          onOpenChange={setIsStrategyConfigOpen}
           onStrategyChange={handleStrategyChange}
           onStrategyFormChange={handleStrategyFormChange}
         />
