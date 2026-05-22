@@ -1,4 +1,5 @@
 ﻿using Cryoptix.Market.Data;
+using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Processor;
 using System.Threading.Channels;
 
@@ -19,8 +20,6 @@ namespace Cryoptix.Strategy.Strategies
         public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
         public int KlineSeedSize { get; set; } = 1440; // 1 day of 1-minute klines
         public int KlineSeedLimit { get; set; } = 1000; // Max klines to fetch per API call during seeding
-        public int FastPeriod { get; init; }
-        public int SlowPeriod { get; init; }
         public int? OrderBookLimit { get; set; } = 20;
         public int MaxOrderBookAgeSeconds { get; set; } = 3;
         public int MaxAccountAgeSeconds { get; set; } = 10;
@@ -37,5 +36,10 @@ namespace Cryoptix.Strategy.Strategies
         public int TradeBroadcastCapacity { get; init; } = 10000;
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+
+        // Parameters for strategy logic
+        public int FastPeriod { get; init; }
+        public int SlowPeriod { get; init; }
+        public MovingAverageSmoothingType SmoothingType { get; init; } = MovingAverageSmoothingType.Sma;
     }
 }
