@@ -12,8 +12,6 @@ export const STRATEGY_CONFIG: Strategy[] = [
     klineInterval: 1,
     klineSeedSize: 1440, // 1 day of 1-minute klines
     klineSeedLimit: 1000, // Max klines to seed at once
-    fastPeriod: 0,
-    slowPeriod: 0,
     orderBookLimit: 20,
     maxOrderBookAgeSeconds: 3,
     maxAccountAgeSeconds: 10,
@@ -28,5 +26,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
     tradeBroadcastCapacity: 10000,
     klineBroadcastFullMode: 2,
     tradeBroadcastFullMode: 2,
+    smoothingType: 0,
+    fastPeriod: 0,
+    slowPeriod: 0,
   },
 ];
