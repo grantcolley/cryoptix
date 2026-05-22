@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   CircleHelp, // general fallback
+  CloudUpload,
   Cog,
   FileQuestion, // missing page icon
   Folder, // missing category icon
@@ -36,6 +37,7 @@ export const icons = {
   check: Check,
   cheveronRight: ChevronRight,
   circleHelp: CircleHelp,
+  cloudUpload: CloudUpload,
   cog: Cog,
   fileQuestion: FileQuestion,
   folder: Folder,
