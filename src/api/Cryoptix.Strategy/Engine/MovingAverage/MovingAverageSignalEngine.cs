@@ -1,7 +1,7 @@
 ﻿using Cryoptix.Strategy.Analysis;
 using Microsoft.Extensions.Logging;
 
-namespace Cryoptix.Strategy.Engine
+namespace Cryoptix.Strategy.Engine.MovingAverage
 {
     public sealed class MovingAverageSignalEngine(
         ILogger<MovingAverageSignalEngine> logger) : IStrategySignalEngine

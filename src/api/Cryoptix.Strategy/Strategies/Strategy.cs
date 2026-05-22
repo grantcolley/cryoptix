@@ -1,5 +1,5 @@
 ﻿using Cryoptix.Market.Data;
-using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Processor;
 using System.Threading.Channels;
 

@@ -3,7 +3,7 @@ using Cryoptix.Strategy.Analysis;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 
-namespace Cryoptix.Strategy.Engine
+namespace Cryoptix.Strategy.Engine.MovingAverage
 {
     public sealed class MovingAverageIndicatorEngine(ILogger<MovingAverageIndicatorEngine> logger) : IStrategyIndicatorEngine
     {
