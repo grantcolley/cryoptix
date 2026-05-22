@@ -45,6 +45,10 @@ import {
   StrategyEngineTypeLabels,
 } from "@/features/api/schema/strategy-engine-type";
 import {
+  MovingAverageSmoothingType,
+  MovingAverageSmoothingTypeLabels,
+} from "@/features/api/schema/moving-average-smothing-type";
+import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
 } from "@/features/api/schema/strategy-processor-type";
@@ -79,6 +83,7 @@ type StrategyEnumFieldName = Extract<
   keyof Strategy,
   | "strategyProcessorType"
   | "strategyEngineType"
+  | "smoothingType"
   | "exchange"
   | "klineInterval"
   | "subscriptionChannelKlineFullMode"
@@ -91,11 +96,13 @@ type StrategyFormProps = {
   submitLabel?: string;
   showSubmitButton?: boolean;
   isSubscriptionOpen?: boolean;
+  isParametersOpen?: boolean;
   isStrategyOpen?: boolean;
   isBroadcastOpen?: boolean;
   onSubmit?: (strategy: Strategy) => void | Promise<void>;
   onChange?: (strategy: Strategy) => void;
   onSubscriptionOpenChange?: (open: boolean) => void;
+  onParametersOpenChange?: (open: boolean) => void;
   onStrategyOpenChange?: (open: boolean) => void;
   onBroadcastOpenChange?: (open: boolean) => void;
 };
@@ -107,6 +114,10 @@ const strategyProcessorTypeOptions = enumToOptions(
 const strategyEngineTypeOptions = enumToOptions(
   StrategyEngineType,
   StrategyEngineTypeLabels
+);
+const movingAverageSmoothingTypeOptions = enumToOptions(
+  MovingAverageSmoothingType,
+  MovingAverageSmoothingTypeLabels
 );
 const exchangeOptions = enumToOptions(Exchange, ExchangeLabels);
 const klineIntervalOptions = enumToOptions(KlineInterval, KlineIntervalLabels);
@@ -123,11 +134,12 @@ const fallbackDefaultValues: Strategy = {
   strategyProcessorType: StrategyProcessorType.None,
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
+  smoothingType: MovingAverageSmoothingType.Sma,
+  fastPeriod: 0,
+  slowPeriod: 0,
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 0,
   klineSeedLimit: 0,
-  fastPeriod: 0,
-  slowPeriod: 0,
   orderBookLimit: 20,
   maxOrderBookAgeSeconds: 3,
   maxAccountAgeSeconds: 10,
@@ -443,11 +455,13 @@ export function StrategyForm({
   submitLabel = "Save strategy",
   showSubmitButton = true,
   isSubscriptionOpen,
+  isParametersOpen,
   isStrategyOpen,
   isBroadcastOpen,
   onSubmit,
   onChange,
   onSubscriptionOpenChange,
+  onParametersOpenChange,
   onStrategyOpenChange,
   onBroadcastOpenChange,
 }: StrategyFormProps) {
@@ -468,11 +482,14 @@ export function StrategyForm({
     React.useState(false);
   const [uncontrolledStrategyOpen, setUncontrolledStrategyOpen] =
     React.useState(false);
+  const [uncontrolledParametersOpen, setUncontrolledParametersOpen] =
+    React.useState(false);
   const [uncontrolledBroadcastOpen, setUncontrolledBroadcastOpen] =
     React.useState(false);
 
   const subscriptionOpen = isSubscriptionOpen ?? uncontrolledSubscriptionOpen;
   const strategyOpen = isStrategyOpen ?? uncontrolledStrategyOpen;
+  const parametersOpen = isParametersOpen ?? uncontrolledParametersOpen;
   const broadcastOpen = isBroadcastOpen ?? uncontrolledBroadcastOpen;
 
   const handleSubscriptionOpenChange = (open: boolean) => {
@@ -483,6 +500,11 @@ export function StrategyForm({
   const handleStrategyOpenChange = (open: boolean) => {
     setUncontrolledStrategyOpen(open);
     onStrategyOpenChange?.(open);
+  };
+
+  const handleParametersOpenChange = (open: boolean) => {
+    setUncontrolledParametersOpen(open);
+    onParametersOpenChange?.(open);
   };
 
   const handleBroadcastOpenChange = (open: boolean) => {
@@ -528,7 +550,7 @@ export function StrategyForm({
       }
       className="space-y-6"
     >
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
             <Collapsible
@@ -602,6 +624,57 @@ export function StrategyForm({
         <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
           <FieldGroup>
             <Collapsible
+              open={parametersOpen}
+              onOpenChange={handleParametersOpenChange}
+              className="group/collapsible"
+            >
+              <div className="flex items-center gap-1 space-y-6">
+                <div>
+                  <p className="text-md">Parameters</p>
+                  <p className="text-sm text-muted-foreground">
+                    Strategy logic inputs and smoothing configuration.
+                  </p>
+                </div>
+
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Toggle details"
+                    className="p-0"
+                  >
+                    <Icon icon={parametersOpen ? icons.minus : icons.plus} />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+
+              <CollapsibleContent className="space-y-6">
+                <EnumSelectField
+                  control={form.control}
+                  name="smoothingType"
+                  label="Smoothing type"
+                  options={movingAverageSmoothingTypeOptions}
+                />
+
+                <IntegerField
+                  control={form.control}
+                  name="fastPeriod"
+                  label="Fast period"
+                />
+
+                <IntegerField
+                  control={form.control}
+                  name="slowPeriod"
+                  label="Slow period"
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          </FieldGroup>
+        </FieldSet>
+
+        <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+          <FieldGroup>
+            <Collapsible
               open={subscriptionOpen}
               onOpenChange={handleSubscriptionOpenChange}
               className="group/collapsible"
@@ -644,17 +717,6 @@ export function StrategyForm({
                   control={form.control}
                   name="klineSeedLimit"
                   label="Kline seed limit"
-                />
-
-                <IntegerField
-                  control={form.control}
-                  name="fastPeriod"
-                  label="Fast period"
-                />
-                <IntegerField
-                  control={form.control}
-                  name="slowPeriod"
-                  label="Slow period"
                 />
 
                 <NullableIntegerField
