@@ -5,34 +5,9 @@ using System.Collections.Immutable;
 
 namespace Cryoptix.Strategy.Engine
 {
-    public enum SmoothingType
-    {
-        Sma,
-        Ema
-    }
-
-    public sealed class MovingAverageOptions
-    {
-        public SmoothingType Smoothing { get; init; } = SmoothingType.Sma;
-    }
-
-    public static class MovingAverageKeys
-    {
-        public const string SmaFast = "SMA_FAST";
-        public const string SmaSlow = "SMA_SLOW";
-        public const string EmaFast = "EMA_FAST";
-        public const string EmaSlow = "EMA_SLOW";
-    }
-}
-
-namespace Cryoptix.Strategy.Engine
-{
-    public sealed class MovingAverageIndicatorEngine(
-        ILogger<MovingAverageIndicatorEngine> logger,
-        MovingAverageOptions options) : IStrategyIndicatorEngine
+    public sealed class MovingAverageIndicatorEngine(ILogger<MovingAverageIndicatorEngine> logger) : IStrategyIndicatorEngine
     {
         private readonly ILogger<MovingAverageIndicatorEngine> _logger = logger;
-        private readonly MovingAverageOptions _options = options;
 
         public Task<IndicatorComputationResult> ComputeAsync(
             StrategyAnalysisContext context,
@@ -46,14 +21,13 @@ namespace Cryoptix.Strategy.Engine
                 return Task.FromResult(IndicatorComputationResult.Empty(DateTime.UtcNow));
             }
 
+            MovingAverageSmoothingType smoothingType = context.Strategy.SmoothingType;
             int fastPeriod = context.Strategy.FastPeriod;
             int slowPeriod = context.Strategy.SlowPeriod;
 
-            var smoothing = _options.Smoothing;
+            Dictionary<string, decimal> values = [];
 
-            Dictionary<string, decimal> values = new();
-
-            if (smoothing == SmoothingType.Sma)
+            if (smoothingType == MovingAverageSmoothingType.Sma)
             {
                 decimal? fast = TryCalculateSmaRolling(klines, fastPeriod);
                 decimal? slow = TryCalculateSmaRolling(klines, slowPeriod);
@@ -61,7 +35,7 @@ namespace Cryoptix.Strategy.Engine
                 if (fast.HasValue) values[MovingAverageKeys.SmaFast] = fast.Value;
                 if (slow.HasValue) values[MovingAverageKeys.SmaSlow] = slow.Value;
             }
-            else if (smoothing == SmoothingType.Ema)
+            else if (smoothingType == MovingAverageSmoothingType.Ema)
             {
                 decimal? fast = TryCalculateEma(klines, fastPeriod);
                 decimal? slow = TryCalculateEma(klines, slowPeriod);
