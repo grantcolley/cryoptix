@@ -95,6 +95,7 @@ type StrategyFormProps = {
   defaultValues?: Partial<Strategy>;
   submitLabel?: string;
   showSubmitButton?: boolean;
+  isReadOnly?: boolean;
   isSubscriptionOpen?: boolean;
   isParametersOpen?: boolean;
   isStrategyOpen?: boolean;
@@ -206,10 +207,12 @@ function TextField({
   control,
   name,
   label,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: Extract<keyof StrategyFormValues, "name" | "symbol">;
   label: string;
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -225,6 +228,7 @@ function TextField({
             value={nullableTextToInputValue(field.value)}
             onBlur={field.onBlur}
             onChange={(event) => field.onChange(event.target.value)}
+            disabled={isReadOnly}
             aria-invalid={fieldState.invalid}
           />
           {fieldState.invalid ? (
@@ -240,10 +244,12 @@ function TextAreaField({
   control,
   name,
   label,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: Extract<keyof StrategyFormValues, "description">;
   label: string;
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -259,6 +265,7 @@ function TextAreaField({
             value={nullableTextToInputValue(field.value)}
             onBlur={field.onBlur}
             onChange={(event) => field.onChange(event.target.value)}
+            disabled={isReadOnly}
             aria-invalid={fieldState.invalid}
           />
           {fieldState.invalid ? (
@@ -274,10 +281,12 @@ function IntegerField({
   control,
   name,
   label,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: StrategyIntegerFieldName;
   label: string;
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -298,6 +307,7 @@ function IntegerField({
             onChange={(event) =>
               field.onChange(parseIntegerInput(event.target.value))
             }
+            disabled={isReadOnly}
             aria-invalid={fieldState.invalid}
           />
           {fieldState.invalid ? (
@@ -314,11 +324,13 @@ function NullableIntegerField({
   name,
   label,
   description,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: Extract<keyof StrategyFormValues, "orderBookLimit">;
   label: string;
   description?: string;
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -339,6 +351,7 @@ function NullableIntegerField({
             onChange={(event) =>
               field.onChange(parseNullableIntegerInput(event.target.value))
             }
+            disabled={isReadOnly}
             aria-invalid={fieldState.invalid}
           />
           {description ? (
@@ -358,6 +371,7 @@ function BooleanField({
   name,
   label,
   description,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: Extract<
@@ -366,6 +380,7 @@ function BooleanField({
   >;
   label: string;
   description?: string;
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -384,6 +399,7 @@ function BooleanField({
             checked={field.value}
             onBlur={field.onBlur}
             onCheckedChange={(checked) => field.onChange(checked === true)}
+            disabled={isReadOnly}
             aria-invalid={fieldState.invalid}
           />
           <FieldContent>
@@ -406,11 +422,13 @@ function EnumSelectField<TName extends StrategyEnumFieldName>({
   name,
   label,
   options,
+  isReadOnly,
 }: {
   control: Control<StrategyFormValues>;
   name: TName;
   label: string;
   options: EnumOption<Extract<Strategy[TName], number>>[];
+  isReadOnly: boolean;
 }) {
   return (
     <Controller
@@ -426,6 +444,7 @@ function EnumSelectField<TName extends StrategyEnumFieldName>({
                 selectValueToNumber<Extract<Strategy[TName], number>>(value)
               )
             }
+            disabled={isReadOnly}
           >
             <SelectTrigger aria-invalid={fieldState.invalid}>
               <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
@@ -454,6 +473,7 @@ export function StrategyForm({
   defaultValues,
   submitLabel = "Save strategy",
   showSubmitButton = true,
+  isReadOnly = false,
   isSubscriptionOpen,
   isParametersOpen,
   isStrategyOpen,
@@ -583,17 +603,25 @@ export function StrategyForm({
                   control={form.control}
                   name="strategyId"
                   label="Strategy ID"
+                  isReadOnly={isReadOnly}
                 />
-                <TextField control={form.control} name="name" label="Name" />
+                <TextField
+                  control={form.control}
+                  name="name"
+                  label="Name"
+                  isReadOnly={isReadOnly}
+                />
                 <TextField
                   control={form.control}
                   name="symbol"
                   label="Symbol"
+                  isReadOnly={isReadOnly}
                 />
                 <TextAreaField
                   control={form.control}
                   name="description"
                   label="Description"
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -601,6 +629,7 @@ export function StrategyForm({
                   name="strategyProcessorType"
                   label="Strategy processor type"
                   options={strategyProcessorTypeOptions}
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -608,6 +637,7 @@ export function StrategyForm({
                   name="strategyEngineType"
                   label="Strategy engine type"
                   options={strategyEngineTypeOptions}
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -615,6 +645,7 @@ export function StrategyForm({
                   name="exchange"
                   label="Exchange"
                   options={exchangeOptions}
+                  isReadOnly={isReadOnly}
                 />
               </CollapsibleContent>
             </Collapsible>
@@ -654,18 +685,21 @@ export function StrategyForm({
                   name="smoothingType"
                   label="Smoothing type"
                   options={movingAverageSmoothingTypeOptions}
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="fastPeriod"
                   label="Fast period"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="slowPeriod"
                   label="Slow period"
+                  isReadOnly={isReadOnly}
                 />
               </CollapsibleContent>
             </Collapsible>
@@ -705,18 +739,21 @@ export function StrategyForm({
                   name="klineInterval"
                   label="Kline interval"
                   options={klineIntervalOptions}
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="klineSeedSize"
                   label="Kline seed size"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="klineSeedLimit"
                   label="Kline seed limit"
+                  isReadOnly={isReadOnly}
                 />
 
                 <NullableIntegerField
@@ -724,48 +761,56 @@ export function StrategyForm({
                   name="orderBookLimit"
                   label="Order book limit"
                   description="Leave empty to submit null."
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="maxOrderBookAgeSeconds"
                   label="Max order book age seconds"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="maxAccountAgeSeconds"
                   label="Max account age seconds"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="cacheMaxKlinesPerSeries"
                   label="Cache max klines per series"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="cacheMaxTradesPerSymbol"
                   label="Cache max trades per symbol"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="strategyProcessorMaxTradesPerPass"
                   label="Strategy processor max trades per pass"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="subscriptionChannelKlineCapacity"
                   label="Subscription channel kline capacity"
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="subscriptionChannelTradeCapacity"
                   label="Subscription channel trade capacity"
+                  isReadOnly={isReadOnly}
                 />
 
                 <BooleanField
@@ -773,6 +818,7 @@ export function StrategyForm({
                   name="subscriptionChannelDropTradesWhenFull"
                   label="Drop trades when full"
                   description="Drops incoming trades when the subscription channel reaches capacity."
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -780,6 +826,7 @@ export function StrategyForm({
                   name="subscriptionChannelKlineFullMode"
                   label="Subscription channel kline full mode"
                   options={boundedChannelFullModeOptions}
+                  isReadOnly={isReadOnly}
                 />
               </CollapsibleContent>
             </Collapsible>
@@ -818,6 +865,7 @@ export function StrategyForm({
                   control={form.control}
                   name="klineBroadcastCapacity"
                   label="Kline broadcast capacity"
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -825,12 +873,14 @@ export function StrategyForm({
                   name="klineBroadcastFullMode"
                   label="Kline broadcast full mode"
                   options={boundedChannelFullModeOptions}
+                  isReadOnly={isReadOnly}
                 />
 
                 <IntegerField
                   control={form.control}
                   name="tradeBroadcastCapacity"
                   label="Trade broadcast capacity"
+                  isReadOnly={isReadOnly}
                 />
 
                 <EnumSelectField
@@ -838,6 +888,7 @@ export function StrategyForm({
                   name="tradeBroadcastFullMode"
                   label="Trade broadcast full mode"
                   options={boundedChannelFullModeOptions}
+                  isReadOnly={isReadOnly}
                 />
               </CollapsibleContent>
             </Collapsible>
@@ -849,7 +900,7 @@ export function StrategyForm({
         <div className="flex justify-end">
           <Button
             type="submit"
-            disabled={!onSubmit || form.formState.isSubmitting}
+            disabled={isReadOnly || !onSubmit || form.formState.isSubmitting}
           >
             {form.formState.isSubmitting ? "Saving..." : submitLabel}
           </Button>
