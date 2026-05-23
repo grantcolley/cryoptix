@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 interface StrategySelectProps {
   isOpen: boolean;
   canSelectStrategy: boolean;
+  showParametersOnly?: boolean;
   selectedStrategyId: string;
   strategy: Strategy | null;
   strategyFormVersion: number;
@@ -25,6 +26,7 @@ interface StrategySelectProps {
 export function StrategySelect({
   isOpen,
   canSelectStrategy,
+  showParametersOnly = false,
   selectedStrategyId,
   strategy,
   strategyFormVersion,
@@ -73,6 +75,7 @@ export function StrategySelect({
             showSubmitButton={false}
             isStrategyOpen={isStrategyOpen}
             isReadOnly={!canSelectStrategy}
+            showParametersOnly={showParametersOnly}
             isSubscriptionOpen={isSubscriptionOpen}
             isParametersOpen={isParametersOpen}
             isBroadcastOpen={isBroadcastOpen}
