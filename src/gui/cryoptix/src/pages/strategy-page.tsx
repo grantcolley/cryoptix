@@ -89,13 +89,14 @@ export function StrategyPage() {
   const showStrategyRunning = strategyState === 2;
   const showConnectButton =
     !showStartButton && !showStrategyRunning && !showDisconnectButton;
-  const strategyConfigTooltip = isStrategyConfigOpen
+  const isStrategyConfigActive = isStrategyConfigOpen && !showParametersOnly;
+  const isStrategyParametersActive = isStrategyConfigOpen && showParametersOnly;
+  const strategyConfigTooltip = isStrategyConfigActive
     ? "Hide strategy config"
     : "Show strategy config";
-  const strategyParametersTooltip =
-    isStrategyConfigOpen && showParametersOnly
-      ? "Hide strategy config"
-      : "Show strategy parameters";
+  const strategyParametersTooltip = isStrategyParametersActive
+    ? "Hide strategy config"
+    : "Show strategy parameters";
   const priceClassName =
     priceDirection === "down"
       ? "text-destructive"
@@ -564,15 +565,17 @@ export function StrategyPage() {
   };
 
   const handleToggleStrategyConfig = () => {
+    const shouldOpenConfig = !isStrategyConfigActive;
+
     setShowParametersOnly(false);
-    setIsStrategyConfigOpen((open) => !open);
+    setIsStrategyConfigOpen(shouldOpenConfig);
   };
 
   const handleToggleStrategyParameters = () => {
-    const isParametersOpen = isStrategyConfigOpen && showParametersOnly;
+    const shouldOpenParameters = !isStrategyParametersActive;
 
-    setShowParametersOnly(!isParametersOpen);
-    setIsStrategyConfigOpen(!isParametersOpen);
+    setShowParametersOnly(shouldOpenParameters);
+    setIsStrategyConfigOpen(shouldOpenParameters);
   };
 
   const handleStrategyFormChange = React.useCallback(
@@ -673,7 +676,7 @@ export function StrategyPage() {
                   >
                     <Icon
                       icon={
-                        isStrategyConfigOpen && showParametersOnly
+                        isStrategyParametersActive
                           ? icons.minimize2
                           : icons.slidersHorizontal
                       }
@@ -692,7 +695,9 @@ export function StrategyPage() {
                     onClick={handleToggleStrategyConfig}
                   >
                     <Icon
-                      icon={isStrategyConfigOpen ? icons.minimize2 : icons.cog}
+                      icon={
+                        isStrategyConfigActive ? icons.minimize2 : icons.cog
+                      }
                     />
                   </Button>
                 </TooltipTrigger>
