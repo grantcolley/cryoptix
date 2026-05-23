@@ -283,18 +283,28 @@ function IntegerField({
   name,
   label,
   isReadOnly,
+  isHorizontal = false,
 }: {
   control: Control<StrategyFormValues>;
   name: StrategyIntegerFieldName;
   label: string;
   isReadOnly: boolean;
+  isHorizontal?: boolean;
 }) {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
+        <Field
+          orientation={isHorizontal ? "horizontal" : "vertical"}
+          data-invalid={fieldState.invalid}
+          className={
+            isHorizontal
+              ? "gap-1.5 [&>[data-slot=field-label]]:w-28 [&>[data-slot=field-label]]:flex-none [&>[data-slot=field-label]]:whitespace-nowrap"
+              : undefined
+          }
+        >
           <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
           <Input
             id={field.name}
@@ -424,19 +434,29 @@ function EnumSelectField<TName extends StrategyEnumFieldName>({
   label,
   options,
   isReadOnly,
+  isHorizontal = false,
 }: {
   control: Control<StrategyFormValues>;
   name: TName;
   label: string;
   options: EnumOption<Extract<Strategy[TName], number>>[];
   isReadOnly: boolean;
+  isHorizontal?: boolean;
 }) {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
+        <Field
+          orientation={isHorizontal ? "horizontal" : "vertical"}
+          data-invalid={fieldState.invalid}
+          className={
+            isHorizontal
+              ? "gap-1.5 [&>[data-slot=field-label]]:w-28 [&>[data-slot=field-label]]:flex-none [&>[data-slot=field-label]]:whitespace-nowrap"
+              : undefined
+          }
+        >
           <FieldLabel>{label}</FieldLabel>
           <Select
             value={numberToSelectValue(field.value as number)}
@@ -447,7 +467,10 @@ function EnumSelectField<TName extends StrategyEnumFieldName>({
             }
             disabled={isReadOnly}
           >
-            <SelectTrigger aria-invalid={fieldState.invalid}>
+            <SelectTrigger
+              aria-invalid={fieldState.invalid}
+              className={isHorizontal ? "flex-1" : undefined}
+            >
               <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
@@ -561,7 +584,7 @@ export function StrategyForm({
     await onSubmit?.(normalizedValues);
   }
 
-  const parameterFields = (
+  const renderParameterFields = (isHorizontal = false) => (
     <>
       <EnumSelectField
         control={form.control}
@@ -569,6 +592,7 @@ export function StrategyForm({
         label="Smoothing type"
         options={movingAverageSmoothingTypeOptions}
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
 
       <IntegerField
@@ -576,6 +600,7 @@ export function StrategyForm({
         name="fastPeriod"
         label="Fast period"
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
 
       <IntegerField
@@ -583,6 +608,7 @@ export function StrategyForm({
         name="slowPeriod"
         label="Slow period"
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
     </>
   );
@@ -602,7 +628,7 @@ export function StrategyForm({
         {showParametersOnly ? (
           <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm lg:col-span-4">
             <FieldGroup className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              {parameterFields}
+              {renderParameterFields(true)}
             </FieldGroup>
           </FieldSet>
         ) : (
@@ -718,7 +744,7 @@ export function StrategyForm({
                   </div>
 
                   <CollapsibleContent className="space-y-6">
-                    {parameterFields}
+                    {renderParameterFields()}
                   </CollapsibleContent>
                 </Collapsible>
               </FieldGroup>
