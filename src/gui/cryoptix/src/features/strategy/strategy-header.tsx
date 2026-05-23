@@ -114,14 +114,16 @@ export function StrategyHeader({
                     type="button"
                     variant="outline"
                     size="icon"
-                    aria-label="Update strategy parameters"
+                    aria-label="Push updated strategy parameters"
                     onClick={onUpdate}
                     disabled={!serverUrl.trim() || !strategy}
                   >
                     <Icon icon={icons.cloudUpload} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Update strategy parameters</TooltipContent>
+                <TooltipContent>
+                  Push updated strategy parameters
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>
