@@ -43,8 +43,8 @@ type PriceDirection = "up" | "down" | "flat";
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
 
-  const [isStrategyConfigOpen, setIsStrategyConfigOpen] =
-    React.useState(false);
+  const [isStrategyConfigOpen, setIsStrategyConfigOpen] = React.useState(false);
+  const [showParametersOnly, setShowParametersOnly] = React.useState(false);
   const [showDisconnectButton, setShowDisconnectButton] = React.useState(false);
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
@@ -92,6 +92,10 @@ export function StrategyPage() {
   const strategyConfigTooltip = isStrategyConfigOpen
     ? "Hide strategy config"
     : "Show strategy config";
+  const strategyParametersTooltip =
+    isStrategyConfigOpen && showParametersOnly
+      ? "Hide strategy config"
+      : "Show strategy parameters";
   const priceClassName =
     priceDirection === "down"
       ? "text-destructive"
@@ -191,6 +195,7 @@ export function StrategyPage() {
 
       if (nextStatus?.strategyState === 2) {
         setIsStrategyConfigOpen(false);
+        setShowParametersOnly(false);
       }
     }
   };
@@ -387,6 +392,7 @@ export function StrategyPage() {
     setStrategyStatus(null);
     setShowStartButton(false);
     setEditedStrategy(null);
+    setShowParametersOnly(false);
     latestStrategyRef.current = null;
     resetPriceComparison();
 
@@ -408,6 +414,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setSelectedStrategyId("");
     setIsStrategyConfigOpen(false);
+    setShowParametersOnly(false);
     resetPriceComparison();
     setNotificationMessage(null);
     resetChartData();
@@ -487,6 +494,7 @@ export function StrategyPage() {
 
       if (isStart) {
         setIsStrategyConfigOpen(false);
+        setShowParametersOnly(false);
         setShowStartButton(false);
         await startSignalRSubscription(accessToken);
       }
@@ -543,7 +551,28 @@ export function StrategyPage() {
     setEditedStrategy(nextStrategy);
     setStrategyFormVersion((version) => version + 1);
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
+    setShowParametersOnly(false);
     resetPriceComparison();
+  };
+
+  const handleStrategyConfigOpenChange = (open: boolean) => {
+    setIsStrategyConfigOpen(open);
+
+    if (!open) {
+      setShowParametersOnly(false);
+    }
+  };
+
+  const handleToggleStrategyConfig = () => {
+    setShowParametersOnly(false);
+    setIsStrategyConfigOpen((open) => !open);
+  };
+
+  const handleToggleStrategyParameters = () => {
+    const isParametersOpen = isStrategyConfigOpen && showParametersOnly;
+
+    setShowParametersOnly(!isParametersOpen);
+    setIsStrategyConfigOpen(!isParametersOpen);
   };
 
   const handleStrategyFormChange = React.useCallback(
@@ -636,16 +665,34 @@ export function StrategyPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    id="btnStrategyParameters"
+                    variant="outline"
+                    size="icon"
+                    aria-label={strategyParametersTooltip}
+                    onClick={handleToggleStrategyParameters}
+                  >
+                    <Icon
+                      icon={
+                        isStrategyConfigOpen && showParametersOnly
+                          ? icons.minimize2
+                          : icons.slidersHorizontal
+                      }
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{strategyParametersTooltip}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
                     id="btnStrategyConfig"
                     variant="outline"
                     size="icon"
                     aria-label={strategyConfigTooltip}
-                    onClick={() => setIsStrategyConfigOpen((open) => !open)}
+                    onClick={handleToggleStrategyConfig}
                   >
                     <Icon
-                      icon={
-                        isStrategyConfigOpen ? icons.minimize2 : icons.cog
-                      }
+                      icon={isStrategyConfigOpen ? icons.minimize2 : icons.cog}
                     />
                   </Button>
                 </TooltipTrigger>
@@ -657,11 +704,12 @@ export function StrategyPage() {
 
         <StrategySelect
           canSelectStrategy={showStartButton}
+          showParametersOnly={showParametersOnly}
           isOpen={isStrategyConfigOpen}
           selectedStrategyId={selectedStrategyId}
           strategy={strategy}
           strategyFormVersion={strategyFormVersion}
-          onOpenChange={setIsStrategyConfigOpen}
+          onOpenChange={handleStrategyConfigOpenChange}
           onStrategyChange={handleStrategyChange}
           onStrategyFormChange={handleStrategyFormChange}
         />
