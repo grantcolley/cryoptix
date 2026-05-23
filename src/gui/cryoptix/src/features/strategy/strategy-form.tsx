@@ -96,6 +96,7 @@ type StrategyFormProps = {
   submitLabel?: string;
   showSubmitButton?: boolean;
   isReadOnly?: boolean;
+  showParametersOnly?: boolean;
   isSubscriptionOpen?: boolean;
   isParametersOpen?: boolean;
   isStrategyOpen?: boolean;
@@ -471,9 +472,10 @@ function EnumSelectField<TName extends StrategyEnumFieldName>({
 
 export function StrategyForm({
   defaultValues,
-  submitLabel = "Save strategy",
+  submitLabel = "Update strategy",
   showSubmitButton = true,
   isReadOnly = false,
+  showParametersOnly = false,
   isSubscriptionOpen,
   isParametersOpen,
   isStrategyOpen,
@@ -559,6 +561,32 @@ export function StrategyForm({
     await onSubmit?.(normalizedValues);
   }
 
+  const parameterFields = (
+    <>
+      <EnumSelectField
+        control={form.control}
+        name="smoothingType"
+        label="Smoothing type"
+        options={movingAverageSmoothingTypeOptions}
+        isReadOnly={isReadOnly}
+      />
+
+      <IntegerField
+        control={form.control}
+        name="fastPeriod"
+        label="Fast period"
+        isReadOnly={isReadOnly}
+      />
+
+      <IntegerField
+        control={form.control}
+        name="slowPeriod"
+        label="Slow period"
+        isReadOnly={isReadOnly}
+      />
+    </>
+  );
+
   return (
     <form
       onSubmit={
@@ -571,329 +599,323 @@ export function StrategyForm({
       className="space-y-6"
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-        <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
-          <FieldGroup>
-            <Collapsible
-              open={strategyOpen}
-              onOpenChange={handleStrategyOpenChange}
-              className="group/collapsible"
-            >
-              <div className="flex items-center gap-1 space-y-6">
-                <div>
-                  <p className="text-md">Strategy</p>
-                  <p className="text-sm text-muted-foreground">
-                    Core strategy metadata and runtime selections.
-                  </p>
-                </div>
+        {showParametersOnly ? (
+          <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm lg:col-span-4">
+            <FieldGroup className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {parameterFields}
+            </FieldGroup>
+          </FieldSet>
+        ) : (
+          <>
+            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+              <FieldGroup>
+                <Collapsible
+                  open={strategyOpen}
+                  onOpenChange={handleStrategyOpenChange}
+                  className="group/collapsible"
+                >
+                  <div className="flex items-center gap-1 space-y-6">
+                    <div>
+                      <p className="text-md">Strategy</p>
+                      <p className="text-sm text-muted-foreground">
+                        Core strategy metadata and runtime selections.
+                      </p>
+                    </div>
 
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Toggle details"
-                    className="p-0"
-                  >
-                    <Icon icon={strategyOpen ? icons.minus : icons.plus} />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Toggle details"
+                        className="p-0"
+                      >
+                        <Icon icon={strategyOpen ? icons.minus : icons.plus} />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-              <CollapsibleContent className="space-y-6">
-                <IntegerField
-                  control={form.control}
-                  name="strategyId"
-                  label="Strategy ID"
-                  isReadOnly={isReadOnly}
-                />
-                <TextField
-                  control={form.control}
-                  name="name"
-                  label="Name"
-                  isReadOnly={isReadOnly}
-                />
-                <TextField
-                  control={form.control}
-                  name="symbol"
-                  label="Symbol"
-                  isReadOnly={isReadOnly}
-                />
-                <TextAreaField
-                  control={form.control}
-                  name="description"
-                  label="Description"
-                  isReadOnly={isReadOnly}
-                />
+                  <CollapsibleContent className="space-y-6">
+                    <IntegerField
+                      control={form.control}
+                      name="strategyId"
+                      label="Strategy ID"
+                      isReadOnly={isReadOnly}
+                    />
+                    <TextField
+                      control={form.control}
+                      name="name"
+                      label="Name"
+                      isReadOnly={isReadOnly}
+                    />
+                    <TextField
+                      control={form.control}
+                      name="symbol"
+                      label="Symbol"
+                      isReadOnly={isReadOnly}
+                    />
+                    <TextAreaField
+                      control={form.control}
+                      name="description"
+                      label="Description"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <EnumSelectField
-                  control={form.control}
-                  name="strategyProcessorType"
-                  label="Strategy processor type"
-                  options={strategyProcessorTypeOptions}
-                  isReadOnly={isReadOnly}
-                />
+                    <EnumSelectField
+                      control={form.control}
+                      name="strategyProcessorType"
+                      label="Strategy processor type"
+                      options={strategyProcessorTypeOptions}
+                      isReadOnly={isReadOnly}
+                    />
 
-                <EnumSelectField
-                  control={form.control}
-                  name="strategyEngineType"
-                  label="Strategy engine type"
-                  options={strategyEngineTypeOptions}
-                  isReadOnly={isReadOnly}
-                />
+                    <EnumSelectField
+                      control={form.control}
+                      name="strategyEngineType"
+                      label="Strategy engine type"
+                      options={strategyEngineTypeOptions}
+                      isReadOnly={isReadOnly}
+                    />
 
-                <EnumSelectField
-                  control={form.control}
-                  name="exchange"
-                  label="Exchange"
-                  options={exchangeOptions}
-                  isReadOnly={isReadOnly}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          </FieldGroup>
-        </FieldSet>
+                    <EnumSelectField
+                      control={form.control}
+                      name="exchange"
+                      label="Exchange"
+                      options={exchangeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              </FieldGroup>
+            </FieldSet>
 
-        <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
-          <FieldGroup>
-            <Collapsible
-              open={parametersOpen}
-              onOpenChange={handleParametersOpenChange}
-              className="group/collapsible"
-            >
-              <div className="flex items-center gap-1 space-y-6">
-                <div>
-                  <p className="text-md">Parameters</p>
-                  <p className="text-sm text-muted-foreground">
-                    Strategy logic inputs and smoothing configuration.
-                  </p>
-                </div>
+            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+              <FieldGroup>
+                <Collapsible
+                  open={parametersOpen}
+                  onOpenChange={handleParametersOpenChange}
+                  className="group/collapsible"
+                >
+                  <div className="flex items-center gap-1 space-y-6">
+                    <div>
+                      <p className="text-md">Parameters</p>
+                      <p className="text-sm text-muted-foreground">
+                        Strategy logic inputs.
+                      </p>
+                    </div>
 
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Toggle details"
-                    className="p-0"
-                  >
-                    <Icon icon={parametersOpen ? icons.minus : icons.plus} />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Toggle details"
+                        className="p-0"
+                      >
+                        <Icon
+                          icon={parametersOpen ? icons.minus : icons.plus}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-              <CollapsibleContent className="space-y-6">
-                <EnumSelectField
-                  control={form.control}
-                  name="smoothingType"
-                  label="Smoothing type"
-                  options={movingAverageSmoothingTypeOptions}
-                  isReadOnly={isReadOnly}
-                />
+                  <CollapsibleContent className="space-y-6">
+                    {parameterFields}
+                  </CollapsibleContent>
+                </Collapsible>
+              </FieldGroup>
+            </FieldSet>
 
-                <IntegerField
-                  control={form.control}
-                  name="fastPeriod"
-                  label="Fast period"
-                  isReadOnly={isReadOnly}
-                />
+            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+              <FieldGroup>
+                <Collapsible
+                  open={subscriptionOpen}
+                  onOpenChange={handleSubscriptionOpenChange}
+                  className="group/collapsible"
+                >
+                  <div className="flex items-center gap-1 space-y-6">
+                    <div>
+                      <p className="text-md">Subscription and caching</p>
+                      <p className="text-sm text-muted-foreground">
+                        Kline, trade, cache, and processor buffer settings.
+                      </p>
+                    </div>
 
-                <IntegerField
-                  control={form.control}
-                  name="slowPeriod"
-                  label="Slow period"
-                  isReadOnly={isReadOnly}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          </FieldGroup>
-        </FieldSet>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Toggle details"
+                        className="p-0"
+                      >
+                        <Icon
+                          icon={subscriptionOpen ? icons.minus : icons.plus}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-        <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
-          <FieldGroup>
-            <Collapsible
-              open={subscriptionOpen}
-              onOpenChange={handleSubscriptionOpenChange}
-              className="group/collapsible"
-            >
-              <div className="flex items-center gap-1 space-y-6">
-                <div>
-                  <p className="text-md">Subscription and caching</p>
-                  <p className="text-sm text-muted-foreground">
-                    Kline, trade, cache, and processor buffer settings.
-                  </p>
-                </div>
+                  <CollapsibleContent className="space-y-6">
+                    <EnumSelectField
+                      control={form.control}
+                      name="klineInterval"
+                      label="Kline interval"
+                      options={klineIntervalOptions}
+                      isReadOnly={isReadOnly}
+                    />
 
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Toggle details"
-                    className="p-0"
-                  >
-                    <Icon icon={subscriptionOpen ? icons.minus : icons.plus} />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
+                    <IntegerField
+                      control={form.control}
+                      name="klineSeedSize"
+                      label="Kline seed size"
+                      isReadOnly={isReadOnly}
+                    />
 
-              <CollapsibleContent className="space-y-6">
-                <EnumSelectField
-                  control={form.control}
-                  name="klineInterval"
-                  label="Kline interval"
-                  options={klineIntervalOptions}
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="klineSeedLimit"
+                      label="Kline seed limit"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="klineSeedSize"
-                  label="Kline seed size"
-                  isReadOnly={isReadOnly}
-                />
+                    <NullableIntegerField
+                      control={form.control}
+                      name="orderBookLimit"
+                      label="Order book limit"
+                      description="Leave empty to submit null."
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="klineSeedLimit"
-                  label="Kline seed limit"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="maxOrderBookAgeSeconds"
+                      label="Max order book age seconds"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <NullableIntegerField
-                  control={form.control}
-                  name="orderBookLimit"
-                  label="Order book limit"
-                  description="Leave empty to submit null."
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="maxAccountAgeSeconds"
+                      label="Max account age seconds"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="maxOrderBookAgeSeconds"
-                  label="Max order book age seconds"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="cacheMaxKlinesPerSeries"
+                      label="Cache max klines per series"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="maxAccountAgeSeconds"
-                  label="Max account age seconds"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="cacheMaxTradesPerSymbol"
+                      label="Cache max trades per symbol"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="cacheMaxKlinesPerSeries"
-                  label="Cache max klines per series"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="strategyProcessorMaxTradesPerPass"
+                      label="Strategy processor max trades per pass"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="cacheMaxTradesPerSymbol"
-                  label="Cache max trades per symbol"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="subscriptionChannelKlineCapacity"
+                      label="Subscription channel kline capacity"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="strategyProcessorMaxTradesPerPass"
-                  label="Strategy processor max trades per pass"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="subscriptionChannelTradeCapacity"
+                      label="Subscription channel trade capacity"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="subscriptionChannelKlineCapacity"
-                  label="Subscription channel kline capacity"
-                  isReadOnly={isReadOnly}
-                />
+                    <BooleanField
+                      control={form.control}
+                      name="subscriptionChannelDropTradesWhenFull"
+                      label="Drop trades when full"
+                      description="Drops incoming trades when the subscription channel reaches capacity."
+                      isReadOnly={isReadOnly}
+                    />
 
-                <IntegerField
-                  control={form.control}
-                  name="subscriptionChannelTradeCapacity"
-                  label="Subscription channel trade capacity"
-                  isReadOnly={isReadOnly}
-                />
+                    <EnumSelectField
+                      control={form.control}
+                      name="subscriptionChannelKlineFullMode"
+                      label="Subscription channel kline full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              </FieldGroup>
+            </FieldSet>
 
-                <BooleanField
-                  control={form.control}
-                  name="subscriptionChannelDropTradesWhenFull"
-                  label="Drop trades when full"
-                  description="Drops incoming trades when the subscription channel reaches capacity."
-                  isReadOnly={isReadOnly}
-                />
+            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+              <FieldGroup>
+                <Collapsible
+                  open={broadcastOpen}
+                  onOpenChange={handleBroadcastOpenChange}
+                  className="group/collapsible"
+                >
+                  <div className="flex items-center gap-1 space-y-6">
+                    <div>
+                      <p className="text-md">Broadcast</p>
+                      <p className="text-sm text-muted-foreground">
+                        Broadcast channel capacities and overflow behavior.
+                      </p>
+                    </div>
 
-                <EnumSelectField
-                  control={form.control}
-                  name="subscriptionChannelKlineFullMode"
-                  label="Subscription channel kline full mode"
-                  options={boundedChannelFullModeOptions}
-                  isReadOnly={isReadOnly}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          </FieldGroup>
-        </FieldSet>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Toggle details"
+                        className="p-0"
+                      >
+                        <Icon icon={broadcastOpen ? icons.minus : icons.plus} />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-        <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
-          <FieldGroup>
-            <Collapsible
-              open={broadcastOpen}
-              onOpenChange={handleBroadcastOpenChange}
-              className="group/collapsible"
-            >
-              <div className="flex items-center gap-1 space-y-6">
-                <div>
-                  <p className="text-md">Broadcast</p>
-                  <p className="text-sm text-muted-foreground">
-                    Broadcast channel capacities and overflow behavior.
-                  </p>
-                </div>
+                  <CollapsibleContent className="space-y-6">
+                    <IntegerField
+                      control={form.control}
+                      name="klineBroadcastCapacity"
+                      label="Kline broadcast capacity"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Toggle details"
-                    className="p-0"
-                  >
-                    <Icon icon={broadcastOpen ? icons.minus : icons.plus} />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
+                    <EnumSelectField
+                      control={form.control}
+                      name="klineBroadcastFullMode"
+                      label="Kline broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
 
-              <CollapsibleContent className="space-y-6">
-                <IntegerField
-                  control={form.control}
-                  name="klineBroadcastCapacity"
-                  label="Kline broadcast capacity"
-                  isReadOnly={isReadOnly}
-                />
+                    <IntegerField
+                      control={form.control}
+                      name="tradeBroadcastCapacity"
+                      label="Trade broadcast capacity"
+                      isReadOnly={isReadOnly}
+                    />
 
-                <EnumSelectField
-                  control={form.control}
-                  name="klineBroadcastFullMode"
-                  label="Kline broadcast full mode"
-                  options={boundedChannelFullModeOptions}
-                  isReadOnly={isReadOnly}
-                />
-
-                <IntegerField
-                  control={form.control}
-                  name="tradeBroadcastCapacity"
-                  label="Trade broadcast capacity"
-                  isReadOnly={isReadOnly}
-                />
-
-                <EnumSelectField
-                  control={form.control}
-                  name="tradeBroadcastFullMode"
-                  label="Trade broadcast full mode"
-                  options={boundedChannelFullModeOptions}
-                  isReadOnly={isReadOnly}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          </FieldGroup>
-        </FieldSet>
+                    <EnumSelectField
+                      control={form.control}
+                      name="tradeBroadcastFullMode"
+                      label="Trade broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              </FieldGroup>
+            </FieldSet>
+          </>
+        )}
       </div>
 
       {showSubmitButton ? (
