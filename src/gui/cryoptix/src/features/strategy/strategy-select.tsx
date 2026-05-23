@@ -72,6 +72,7 @@ export function StrategySelect({
             defaultValues={strategy}
             showSubmitButton={false}
             isStrategyOpen={isStrategyOpen}
+            isReadOnly={!canSelectStrategy}
             isSubscriptionOpen={isSubscriptionOpen}
             isParametersOpen={isParametersOpen}
             isBroadcastOpen={isBroadcastOpen}
