@@ -95,7 +95,7 @@ export function StrategyPage() {
     ? "Hide strategy config"
     : "Show strategy config";
   const strategyParametersTooltip = isStrategyParametersActive
-    ? "Hide strategy config"
+    ? "Hide strategy parameters"
     : "Show strategy parameters";
   const priceClassName =
     priceDirection === "down"
