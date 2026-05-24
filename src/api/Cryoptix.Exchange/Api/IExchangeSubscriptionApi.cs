@@ -5,7 +5,19 @@ namespace Cryoptix.Exchange.Api
 {
     public interface IExchangeSubscriptionApi
     {
+        /// <summary>
+        /// The exchange supported by this subscription API implementation.
+        /// </summary>
         Market.Data.Exchange Exchange { get; }
+        /// <summary>
+        /// Subscribes to account updates for the provided user credentials.
+        /// The returned <see cref="IAsyncDisposable"/> must be disposed to stop the subscription.
+        /// </summary>
+        /// <param name="user">User credentials for the subscription.</param>
+        /// <param name="onCallback">Callback invoked for each account event.</param>
+        /// <param name="onError">Callback invoked when an error occurs.</param>
+        /// <param name="cancellationToken">Cancellation token for the subscription call.</param>
+        /// <returns>An async disposable representing the active subscription.</returns>
         Task<IAsyncDisposable> SubscribeToAccountUpdatesAsync(Credentials user, Action<AccountEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToKlineUpdatesAsync(string symbol, KlineInterval interval, Action<KlineEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);
         Task<IAsyncDisposable> SubscribeToOrderBookAsync(string symbol, int? limit, Action<OrderBookEventArgs> onCallback, Action<Exception> onError, CancellationToken cancellationToken);

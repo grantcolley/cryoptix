@@ -22,6 +22,11 @@ namespace Cryoptix.Exchange.Binance
 
         public Market.Data.Exchange Exchange => Market.Data.Exchange.Binance;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinanceRestApi"/> which wraps the Binance.Net REST client.
+        /// </summary>
+        /// <param name="binanceRestClient">The underlying Binance REST client.</param>
+        /// <param name="credentials">API credentials and account information.</param>
         public BinanceRestApi(IBinanceRestClient binanceRestClient, Credentials credentials)
         {
             ArgumentNullException.ThrowIfNull(binanceRestClient);

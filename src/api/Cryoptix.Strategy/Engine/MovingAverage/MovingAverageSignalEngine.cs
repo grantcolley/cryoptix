@@ -8,6 +8,13 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
     {
         private readonly ILogger<MovingAverageSignalEngine> _logger = logger;
 
+        /// <summary>
+        /// Evaluates moving average crossover signals based on provided indicators.
+        /// </summary>
+        /// <param name="context">The analysis context containing strategy and market data.</param>
+        /// <param name="indicators">Indicator values computed previously (SMA/EMA).</param>
+        /// <param name="cancellationToken">Cancellation token to observe during evaluation.</param>
+        /// <returns>A <see cref="SignalEvaluationResult"/> representing the evaluated signal.</returns>
         public Task<SignalEvaluationResult> EvaluateAsync(
             StrategyAnalysisContext context,
             IndicatorComputationResult indicators,

@@ -7,6 +7,12 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Notification
 {
+    /// <summary>
+    /// Pumps notifications from strategy event channels to the notification dispatcher.
+    /// </summary>
+    /// <param name="logger">Logger used for diagnostic messages.</param>
+    /// <param name="notificationMetrics">Metrics recorder for notification publish results.</param>
+    /// <param name="notificationDispatcher">Dispatcher used to publish notifications.</param>
     public sealed class NotificationPump(
         ILogger<NotificationPump> logger,
         INotificationMetrics notificationMetrics,
@@ -16,6 +22,13 @@ namespace Cryoptix.Strategy.Notification
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationDispatcher _notificationDispatcher = notificationDispatcher;
 
+        /// <summary>
+        /// Runs the notification pump, reading broadcasted klines and trades from the provided channels
+        /// and publishing them via the configured <see cref="INotificationDispatcher"/> until cancellation.
+        /// </summary>
+        /// <param name="channels">Strategy event channels containing kline and trade broadcast channels.</param>
+        /// <param name="cancellationToken">Cancellation token to observe for graceful shutdown.</param>
+        /// <returns>A task that completes when the pump stops due to cancellation or channels completion.</returns>
         public async Task RunAsync(
             StrategyEventChannels channels,
             CancellationToken cancellationToken)

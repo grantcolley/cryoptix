@@ -4,6 +4,12 @@ namespace Cryoptix.Strategy.Notification
 {
     public interface INotificationPump
     {
+        /// <summary>
+        /// Starts the notification pump which reads events from the provided channels and publishes notifications.
+        /// </summary>
+        /// <param name="channels">The strategy event channels to read from.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the pump to finish.</param>
+        /// <returns>A task that completes when the pump stops.</returns>
         Task RunAsync(StrategyEventChannels channels, CancellationToken cancellationToken);
     }
 }
