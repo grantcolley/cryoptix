@@ -14,5 +14,4 @@
                 Reason = reason
             };
     }
-
 }
