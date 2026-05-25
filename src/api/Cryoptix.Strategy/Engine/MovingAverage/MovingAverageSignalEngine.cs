@@ -1,4 +1,5 @@
-﻿using Cryoptix.Strategy.Analysis;
+﻿using Cryoptix.Market.Strategy;
+using Cryoptix.Strategy.Analysis;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Engine.MovingAverage
@@ -22,45 +23,48 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
+            if (!indicators.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
             {
                 return Task.FromResult(SignalEvaluationResult.None(
                     DateTime.UtcNow,
                     "Fast SMA unavailable."));
             }
 
-            if (!indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
+            if (!indicators.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
             {
                 return Task.FromResult(SignalEvaluationResult.None(
                     DateTime.UtcNow,
                     "Slow SMA unavailable."));
             }
 
-            StrategySignal signal = StrategySignal.None;
+            SignalType signalType = SignalType.None;
             string reason = "No crossover.";
 
             if (fast > slow)
             {
-                signal = StrategySignal.Buy;
+                signalType = SignalType.Buy;
                 reason = "Fast SMA is above Slow SMA.";
             }
             else if (fast < slow)
             {
-                signal = StrategySignal.Sell;
+                signalType = SignalType.Sell;
                 reason = "Fast SMA is below Slow SMA.";
             }
 
             _logger.LogDebug(
                 "Evaluated signal for {Symbol}. Signal:{Signal} Reason:{Reason}",
                 context.Strategy.Symbol,
-                signal,
+                signalType,
                 reason);
 
             return Task.FromResult(new SignalEvaluationResult
             {
-                TimestampUtc = DateTime.UtcNow,
-                Signal = signal,
-                Reason = reason
+                Signal = new Market.Strategy.Signal
+                {
+                    TimestampUtc = DateTime.UtcNow,
+                    SignalType = signalType,
+                    Reason = reason
+                },
             });
         }
     }

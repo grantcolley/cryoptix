@@ -1,4 +1,5 @@
 ﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 using Microsoft.Extensions.Logging;
@@ -11,20 +12,20 @@ namespace Cryoptix.Strategy.Order
 
         public OrderSizingResult? Size(
             StrategyAnalysisContext context,
-            SignalEvaluationResult signal,
+            SignalEvaluationResult signalEvaluationResult,
             OrderBook orderBook,
             Account account)
         {
             ArgumentNullException.ThrowIfNull(context);
-            ArgumentNullException.ThrowIfNull(signal);
+            ArgumentNullException.ThrowIfNull(signalEvaluationResult);
             ArgumentNullException.ThrowIfNull(orderBook);
             ArgumentNullException.ThrowIfNull(account);
 
             SymbolParts parts = ParseSymbol(context.Strategy.Symbol);
 
-            switch (signal.Signal)
+            switch (signalEvaluationResult.Signal.SignalType)
             {
-                case StrategySignal.Buy:
+                case SignalType.Buy:
                     {
                         decimal quoteFree = context.AccountRealtimeState.GetFreeBalance(parts.QuoteAsset);
                         if (quoteFree <= 0m)
@@ -71,7 +72,7 @@ namespace Cryoptix.Strategy.Order
                         };
                     }
 
-                case StrategySignal.Sell:
+                case SignalType.Sell:
                     {
                         decimal baseFree = context.AccountRealtimeState.GetFreeBalance(parts.BaseAsset);
                         if (baseFree <= 0m)
@@ -122,7 +123,7 @@ namespace Cryoptix.Strategy.Order
                     _logger.LogDebug(
                         "Sizing skipped for {Symbol}: signal {Signal} is not executable.",
                         context.Strategy.Symbol,
-                        signal.Signal);
+                        signalEvaluationResult.Signal);
 
                     return null;
             }

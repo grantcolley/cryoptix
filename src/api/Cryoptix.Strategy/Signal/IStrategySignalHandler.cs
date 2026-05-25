@@ -7,7 +7,7 @@ namespace Cryoptix.Strategy.Signal
     {
         Task HandleAsync(
             StrategyAnalysisContext context,
-            SignalEvaluationResult signal,
+            SignalEvaluationResult signalEvaluationResult,
             CancellationToken cancellationToken);
     }
 }

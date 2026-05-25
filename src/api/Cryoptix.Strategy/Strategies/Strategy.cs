@@ -25,6 +25,8 @@ namespace Cryoptix.Strategy.Strategies
         public int MaxAccountAgeSeconds { get; set; } = 10;
         public int CacheMaxKlinesPerSeries { get; set; } = 5000;
         public int CacheMaxTradesPerSymbol { get; set; } = 10000;
+        public int CacheMaxIndicatorsPerSeries { get; set; } = 5000;
+        public int CacheMaxSignalsPerSeries { get; set; } = 5000;
         public int StrategyProcessorMaxTradesPerPass { get; set; } = 256;
         public int SubscriptionChannelKlineCapacity { get; set; } = 500;
         public int SubscriptionChannelTradeCapacity { get; set; } = 10000;

@@ -19,5 +19,21 @@ namespace Cryoptix.Observer.Notification
         /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
         /// <returns>A task that completes when the publish is finished.</returns>
         Task PublishAsync(Trade trade, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Publishes an indicator notification to configured listeners.
+        /// </summary>
+        /// <param name="indicators">The indicator to publish.</param>
+        /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
+        /// <returns>A task that completes when the publish is finished.</returns>
+        Task PublishAsync(Market.Strategy.Indicators indicators, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Publishes a signal notification to configured listeners.
+        /// </summary>
+        /// <param name="signal">The signal to publish.</param>
+        /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
+        /// <returns>A task that completes when the publish is finished.</returns>
+        Task PublishAsync(Market.Strategy.Signal signal, CancellationToken cancellationToken = default);
     }
 }

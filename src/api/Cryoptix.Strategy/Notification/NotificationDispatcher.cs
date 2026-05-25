@@ -39,5 +39,37 @@ namespace Cryoptix.Strategy.Notification
                 trade,
                 cancellationToken);
         }
+
+        /// <summary>
+        /// Publishes an indicator notification to configured listeners.
+        /// </summary>
+        /// <param name="indicators">The indicator to publish.</param>
+        /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
+        /// <returns>A task that completes when the publish is finished.</returns>
+        public Task PublishAsync(Market.Strategy.Indicators indicators, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(indicators);
+
+            return _notificationBroadcaster.BroadcastAsync(
+                MessageType.Indicators,
+                indicators,
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// Publishes a signal notification to configured listeners.
+        /// </summary>
+        /// <param name="signal">The signal to publish.</param>
+        /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
+        /// <returns>A task that completes when the publish is finished.</returns>
+        public Task PublishAsync(Market.Strategy.Signal signal, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(signal);
+
+            return _notificationBroadcaster.BroadcastAsync(
+                MessageType.Signal,
+                signal,
+                cancellationToken);
+        }
     }
 }

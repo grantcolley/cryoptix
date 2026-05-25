@@ -1,4 +1,5 @@
-﻿using Cryoptix.Strategy.Analysis;
+﻿using Cryoptix.Market.Strategy;
+using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Event;
@@ -52,7 +53,7 @@ namespace Cryoptix.Strategy.Dispatcher
             KlineMarketEvent marketEvent,
             CancellationToken cancellationToken)
         {
-            KlineUpsertResult upsertResult = session.Cache.UpsertKline(marketEvent.Kline);
+            KlineUpsertResult upsertKlineResult = session.Cache.UpsertKline(marketEvent.Kline);
 
             StrategyAnalysisContext context =
                 _strategyAnalysisContextFactory.CreateForKline(session, marketEvent);
@@ -63,8 +64,15 @@ namespace Cryoptix.Strategy.Dispatcher
             IndicatorComputationResult indicators =
                 await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
 
+            session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
+
             SignalEvaluationResult signal =
                 await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
+
+            if (signal.Signal.SignalType != SignalType.None)
+            {
+                session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+            }
 
             _logger.LogInformation(
                 "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} CloseTime:{CloseTime:u} Open:{Open} Close:{Close}",

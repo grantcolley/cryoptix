@@ -1,4 +1,5 @@
 ﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Engine;
@@ -20,15 +21,15 @@ namespace Cryoptix.Strategy.Signal
 
         public async Task HandleAsync(
             StrategyAnalysisContext context,
-            SignalEvaluationResult signal,
+            SignalEvaluationResult signalEvaluationResult,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context);
-            ArgumentNullException.ThrowIfNull(signal);
+            ArgumentNullException.ThrowIfNull(signalEvaluationResult);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (signal.Signal == StrategySignal.None)
+            if (signalEvaluationResult.Signal.SignalType == SignalType.None)
                 return;
 
             if (!context.OrderBookRealtimeState.TryGet(out OrderBook? orderBook) || orderBook == null)
@@ -77,56 +78,56 @@ namespace Cryoptix.Strategy.Signal
                 return;
             }
 
-            OrderSizingResult? sizingResult = _orderSizingService.Size(
+            OrderSizingResult? orderSizingResult = _orderSizingService.Size(
                 context,
-                signal,
+                signalEvaluationResult,
                 orderBook,
                 account);
 
-            if (sizingResult == null)
+            if (orderSizingResult == null)
             {
                 _logger.LogWarning(
                     "Execution skipped for {Symbol}. Signal:{Signal}. Reason:Sizing returned null.",
                     context.Strategy.Symbol,
-                    signal.Signal);
+                    signalEvaluationResult.Signal);
                 return;
             }
 
-            if (sizingResult.Quantity <= 0m)
+            if (orderSizingResult.Quantity <= 0m)
             {
                 _logger.LogWarning(
                     "Execution skipped for {Symbol}. Signal:{Signal}. Reason:Calculated quantity <= 0.",
                     context.Strategy.Symbol,
-                    signal.Signal);
+                    signalEvaluationResult.Signal);
                 return;
             }
 
             OrderExecutionRequest request = new()
             {
                 Context = context,
-                Signal = signal,
+                Signal = signalEvaluationResult,
                 OrderBook = orderBook,
                 Account = account,
-                Side = sizingResult.Side,
+                Side = orderSizingResult.Side,
                 Symbol = context.Strategy.Symbol!,
-                BaseAsset = sizingResult.BaseAsset,
-                QuoteAsset = sizingResult.QuoteAsset,
-                Quantity = sizingResult.Quantity,
-                LimitPrice = sizingResult.LimitPrice,
-                QuoteNotional = sizingResult.QuoteNotional,
-                Reason = sizingResult.Reason
+                BaseAsset = orderSizingResult.BaseAsset,
+                QuoteAsset = orderSizingResult.QuoteAsset,
+                Quantity = orderSizingResult.Quantity,
+                LimitPrice = orderSizingResult.LimitPrice,
+                QuoteNotional = orderSizingResult.QuoteNotional,
+                Reason = orderSizingResult.Reason
             };
 
             _logger.LogInformation(
                 "Signal approved for execution for {Symbol} [{StrategyType}]: {Signal}. Side:{Side} Quantity:{Quantity} LimitPrice:{LimitPrice} QuoteNotional:{QuoteNotional} Reason:{Reason}",
                 context.Strategy.Symbol,
                 context.Strategy.StrategyProcessorType,
-                signal.Signal,
-                sizingResult.Side,
-                sizingResult.Quantity,
-                sizingResult.LimitPrice,
-                sizingResult.QuoteNotional,
-                sizingResult.Reason);
+                signalEvaluationResult.Signal,
+                orderSizingResult.Side,
+                orderSizingResult.Quantity,
+                orderSizingResult.LimitPrice,
+                orderSizingResult.QuoteNotional,
+                orderSizingResult.Reason);
 
             OrderExecutionResult executionResult = await _orderExecutionService.ExecuteAsync(
                 request,

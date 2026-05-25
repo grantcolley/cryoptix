@@ -1,6 +1,6 @@
-﻿namespace Cryoptix.Strategy.Engine
+﻿namespace Cryoptix.Market.Strategy
 {
-    public enum StrategySignal
+    public enum SignalType
     {
         None = 0,
         Buy = 1,

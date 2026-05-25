@@ -3,10 +3,12 @@
     public enum MessageType
     {
         None,
+        StrategyStarted,
+        StrategyUpdated,
         MarketDataSnapshot,
         Kline,
         Trade,
-        StrategyStarted,
-        StrategyUpdated
+        Indicators,
+        Signal
     }
 }

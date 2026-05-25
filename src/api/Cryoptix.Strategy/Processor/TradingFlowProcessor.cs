@@ -61,7 +61,9 @@ namespace Cryoptix.Strategy.Processor
                 AccountRealtimeState = new AccountRealtimeState(),
                 Cache = new MarketDataCache(
                     maxTradesPerSymbol: initialStrategy.CacheMaxTradesPerSymbol,
-                    maxKlinesPerSeries: initialStrategy.CacheMaxKlinesPerSeries)
+                    maxKlinesPerSeries: initialStrategy.CacheMaxKlinesPerSeries,
+                    maxIndicatorsPerSeries: initialStrategy.CacheMaxIndicatorsPerSeries,
+                    maxSignalsPerSeries: initialStrategy.CacheMaxSignalsPerSeries)
             };
 
             _tradingFlowSessionAccessor.SetCurrent(strategyProcessorSession);

@@ -21,7 +21,9 @@ namespace Cryoptix.Strategy.Cache
                     Strategy = new Strategies.Strategy(),
                     SnapshotTimeUtc = _strategyClock.UtcNow,
                     Klines = [],
-                    Trades = []
+                    Trades = [],
+                    Indicators = [],
+                    Signals = []
                 });
             }
 
@@ -32,7 +34,9 @@ namespace Cryoptix.Strategy.Cache
                 Strategy = strategy,
                 SnapshotTimeUtc = _strategyClock.UtcNow,
                 Klines = [.. session.Cache.GetKlines(strategy.Symbol ?? string.Empty, strategy.KlineInterval)],
-                Trades = [.. session.Cache.GetTrades(strategy.Symbol ?? string.Empty)]
+                Trades = [.. session.Cache.GetTrades(strategy.Symbol ?? string.Empty)],
+                Indicators = [.. session.Cache.GetIndicators(strategy.Symbol ?? string.Empty)],
+                Signals = [.. session.Cache.GetSignals(strategy.Symbol ?? string.Empty)]
             });
         }
     }

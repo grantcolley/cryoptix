@@ -51,8 +51,11 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             return Task.FromResult(new IndicatorComputationResult
             {
-                TimestampUtc = DateTime.UtcNow,
-                Values = values.ToImmutableDictionary()
+                Indicators = new Market.Strategy.Indicators
+                {
+                    TimestampUtc = DateTime.UtcNow, 
+                    Values = values.ToImmutableDictionary() 
+                },
             });
         }
 

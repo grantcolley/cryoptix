@@ -6,19 +6,121 @@ namespace Cryoptix.Strategy.Cache
     {
         private readonly int _maxTradesPerSymbol;
         private readonly int _maxKlinesPerSeries;
+        private readonly int _maxIndicatorsPerSeries;
+        private readonly int _maxSignalsPerSeries;
         private readonly object _gate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
         private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
+        private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Indicators>> _indicators = [];
+        private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Signal>> _signals = [];
 
-        public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries)
+        public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries, int maxIndicatorsPerSeries, int maxSignalsPerSeries)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTradesPerSymbol);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxKlinesPerSeries);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxIndicatorsPerSeries);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxSignalsPerSeries);
 
             _maxTradesPerSymbol = maxTradesPerSymbol;
             _maxKlinesPerSeries = maxKlinesPerSeries;
+            _maxIndicatorsPerSeries = maxIndicatorsPerSeries;
+            _maxSignalsPerSeries = maxSignalsPerSeries;
+        }
+
+        /// <summary>
+        /// Upserts a computed indicator result for the specified symbol.
+        /// The result is stored by its TimestampUtc and the series will be trimmed to the configured maximum.
+        /// </summary>
+        /// <param name="symbol">Trading symbol for which the indicator was computed.</param>
+        /// <param name="indicators">Computed indicator result.</param>
+        public void UpsertIndicators(string symbol, Market.Strategy.Indicators indicators)
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNull(indicators);
+
+            lock (_gate)
+            {
+                string key = NormalizeSymbol(symbol);
+                if (!_indicators.TryGetValue(key, out var series))
+                {
+                    series = new SortedDictionary<DateTime, Market.Strategy.Indicators>();
+                    _indicators[key] = series;
+                }
+
+                series[indicators.TimestampUtc] = CloneIndicators(indicators);
+
+                while (series.Count > _maxIndicatorsPerSeries)
+                {
+                    DateTime oldest = series.First().Key;
+                    series.Remove(oldest);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves computed indicators for the specified symbol in chronological order.
+        /// </summary>
+        /// <param name="symbol">Trading symbol to query.</param>
+        /// <returns>List of indicator computation results for the symbol.</returns>
+        public IReadOnlyList<Market.Strategy.Indicators> GetIndicators(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_gate)
+            {
+                string key = NormalizeSymbol(symbol);
+                if (!_indicators.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneIndicators)];
+            }
+        }
+
+        /// <summary>
+        /// Upserts a evaluated signal for the specified symbol.
+        /// The result is stored by its TimestampUtc and the series will be trimmed to the configured maximum.
+        /// </summary>
+        public void UpsertSignal(string symbol, Market.Strategy.Signal signal)
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNull(signal);
+
+            lock (_gate)
+            {
+                string key = NormalizeSymbol(symbol);
+                if (!_signals.TryGetValue(key, out var series))
+                {
+                    series = new SortedDictionary<DateTime, Market.Strategy.Signal>();
+                    _signals[key] = series;
+                }
+
+                series[signal.TimestampUtc] = CloneSignal(signal);
+
+                while (series.Count > _maxSignalsPerSeries)
+                {
+                    DateTime oldest = series.First().Key;
+                    series.Remove(oldest);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves evaluated signals for the specified symbol in chronological order.
+        /// </summary>
+        public IReadOnlyList<Market.Strategy.Signal> GetSignals(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_gate)
+            {
+                string key = NormalizeSymbol(symbol);
+                if (!_signals.TryGetValue(key, out var series))
+                    return Array.Empty<Market.Strategy.Signal>();
+
+                return series.Values.Select(CloneSignal).ToList();
+            }
         }
 
         public KlineUpsertResult UpsertKline(Kline kline)
@@ -185,6 +287,25 @@ namespace Cryoptix.Strategy.Cache
                 Price = source.Price,
                 BaseQuantity = source.BaseQuantity,
                 QuoteQuantity = source.QuoteQuantity
+            };
+        }
+
+        private static Market.Strategy.Indicators CloneIndicators(Market.Strategy.Indicators source)
+        {
+            return new Market.Strategy.Indicators
+            {
+                TimestampUtc = source.TimestampUtc,
+                Values = new Dictionary<string, decimal>(source.Values)
+            };
+        }
+
+        private static Market.Strategy.Signal CloneSignal(Market.Strategy.Signal source)
+        {
+            return new Market.Strategy.Signal
+            {
+                TimestampUtc = source.TimestampUtc,
+                SignalType = source.SignalType,
+                Reason = source.Reason
             };
         }
     }
