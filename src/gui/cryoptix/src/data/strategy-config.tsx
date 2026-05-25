@@ -17,6 +17,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
     maxAccountAgeSeconds: 10,
     cacheMaxKlinesPerSeries: 5000,
     cacheMaxTradesPerSymbol: 10000,
+    CacheMaxIndicatorsPerSeries: 5000,
+    CacheMaxSignalsPerSeries: 5000,
     strategyProcessorMaxTradesPerPass: 256,
     subscriptionChannelKlineCapacity: 1440,
     subscriptionChannelTradeCapacity: 10000,
@@ -27,7 +29,7 @@ export const STRATEGY_CONFIG: Strategy[] = [
     klineBroadcastFullMode: 2,
     tradeBroadcastFullMode: 2,
     smoothingType: 0,
-    fastPeriod: 0,
-    slowPeriod: 0,
+    fastPeriod: 9,
+    slowPeriod: 21,
   },
 ];

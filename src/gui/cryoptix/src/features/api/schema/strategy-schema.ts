@@ -36,6 +36,8 @@ export const StrategySchema = z.object({
   maxAccountAgeSeconds: z.number().int().default(10),
   cacheMaxKlinesPerSeries: z.number().int().default(5000),
   cacheMaxTradesPerSymbol: z.number().int().default(10000),
+  CacheMaxIndicatorsPerSeries: z.number().int().default(5000),
+  CacheMaxSignalsPerSeries: z.number().int().default(5000),
   strategyProcessorMaxTradesPerPass: z.number().int().default(256),
   subscriptionChannelKlineCapacity: z.number().int().default(500),
   subscriptionChannelTradeCapacity: z.number().int().default(10000),

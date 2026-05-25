@@ -72,6 +72,8 @@ type StrategyIntegerFieldName = Extract<
   | "maxAccountAgeSeconds"
   | "cacheMaxKlinesPerSeries"
   | "cacheMaxTradesPerSymbol"
+  | "CacheMaxIndicatorsPerSeries"
+  | "CacheMaxSignalsPerSeries"
   | "strategyProcessorMaxTradesPerPass"
   | "subscriptionChannelKlineCapacity"
   | "subscriptionChannelTradeCapacity"
@@ -137,8 +139,8 @@ const fallbackDefaultValues: Strategy = {
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
   smoothingType: MovingAverageSmoothingType.Sma,
-  fastPeriod: 0,
-  slowPeriod: 0,
+  fastPeriod: 9,
+  slowPeriod: 21,
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 0,
   klineSeedLimit: 0,
@@ -147,6 +149,8 @@ const fallbackDefaultValues: Strategy = {
   maxAccountAgeSeconds: 10,
   cacheMaxKlinesPerSeries: 5000,
   cacheMaxTradesPerSymbol: 10000,
+  CacheMaxIndicatorsPerSeries: 5000,
+  CacheMaxSignalsPerSeries: 5000,
   strategyProcessorMaxTradesPerPass: 256,
   subscriptionChannelKlineCapacity: 500,
   subscriptionChannelTradeCapacity: 10000,
@@ -835,6 +839,20 @@ export function StrategyForm({
                       control={form.control}
                       name="cacheMaxTradesPerSymbol"
                       label="Cache max trades per symbol"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="CacheMaxIndicatorsPerSeries"
+                      label="Cache max indicators per series"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="CacheMaxSignalsPerSeries"
+                      label="Cache max signals per series"
                       isReadOnly={isReadOnly}
                     />
 

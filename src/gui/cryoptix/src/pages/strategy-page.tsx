@@ -4,10 +4,16 @@ import {
   CandlestickSeries,
   ColorType,
   CrosshairMode,
+  LineSeries,
   createChart,
+  createSeriesMarkers,
   type CandlestickData,
   type IChartApi,
+  type ISeriesMarkersPluginApi,
   type ISeriesApi,
+  type LineData,
+  type SeriesMarker,
+  type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
 import { Config } from "@/config/config";
@@ -17,7 +23,10 @@ import { StrategyHeader } from "@/features/strategy/strategy-header";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
+import type { Indicators } from "@/features/api/schema/indicators-schema";
 import type { Kline } from "@/features/api/schema/kline-schema";
+import { SignalType } from "@/features/api/schema/signal-type";
+import type { Signal } from "@/features/api/schema/signal-schema";
 import type { Trade } from "@/features/api/schema/trade-schema";
 import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
@@ -39,6 +48,19 @@ import { Icon } from "@/components/icon/icon";
 import { ExchangeLabels } from "@/features/api/schema/exchange";
 
 type PriceDirection = "up" | "down" | "flat";
+type IndicatorSeriesData = {
+  key: string;
+  data: LineData<UTCTimestamp>[];
+};
+
+const INDICATOR_SERIES_COLORS = [
+  "#2563eb",
+  "#f97316",
+  "#7c3aed",
+  "#0891b2",
+  "#db2777",
+  "#65a30d",
+];
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -70,6 +92,12 @@ export function StrategyPage() {
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const chartApiRef = React.useRef<IChartApi | null>(null);
   const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const signalMarkersRef = React.useRef<ISeriesMarkersPluginApi<Time> | null>(
+    null
+  );
+  const signalMarkersDataRef = React.useRef<SeriesMarker<Time>[]>([]);
+  const indicatorSeriesRefs = React.useRef<ISeriesApi<"Line">[]>([]);
+  const indicatorSeriesDataRef = React.useRef<IndicatorSeriesData[]>([]);
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
@@ -141,6 +169,98 @@ export function StrategyPage() {
   const sortByTime = <T extends { time: UTCTimestamp }>(items: T[]) =>
     items.sort((a, b) => a.time - b.time);
 
+  const toIndicatorSeriesData = (
+    indicators: Indicators[]
+  ): IndicatorSeriesData[] => {
+    const seriesByKey = new Map<string, Map<number, LineData<UTCTimestamp>>>();
+
+    for (const indicator of indicators) {
+      const time = toChartTime(indicator.timestampUtc);
+
+      for (const item of indicator.values) {
+        const dataByTime = seriesByKey.get(item.key) ?? new Map();
+
+        dataByTime.set(time, {
+          time,
+          value: item.value,
+        });
+        seriesByKey.set(item.key, dataByTime);
+      }
+    }
+
+    return [...seriesByKey.entries()].map(([key, dataByTime]) => ({
+      key,
+      data: sortByTime([...dataByTime.values()]),
+    }));
+  };
+
+  const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
+    const markers = signals
+      .filter((signal) => signal.signalType !== SignalType.None)
+      .map<SeriesMarker<Time>>((signal) => ({
+        time: toChartTime(signal.timestampUtc),
+        position: "belowBar",
+        shape: "arrowUp",
+        color: "#16a34a",
+        text: signal.reason ?? undefined,
+      }));
+
+    return markers.sort((a, b) => Number(a.time) - Number(b.time));
+  };
+
+  const applySignalMarkersToChart = () => {
+    const candleSeries = candleSeriesRef.current;
+
+    if (!candleSeries) {
+      return;
+    }
+
+    const signalMarkers =
+      signalMarkersRef.current ?? createSeriesMarkers(candleSeries);
+
+    signalMarkersRef.current = signalMarkers;
+    signalMarkers.setMarkers(signalMarkersDataRef.current);
+  };
+
+  const clearIndicatorSeries = () => {
+    const chart = chartApiRef.current;
+
+    if (chart) {
+      for (const indicatorSeries of indicatorSeriesRefs.current) {
+        chart.removeSeries(indicatorSeries);
+      }
+    }
+
+    indicatorSeriesRefs.current = [];
+  };
+
+  const addIndicatorSeriesToChart = () => {
+    const chart = chartApiRef.current;
+
+    if (!chart) {
+      return;
+    }
+
+    clearIndicatorSeries();
+
+    indicatorSeriesRefs.current = indicatorSeriesDataRef.current.map(
+      ({ key, data }, index) => {
+        const indicatorSeries = chart.addSeries(LineSeries, {
+          title: key,
+          color:
+            INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length],
+          lineWidth: 2,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+
+        indicatorSeries.setData(data);
+
+        return indicatorSeries;
+      }
+    );
+  };
+
   const applyKlinesToChart = (klines: Kline[], replace = false) => {
     const candleSeries = candleSeriesRef.current;
 
@@ -165,9 +285,24 @@ export function StrategyPage() {
     }
   };
 
+  const applyIndicatorsToChart = (indicators: Indicators[]) => {
+    indicatorSeriesDataRef.current = toIndicatorSeriesData(indicators);
+    addIndicatorSeriesToChart();
+    chartApiRef.current?.timeScale().fitContent();
+  };
+
+  const applySignalsToChart = (signals: Signal[]) => {
+    signalMarkersDataRef.current = toSignalMarkers(signals);
+    applySignalMarkersToChart();
+  };
+
   const resetChartData = () => {
     candleDataByTimeRef.current = new Map();
+    indicatorSeriesDataRef.current = [];
+    signalMarkersDataRef.current = [];
     candleSeriesRef.current?.setData([]);
+    signalMarkersRef.current?.setMarkers([]);
+    clearIndicatorSeries();
   };
 
   const applyRunningStrategyStatus = (
@@ -236,6 +371,8 @@ export function StrategyPage() {
 
           applyRunningStrategyStatus(payload.strategy, message);
           applyKlinesToChart(payload.klines, true);
+          applyIndicatorsToChart(payload.indicators);
+          applySignalsToChart(payload.signals);
 
           setNotificationMessage(message);
         }
@@ -471,11 +608,16 @@ export function StrategyPage() {
     candleSeriesRef.current = candleSeries;
 
     candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+    applySignalMarkersToChart();
+    addIndicatorSeriesToChart();
     chart.timeScale().fitContent();
 
     return () => {
+      signalMarkersRef.current?.detach();
       chartApiRef.current = null;
       candleSeriesRef.current = null;
+      signalMarkersRef.current = null;
+      indicatorSeriesRefs.current = [];
       chart.remove();
     };
   }, [showStrategyRunning, strategy?.symbol]);
