@@ -166,8 +166,12 @@ export function StrategyPage() {
     close: kline.close,
   });
 
-  const sortByTime = <T extends { time: UTCTimestamp }>(items: T[]) =>
-    items.sort((a, b) => a.time - b.time);
+  const sortByTime = React.useCallback(
+    function sortByTime<T extends { time: UTCTimestamp }>(items: T[]) {
+      return items.sort((a, b) => a.time - b.time);
+    },
+    []
+  );
 
   const toIndicatorSeriesData = (
     indicators: Indicators[]
@@ -178,7 +182,9 @@ export function StrategyPage() {
       const time = toChartTime(indicator.timestampUtc);
 
       for (const item of indicator.values) {
-        const dataByTime = seriesByKey.get(item.key) ?? new Map();
+        const dataByTime =
+          seriesByKey.get(item.key) ??
+          new Map<number, LineData<UTCTimestamp>>();
 
         dataByTime.set(time, {
           time,
@@ -208,7 +214,7 @@ export function StrategyPage() {
     return markers.sort((a, b) => Number(a.time) - Number(b.time));
   };
 
-  const applySignalMarkersToChart = () => {
+  const applySignalMarkersToChart = React.useCallback(() => {
     const candleSeries = candleSeriesRef.current;
 
     if (!candleSeries) {
@@ -220,9 +226,9 @@ export function StrategyPage() {
 
     signalMarkersRef.current = signalMarkers;
     signalMarkers.setMarkers(signalMarkersDataRef.current);
-  };
+  }, []);
 
-  const clearIndicatorSeries = () => {
+  const clearIndicatorSeries = React.useCallback(() => {
     const chart = chartApiRef.current;
 
     if (chart) {
@@ -232,9 +238,9 @@ export function StrategyPage() {
     }
 
     indicatorSeriesRefs.current = [];
-  };
+  }, []);
 
-  const addIndicatorSeriesToChart = () => {
+  const addIndicatorSeriesToChart = React.useCallback(() => {
     const chart = chartApiRef.current;
 
     if (!chart) {
@@ -259,7 +265,7 @@ export function StrategyPage() {
         return indicatorSeries;
       }
     );
-  };
+  }, [clearIndicatorSeries]);
 
   const applyKlinesToChart = (klines: Kline[], replace = false) => {
     const candleSeries = candleSeriesRef.current;
@@ -620,7 +626,13 @@ export function StrategyPage() {
       indicatorSeriesRefs.current = [];
       chart.remove();
     };
-  }, [showStrategyRunning, strategy?.symbol]);
+  }, [
+    addIndicatorSeriesToChart,
+    applySignalMarkersToChart,
+    showStrategyRunning,
+    sortByTime,
+    strategy?.symbol,
+  ]);
 
   const handleStrategyAction = async (
     route: string,
