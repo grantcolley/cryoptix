@@ -297,8 +297,43 @@ export function StrategyPage() {
     chartApiRef.current?.timeScale().fitContent();
   };
 
+  const applyIndicatorToChart = (indicator: Indicators) => {
+    const time = toChartTime(indicator.timestampUtc);
+    const seriesByKey = new Map(
+      indicatorSeriesDataRef.current.map(({ key, data }) => [key, data])
+    );
+
+    for (const item of indicator.values) {
+      const data = seriesByKey.get(item.key) ?? [];
+      const nextData = data.filter((point) => point.time !== time);
+
+      nextData.push({
+        time,
+        value: item.value,
+      });
+
+      seriesByKey.set(item.key, sortByTime(nextData));
+    }
+
+    indicatorSeriesDataRef.current = [...seriesByKey.entries()].map(
+      ([key, data]) => ({
+        key,
+        data,
+      })
+    );
+    addIndicatorSeriesToChart();
+  };
+
   const applySignalsToChart = (signals: Signal[]) => {
     signalMarkersDataRef.current = toSignalMarkers(signals);
+    applySignalMarkersToChart();
+  };
+
+  const applySignalToChart = (signal: Signal) => {
+    signalMarkersDataRef.current = [
+      ...signalMarkersDataRef.current,
+      ...toSignalMarkers([signal]),
+    ].sort((a, b) => Number(a.time) - Number(b.time));
     applySignalMarkersToChart();
   };
 
@@ -390,6 +425,26 @@ export function StrategyPage() {
 
         if (payload) {
           applyKlinesToChart([payload]);
+        }
+
+        setNotificationMessage(null);
+        break;
+      }
+      case MessageType.Indicator: {
+        const payload = envelope.payload as Indicators | undefined;
+
+        if (payload) {
+          applyIndicatorToChart(payload);
+        }
+
+        setNotificationMessage(null);
+        break;
+      }
+      case MessageType.Signal: {
+        const payload = envelope.payload as Signal | undefined;
+
+        if (payload) {
+          applySignalToChart(payload);
         }
 
         setNotificationMessage(null);
