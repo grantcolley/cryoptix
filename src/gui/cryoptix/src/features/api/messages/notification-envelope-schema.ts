@@ -16,10 +16,43 @@ export const NotificationPayloadSchema = z.union([
   SignalSchema,
 ]);
 
-export const NotificationEnvelopeSchema = z.object({
-  messageType: z.enum(MessageType).default(MessageType.None),
+const NotificationEnvelopeBaseSchema = z.object({
   timestampUtc: z.coerce.date(),
-  payload: NotificationPayloadSchema.nullable().optional(),
 });
+
+export const NotificationEnvelopeSchema = z.discriminatedUnion("messageType", [
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.None),
+    payload: z.null().optional(),
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.StrategyStarted),
+    payload: StrategySchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.StrategyUpdated),
+    payload: StrategySchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.MarketDataSnapshot),
+    payload: MarketDataSnapshotSchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.Kline),
+    payload: KlineSchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.Trade),
+    payload: TradeSchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.Indicator),
+    payload: IndicatorsSchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.Signal),
+    payload: SignalSchema,
+  }),
+]);
 
 export type NotificationEnvelope = z.infer<typeof NotificationEnvelopeSchema>;
