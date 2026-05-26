@@ -87,6 +87,30 @@ namespace Cryoptix.Observer.Metrics
                 });
         }
 
+        public void RecordPublishFailureIndicator(string? symbol, Exception exception)
+        {
+            _publishFailureCounter.Add(
+                1,
+                new TagList
+                {
+                { "event_type", "indicator" },
+                { "symbol", Normalize(symbol) },
+                { "exception_type", exception.GetType().Name }
+                });
+        }
+
+        public void RecordPublishFailureSignal(string? symbol, Exception exception)
+        {
+            _publishFailureCounter.Add(
+                1,
+                new TagList
+                {
+                { "event_type", "signal" },
+                { "symbol", Normalize(symbol) },
+                { "exception_type", exception.GetType().Name }
+                });
+        }
+
         public void RecordNotificationLagKline(string? symbol, KlineInterval interval, TimeSpan lag)
         {
             _notificationLagMs.Record(
@@ -129,6 +153,28 @@ namespace Cryoptix.Observer.Metrics
                 new TagList
                 {
                 { "event_type", "trade" },
+                { "symbol", Normalize(symbol) }
+                });
+        }
+
+        public void RecordPublishDurationIndicator(string? symbol, TimeSpan duration)
+        {
+            _publishDurationMs.Record(
+                duration.TotalMilliseconds,
+                new TagList
+                {
+                { "event_type", "indicator" },
+                { "symbol", Normalize(symbol) }
+                });
+        }
+
+        public void RecordPublishDurationSignal(string? symbol, TimeSpan duration)
+        {
+            _publishDurationMs.Record(
+                duration.TotalMilliseconds,
+                new TagList
+                {
+                { "event_type", "signal" },
                 { "symbol", Normalize(symbol) }
                 });
         }

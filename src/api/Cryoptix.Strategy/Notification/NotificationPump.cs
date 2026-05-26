@@ -39,6 +39,8 @@ namespace Cryoptix.Strategy.Notification
 
             ChannelReader<Kline> klineReader = channels.KlineBroadcasts.Reader;
             ChannelReader<Trade> tradeReader = channels.TradeBroadcasts.Reader;
+            ChannelReader<Market.Strategy.Indicators> indicatorsReader = channels.IndicatorsBroadcasts.Reader;
+            ChannelReader<Market.Strategy.Signal> signalReader = channels.SignalBroadcasts.Reader;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -65,6 +67,29 @@ namespace Cryoptix.Strategy.Notification
                             kline.Interval);
 
                         _notificationMetrics.RecordPublishFailureKline(kline.Symbol, kline.Interval, ex);
+                    }
+                }
+
+                while (indicatorsReader.TryRead(out Market.Strategy.Indicators? indicators))
+                {
+                    processedAny = true;
+
+                    try
+                    {
+                        await _notificationDispatcher.PublishAsync(indicators, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to publish indicator notification for {Symbol}",
+                            indicators.TimestampUtc);
+
+                        _notificationMetrics.RecordPublishFailureIndicator(indicators is null ? null : null, ex);
                     }
                 }
 
@@ -97,12 +122,37 @@ namespace Cryoptix.Strategy.Notification
                     }
                 }
 
-                if (klineReader.Completion.IsCompleted && tradeReader.Completion.IsCompleted)
+                while (signalReader.TryRead(out Market.Strategy.Signal? signal))
+                {
+                    processedAny = true;
+
+                    try
+                    {
+                        await _notificationDispatcher.PublishAsync(signal, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to publish signal notification for {Symbol}",
+                            signal.TimestampUtc);
+
+                        _notificationMetrics.RecordPublishFailureSignal(signal is null ? null : null, ex);
+                    }
+                }
+
+                if (klineReader.Completion.IsCompleted && tradeReader.Completion.IsCompleted && indicatorsReader.Completion.IsCompleted && signalReader.Completion.IsCompleted)
                 {
                     bool hasRemainingKlines = klineReader.TryPeek(out _);
                     bool hasRemainingTrades = tradeReader.TryPeek(out _);
+                    bool hasRemainingIndicators = indicatorsReader.TryPeek(out _);
+                    bool hasRemainingSignals = signalReader.TryPeek(out _);
 
-                    if (!hasRemainingKlines && !hasRemainingTrades)
+                    if (!hasRemainingKlines && !hasRemainingTrades && !hasRemainingIndicators && !hasRemainingSignals)
                         break;
                 }
 
@@ -111,16 +161,26 @@ namespace Cryoptix.Strategy.Notification
 
                 Task<bool> waitForKline = klineReader.WaitToReadAsync(cancellationToken).AsTask();
                 Task<bool> waitForTrade = tradeReader.WaitToReadAsync(cancellationToken).AsTask();
+                Task<bool> waitForIndicator = indicatorsReader.WaitToReadAsync(cancellationToken).AsTask();
+                Task<bool> waitForSignal = signalReader.WaitToReadAsync(cancellationToken).AsTask();
 
-                Task completed = await Task.WhenAny(waitForKline, waitForTrade);
+                Task completed = await Task.WhenAny(waitForKline, waitForTrade, waitForIndicator, waitForSignal);
 
                 if (completed == waitForKline)
                 {
                     await waitForKline;
                 }
-                else
+                else if (completed == waitForTrade)
                 {
                     await waitForTrade;
+                }
+                else if (completed == waitForIndicator)
+                {
+                    await waitForIndicator;
+                }
+                else
+                {
+                    await waitForSignal;
                 }
             }
         }

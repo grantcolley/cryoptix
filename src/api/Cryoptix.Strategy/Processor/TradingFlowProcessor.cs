@@ -139,7 +139,7 @@ namespace Cryoptix.Strategy.Processor
                     Strategies.Strategy? updatedStrategy = strategyAgentSession.GetStrategy();
                     if (updatedStrategy == null)
                     {
-                        _logger.LogWarning("Received null strategy update; ignoring.");
+                        _logger.LogWarning("Received null strategy update; ignoring. (ignored)");
                         continue;
                     }
 
@@ -213,6 +213,7 @@ namespace Cryoptix.Strategy.Processor
                     await _strategyMarketEventDispatcher.DispatchAsync(
                         session,
                         klineEvent,
+                        channels,
                         cancellationToken);
                 }
 
@@ -236,6 +237,7 @@ namespace Cryoptix.Strategy.Processor
                     await _strategyMarketEventDispatcher.DispatchAsync(
                         session,
                         tradeEvent,
+                        channels,
                         cancellationToken);
                 }
 

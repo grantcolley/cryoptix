@@ -23,6 +23,7 @@ namespace Cryoptix.Strategy.Dispatcher
         public async Task DispatchAsync(
             StrategyProcessorSession session,
             MarketEvent marketEvent,
+            Channel.StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(session);
@@ -33,11 +34,11 @@ namespace Cryoptix.Strategy.Dispatcher
             switch (marketEvent)
             {
                 case KlineMarketEvent klineEvent:
-                    await DispatchKlineAsync(session, klineEvent, cancellationToken);
+                    await DispatchKlineAsync(session, klineEvent, channels, cancellationToken);
                     break;
 
                 case TradeMarketEvent tradeEvent:
-                    await DispatchTradeAsync(session, tradeEvent, cancellationToken);
+                    await DispatchTradeAsync(session, tradeEvent, channels, cancellationToken);
                     break;
 
                 default:
@@ -51,6 +52,7 @@ namespace Cryoptix.Strategy.Dispatcher
         private async Task DispatchKlineAsync(
             StrategyProcessorSession session,
             KlineMarketEvent marketEvent,
+            Channel.StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
             KlineUpsertResult upsertKlineResult = session.Cache.UpsertKline(marketEvent.Kline);
@@ -66,12 +68,28 @@ namespace Cryoptix.Strategy.Dispatcher
 
             session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
 
+            // Broadcast computed indicators
+            if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicators.Indicators))
+            {
+                _logger.LogDebug(
+                    "Dropped indicators broadcast for {Symbol} due to channel pressure.",
+                    context.Strategy.Symbol);
+            }
+
             SignalEvaluationResult signal =
                 await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
 
             if (signal.Signal.SignalType != SignalType.None)
             {
                 session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+
+                // Broadcast signal
+                if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
+                {
+                    _logger.LogDebug(
+                        "Dropped signal broadcast for {Symbol} due to channel pressure.",
+                        context.Strategy.Symbol);
+                }
             }
 
             _logger.LogInformation(
@@ -90,6 +108,7 @@ namespace Cryoptix.Strategy.Dispatcher
         private async Task DispatchTradeAsync(
             StrategyProcessorSession session,
             TradeMarketEvent marketEvent,
+            Channel.StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
             bool added = session.Cache.AddTrade(marketEvent.Trade);
@@ -112,8 +131,28 @@ namespace Cryoptix.Strategy.Dispatcher
             IndicatorComputationResult indicators =
                 await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
 
+            // Upsert and broadcast indicators for trades as well
+            session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
+            if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicators.Indicators))
+            {
+                _logger.LogDebug(
+                    "Dropped indicators broadcast for {Symbol} due to channel pressure.",
+                    context.Strategy.Symbol);
+            }
+
             SignalEvaluationResult signal =
                 await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
+
+            if (signal.Signal.SignalType != SignalType.None)
+            {
+                session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+                if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
+                {
+                    _logger.LogDebug(
+                        "Dropped signal broadcast for {Symbol} due to channel pressure.",
+                        context.Strategy.Symbol);
+                }
+            }
 
             _logger.LogInformation(
                 "TRADE {Symbol} TradeId:{TradeId} Time:{Time:u} Price:{Price} BaseQuantity:{BaseQuantity} QuoteQuantity:{QuoteQuantity}",

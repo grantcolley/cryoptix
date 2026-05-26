@@ -8,6 +8,7 @@ namespace Cryoptix.Strategy.Dispatcher
         Task DispatchAsync(
             StrategyProcessorSession session,
             MarketEvent marketEvent,
+            Channel.StrategyEventChannels channels,
             CancellationToken cancellationToken);
     }
 }
