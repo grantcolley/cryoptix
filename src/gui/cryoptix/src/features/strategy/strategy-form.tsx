@@ -5,10 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
-  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
