@@ -133,6 +133,7 @@ namespace Cryoptix.Strategy.Dispatcher
 
             // Upsert and broadcast indicators for trades as well
             session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
+
             if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicators.Indicators))
             {
                 _logger.LogDebug(
@@ -146,6 +147,7 @@ namespace Cryoptix.Strategy.Dispatcher
             if (signal.Signal.SignalType != SignalType.None)
             {
                 session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+
                 if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
                 {
                     _logger.LogDebug(
