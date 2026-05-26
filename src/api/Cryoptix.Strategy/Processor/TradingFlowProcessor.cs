@@ -104,6 +104,7 @@ namespace Cryoptix.Strategy.Processor
                     cancellationToken);
 
                 notificationTask = _notificationPump.RunAsync(
+                    strategy: strategyProcessorSession.Strategy,
                     channels,
                     cancellationToken);
 
