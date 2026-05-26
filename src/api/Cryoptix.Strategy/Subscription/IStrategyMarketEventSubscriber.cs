@@ -1,8 +1,7 @@
 ﻿using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
-using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Snapshot;
-using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Subscription
 {
@@ -12,8 +11,7 @@ namespace Cryoptix.Strategy.Subscription
             Strategies.Strategy strategy,
             Credentials? credentials,
             IExchangeSubscriptionApi subscriptionsApi,
-            ChannelWriter<KlineMarketEvent> klineWriter,
-            ChannelWriter<TradeMarketEvent> tradeWriter,
+            StrategyEventChannels channels,
             OrderBookRealtimeState orderBookRealtimeState,
             AccountRealtimeState accountRealtimeState,
             CancellationToken cancellationToken);
