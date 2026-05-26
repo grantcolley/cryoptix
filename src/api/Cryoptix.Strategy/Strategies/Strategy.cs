@@ -28,16 +28,21 @@ namespace Cryoptix.Strategy.Strategies
         public int CacheMaxIndicatorsPerSeries { get; set; } = 5000;
         public int CacheMaxSignalsPerSeries { get; set; } = 5000;
         public int StrategyProcessorMaxTradesPerPass { get; set; } = 256;
-        public int SubscriptionChannelKlineCapacity { get; set; } = 500;
+        public int SubscriptionChannelKlineCapacity { get; set; } = 10000;
         public int SubscriptionChannelTradeCapacity { get; set; } = 10000;
-        public bool SubscriptionChannelDropTradesWhenFull { get; set; } = true;
-        public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.Wait;
+        public BoundedChannelFullMode SubscriptionChannelTradeFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
 
         // Broadcast settings
         public int KlineBroadcastCapacity { get; init; } = 500;
         public int TradeBroadcastCapacity { get; init; } = 10000;
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        public int IndicatorsBroadcastCapacity { get; set; } = 5000;
+        public int SignalBroadcastCapacity { get; set; } = 5000;
+        public BoundedChannelFullMode IndicatorsBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public BoundedChannelFullMode SignalBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+
 
         // Parameters for strategy logic
         public int FastPeriod { get; init; }

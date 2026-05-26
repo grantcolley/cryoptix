@@ -1,5 +1,6 @@
 ﻿using Cryoptix.Strategy.Event;
 using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 
 namespace Cryoptix.Strategy.Channel
 {
@@ -10,29 +11,31 @@ namespace Cryoptix.Strategy.Channel
 
         public StrategyEventChannels Create()
         {
-            return Create(_options.DropTradesWhenFull, _options.KlineCapacity, _options.KlineFullMode, _options.TradeCapacity, _options.KlineBroadcastCapacity, _options.KlineBroadcastFullMode, _options.TradeBroadcastCapacity, _options.TradeBroadcastFullMode);
+            return Create(_options.KlineCapacity, _options.KlineFullMode, _options.TradeCapacity, _options.TradeFullMode, _options.KlineBroadcastCapacity, _options.KlineBroadcastFullMode, _options.TradeBroadcastCapacity, _options.TradeBroadcastFullMode, _options.IndicatorsBroadcastCapacity, _options.IndicatorsBroadcastFullMode, _options.SignalBroadcastCapacity, _options.SignalBroadcastFullMode);
         }
 
         public StrategyEventChannels Create(Strategies.Strategy strategy)
         {
-            bool dropTradesWhenFull = strategy.SubscriptionChannelDropTradesWhenFull;
             int klineCapacity = strategy.SubscriptionChannelKlineCapacity > 0 ? strategy.SubscriptionChannelKlineCapacity : _options.KlineCapacity;
             System.Threading.Channels.BoundedChannelFullMode klineFullMode = strategy.SubscriptionChannelKlineFullMode;
             int tradeCapacity = strategy.SubscriptionChannelTradeCapacity > 0 ? strategy.SubscriptionChannelTradeCapacity : _options.TradeCapacity;
+            System.Threading.Channels.BoundedChannelFullMode tradeFullMode = strategy.SubscriptionChannelTradeFullMode;
             int klineBroadcastCapacity = strategy.KlineBroadcastCapacity > 0 ? strategy.KlineBroadcastCapacity : _options.KlineBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode = strategy.KlineBroadcastFullMode;
             int tradeBroadcastCapacity = strategy.TradeBroadcastCapacity > 0 ? strategy.TradeBroadcastCapacity : _options.TradeBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode = strategy.TradeBroadcastFullMode;
 
-            return Create(dropTradesWhenFull, klineCapacity, klineFullMode, tradeCapacity, klineBroadcastCapacity, klineBroadcastFullMode, tradeBroadcastCapacity, tradeBroadcastFullMode);
+            int indicatorsBroadcastCapacity = strategy.IndicatorsBroadcastCapacity > 0 ? strategy.IndicatorsBroadcastCapacity : _options.IndicatorsBroadcastCapacity;
+            System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode = strategy.IndicatorsBroadcastFullMode;
+
+            int signalBroadcastCapacity = strategy.SignalBroadcastCapacity > 0 ? strategy.SignalBroadcastCapacity : _options.SignalBroadcastCapacity;
+            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode = strategy.SignalBroadcastFullMode;
+
+            return Create(klineCapacity, klineFullMode, tradeCapacity, tradeFullMode, klineBroadcastCapacity, klineBroadcastFullMode, tradeBroadcastCapacity, tradeBroadcastFullMode, indicatorsBroadcastCapacity, indicatorsBroadcastFullMode, signalBroadcastCapacity, signalBroadcastFullMode);
         }
 
-        public StrategyEventChannels Create(bool dropTradesWhenFull, int klineCapacity, System.Threading.Channels.BoundedChannelFullMode klineFullMode, int tradeCapacity, int klineBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, int tradeBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode)
+        public StrategyEventChannels Create(int klineCapacity, System.Threading.Channels.BoundedChannelFullMode klineFullMode, int tradeCapacity, System.Threading.Channels.BoundedChannelFullMode tradeFullMode, int klineBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, int tradeBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, int indicatorsBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, int signalBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode)
         {
-            System.Threading.Channels.BoundedChannelFullMode tradeFullMode = dropTradesWhenFull
-                ? System.Threading.Channels.BoundedChannelFullMode.DropOldest
-                : System.Threading.Channels.BoundedChannelFullMode.Wait;
-
             System.Threading.Channels.Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(
                 new System.Threading.Channels.BoundedChannelOptions(klineCapacity)
                 {
@@ -69,12 +72,32 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = tradeBroadcastFullMode
                 });
 
+            System.Threading.Channels.Channel<Indicators> indicatorsBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Indicators>(
+                new System.Threading.Channels.BoundedChannelOptions(indicatorsBroadcastCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false,
+                    FullMode = indicatorsBroadcastFullMode
+                });
+
+            System.Threading.Channels.Channel<Market.Strategy.Signal> signalBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Market.Strategy.Signal>(
+                new System.Threading.Channels.BoundedChannelOptions(signalBroadcastCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false,
+                    FullMode = signalBroadcastFullMode
+                });
+
             return new StrategyEventChannels
             {
                 Klines = klineChannel,
                 Trades = tradeChannel,
                 KlineBroadcasts = klineBroadcastChannel,
-                TradeBroadcasts = tradeBroadcastChannel
+                TradeBroadcasts = tradeBroadcastChannel,
+                IndicatorsBroadcasts = indicatorsBroadcastChannel,
+                SignalBroadcasts = signalBroadcastChannel
             };
         }
     }

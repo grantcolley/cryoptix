@@ -6,17 +6,15 @@ namespace Cryoptix.Strategy.Channel
     {
         public int KlineCapacity { get; set; }
         public int TradeCapacity { get; set; }
-
-        /// <summary>
-        /// When true, excess trades are dropped instead of blocking writers.
-        /// Useful when trade volume spikes and only recent trades matter.
-        /// </summary>
-        public bool DropTradesWhenFull { get; set; } = true;
-        public BoundedChannelFullMode KlineFullMode { get; set; } = BoundedChannelFullMode.Wait;
-
-        public int KlineBroadcastCapacity { get; init; } = 5_000;
-        public int TradeBroadcastCapacity { get; init; } = 5_000;
+        public BoundedChannelFullMode TradeFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public BoundedChannelFullMode KlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public int KlineBroadcastCapacity { get; init; }
+        public int TradeBroadcastCapacity { get; init; }
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        public int IndicatorsBroadcastCapacity { get; init; }
+        public int SignalBroadcastCapacity { get; init; }
+        public BoundedChannelFullMode IndicatorsBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        public BoundedChannelFullMode SignalBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
     }
 }

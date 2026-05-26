@@ -34,7 +34,6 @@ using Cryoptix.Web.API.Notification;
 using Cryoptix.Web.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Threading.Channels;
@@ -49,13 +48,17 @@ builder.Configuration
 
 string klineCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY);
 string tradeCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY);
-string dropTradesWhenFull = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_DROP_TRADES_WHEN_FULL);
+string tradeFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_FULL_MODE);
 string klineFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_FULL_MODE);
 
 string klineBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_CAPACITY);
 string tradeBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_CAPACITY);
+string indicatorsBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_INDICATORS_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_INDICATORS_BROADCAST_CAPACITY);
+string signalBroadcastCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_SIGNAL_BROADCAST_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_SIGNAL_BROADCAST_CAPACITY);
 string klineBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_BROADCAST_FULL_MODE);
 string tradeBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_BROADCAST_FULL_MODE);
+string indicatorsBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_INDICATORS_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_INDICATORS_BROADCAST_FULL_MODE);
+string signalBroadcastFullMode = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_SIGNAL_BROADCAST_FULL_MODE] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_SIGNAL_BROADCAST_FULL_MODE);
 
 string domain = builder.Configuration[ConfigKeys.AUTH_DOMAIN] ?? throw new NullReferenceException(ConfigKeys.AUTH_DOMAIN);
 string audience = builder.Configuration[ConfigKeys.AUTH_AUDIENCE] ?? throw new NullReferenceException(ConfigKeys.AUTH_AUDIENCE);
@@ -168,12 +171,16 @@ builder.Services.AddSingleton(new StrategyChannelOptions
 {
     KlineCapacity = Int32.Parse(klineCapacity),
     TradeCapacity = Int32.Parse(tradeCapacity),
-    DropTradesWhenFull = bool.Parse(dropTradesWhenFull),
+    TradeFullMode = (BoundedChannelFullMode)int.Parse(tradeFullMode),
     KlineFullMode = (BoundedChannelFullMode)int.Parse(klineFullMode),
     KlineBroadcastCapacity = Int32.Parse(klineBroadcastCapacity),
     TradeBroadcastCapacity = Int32.Parse(tradeBroadcastCapacity),
     KlineBroadcastFullMode = (BoundedChannelFullMode)int.Parse(klineBroadcastFullMode),
-    TradeBroadcastFullMode = (BoundedChannelFullMode)int.Parse(tradeBroadcastFullMode)
+    TradeBroadcastFullMode = (BoundedChannelFullMode)int.Parse(tradeBroadcastFullMode),
+    IndicatorsBroadcastCapacity = Int32.Parse(indicatorsBroadcastCapacity),
+    SignalBroadcastCapacity = Int32.Parse(signalBroadcastCapacity),
+    IndicatorsBroadcastFullMode = (BoundedChannelFullMode)int.Parse(indicatorsBroadcastFullMode),
+    SignalBroadcastFullMode = (BoundedChannelFullMode)int.Parse(signalBroadcastFullMode)
 });
 
 builder.Services.AddSignalR();

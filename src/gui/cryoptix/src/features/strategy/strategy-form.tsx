@@ -72,13 +72,15 @@ type StrategyIntegerFieldName = Extract<
   | "maxAccountAgeSeconds"
   | "cacheMaxKlinesPerSeries"
   | "cacheMaxTradesPerSymbol"
-  | "CacheMaxIndicatorsPerSeries"
-  | "CacheMaxSignalsPerSeries"
+  | "cacheMaxIndicatorsPerSeries"
+  | "cacheMaxSignalsPerSeries"
   | "strategyProcessorMaxTradesPerPass"
   | "subscriptionChannelKlineCapacity"
   | "subscriptionChannelTradeCapacity"
   | "klineBroadcastCapacity"
   | "tradeBroadcastCapacity"
+  | "indicatorsBroadcastCapacity"
+  | "signalBroadcastCapacity"
 >;
 
 type StrategyEnumFieldName = Extract<
@@ -88,9 +90,12 @@ type StrategyEnumFieldName = Extract<
   | "smoothingType"
   | "exchange"
   | "klineInterval"
+  | "subscriptionChannelTradeFullMode"
   | "subscriptionChannelKlineFullMode"
   | "klineBroadcastFullMode"
   | "tradeBroadcastFullMode"
+  | "indicatorsBroadcastFullMode"
+  | "signalBroadcastFullMode"
 >;
 
 type StrategyFormProps = {
@@ -142,24 +147,28 @@ const fallbackDefaultValues: Strategy = {
   fastPeriod: 9,
   slowPeriod: 21,
   klineInterval: KlineInterval.Minute,
-  klineSeedSize: 0,
-  klineSeedLimit: 0,
+  klineSeedSize: 1440,
+  klineSeedLimit: 1000,
   orderBookLimit: 20,
   maxOrderBookAgeSeconds: 3,
   maxAccountAgeSeconds: 10,
   cacheMaxKlinesPerSeries: 5000,
   cacheMaxTradesPerSymbol: 10000,
-  CacheMaxIndicatorsPerSeries: 5000,
-  CacheMaxSignalsPerSeries: 5000,
+  cacheMaxIndicatorsPerSeries: 5000,
+  cacheMaxSignalsPerSeries: 5000,
   strategyProcessorMaxTradesPerPass: 256,
-  subscriptionChannelKlineCapacity: 500,
+  subscriptionChannelKlineCapacity: 10000,
   subscriptionChannelTradeCapacity: 10000,
-  subscriptionChannelDropTradesWhenFull: true,
-  subscriptionChannelKlineFullMode: BoundedChannelFullMode.Wait,
+  subscriptionChannelTradeFullMode: BoundedChannelFullMode.DropOldest,
+  subscriptionChannelKlineFullMode: BoundedChannelFullMode.DropOldest,
   klineBroadcastCapacity: 500,
   tradeBroadcastCapacity: 10000,
   klineBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   tradeBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  indicatorsBroadcastCapacity: 5000,
+  signalBroadcastCapacity: 5000,
+  indicatorsBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  signalBroadcastFullMode: BoundedChannelFullMode.DropOldest,
 };
 
 function nullableTextToInputValue(value: string | null | undefined): string {
@@ -375,57 +384,6 @@ function NullableIntegerField({
           {fieldState.invalid ? (
             <FieldError errors={[fieldState.error]} />
           ) : null}
-        </Field>
-      )}
-    />
-  );
-}
-
-function BooleanField({
-  control,
-  name,
-  label,
-  description,
-  isReadOnly,
-}: {
-  control: Control<StrategyFormValues>;
-  name: Extract<
-    keyof StrategyFormValues,
-    "subscriptionChannelDropTradesWhenFull"
-  >;
-  label: string;
-  description?: string;
-  isReadOnly: boolean;
-}) {
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field, fieldState }) => (
-        <Field
-          orientation="horizontal"
-          data-invalid={fieldState.invalid}
-          className="rounded-md border p-3"
-        >
-          <Checkbox
-            id={field.name}
-            name={field.name}
-            ref={field.ref}
-            checked={field.value}
-            onBlur={field.onBlur}
-            onCheckedChange={(checked) => field.onChange(checked === true)}
-            disabled={isReadOnly}
-            aria-invalid={fieldState.invalid}
-          />
-          <FieldContent>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-            {description ? (
-              <FieldDescription>{description}</FieldDescription>
-            ) : null}
-            {fieldState.invalid ? (
-              <FieldError errors={[fieldState.error]} />
-            ) : null}
-          </FieldContent>
         </Field>
       )}
     />
@@ -844,14 +802,14 @@ export function StrategyForm({
 
                     <IntegerField
                       control={form.control}
-                      name="CacheMaxIndicatorsPerSeries"
+                      name="cacheMaxIndicatorsPerSeries"
                       label="Cache max indicators per series"
                       isReadOnly={isReadOnly}
                     />
 
                     <IntegerField
                       control={form.control}
-                      name="CacheMaxSignalsPerSeries"
+                      name="cacheMaxSignalsPerSeries"
                       label="Cache max signals per series"
                       isReadOnly={isReadOnly}
                     />
@@ -870,6 +828,14 @@ export function StrategyForm({
                       isReadOnly={isReadOnly}
                     />
 
+                    <EnumSelectField
+                      control={form.control}
+                      name="subscriptionChannelKlineFullMode"
+                      label="Subscription channel kline full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
                     <IntegerField
                       control={form.control}
                       name="subscriptionChannelTradeCapacity"
@@ -877,18 +843,10 @@ export function StrategyForm({
                       isReadOnly={isReadOnly}
                     />
 
-                    <BooleanField
-                      control={form.control}
-                      name="subscriptionChannelDropTradesWhenFull"
-                      label="Drop trades when full"
-                      description="Drops incoming trades when the subscription channel reaches capacity."
-                      isReadOnly={isReadOnly}
-                    />
-
                     <EnumSelectField
                       control={form.control}
-                      name="subscriptionChannelKlineFullMode"
-                      label="Subscription channel kline full mode"
+                      name="subscriptionChannelTradeFullMode"
+                      label="Subscription channel trade full mode"
                       options={boundedChannelFullModeOptions}
                       isReadOnly={isReadOnly}
                     />
@@ -951,6 +909,36 @@ export function StrategyForm({
                       control={form.control}
                       name="tradeBroadcastFullMode"
                       label="Trade broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="indicatorsBroadcastCapacity"
+                      label="Indicators broadcast capacity"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <EnumSelectField
+                      control={form.control}
+                      name="indicatorsBroadcastFullMode"
+                      label="Indicators broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="signalBroadcastCapacity"
+                      label="Signal broadcast capacity"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <EnumSelectField
+                      control={form.control}
+                      name="signalBroadcastFullMode"
+                      label="Signal broadcast full mode"
                       options={boundedChannelFullModeOptions}
                       isReadOnly={isReadOnly}
                     />
