@@ -92,8 +92,7 @@ namespace Cryoptix.Strategy.Processor
                     strategy: strategyProcessorSession.Strategy,
                     credentials: strategyProcessorSession.Credentials,
                     subscriptionsApi: strategyProcessorSession.ExchangeApi.SubscriptionsApi!,
-                    klineWriter: channels.Klines.Writer,
-                    tradeWriter: channels.Trades.Writer,
+                    channels: channels,
                     orderBookRealtimeState: strategyProcessorSession.OrderBookRealtimeState,
                     accountRealtimeState: strategyProcessorSession.AccountRealtimeState,
                     cancellationToken: cancellationToken);
