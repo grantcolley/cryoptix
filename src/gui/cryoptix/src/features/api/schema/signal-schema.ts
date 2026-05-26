@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { SignalType } from "./signal-type";
+import { SignalTypeSchema } from "./signal-type";
 
 export const SignalSchema = z.object({
   timestampUtc: z.coerce.date(),
-  signalType: z.enum(SignalType).default(SignalType.None),
+  signalType: SignalTypeSchema,
   reason: z.string().nullable().optional(),
 });
 
