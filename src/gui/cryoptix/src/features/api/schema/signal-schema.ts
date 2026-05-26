@@ -3,7 +3,7 @@ import { SignalType } from "./signal-type";
 
 export const SignalSchema = z.object({
   timestampUtc: z.coerce.date(),
-  signalType: SignalType,
+  signalType: z.enum(SignalType).default(SignalType.None),
   reason: z.string().nullable().optional(),
 });
 
