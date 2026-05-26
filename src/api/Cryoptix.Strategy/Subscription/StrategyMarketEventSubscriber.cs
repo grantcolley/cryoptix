@@ -1,15 +1,15 @@
 ﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Market.Args;
 using Cryoptix.Market.Data;
+using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Snapshot;
 using Microsoft.Extensions.Logging;
+using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Subscription
 {
-    using Cryoptix.Market.Args;
-    using System.Threading.Channels;
-
     public sealed class StrategyMarketEventSubscriber(
         ILogger<StrategyMarketEventSubscriber> logger) : IStrategyMarketEventSubscriber
     {
@@ -19,16 +19,14 @@ namespace Cryoptix.Strategy.Subscription
             Strategies.Strategy strategy,
             Credentials? credentials,
             IExchangeSubscriptionApi subscriptionsApi,
-            ChannelWriter<KlineMarketEvent> klineWriter,
-            ChannelWriter<TradeMarketEvent> tradeWriter,
+            StrategyEventChannels channels,
             OrderBookRealtimeState orderBookRealtimeState,
             AccountRealtimeState accountRealtimeState,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategy);
             ArgumentNullException.ThrowIfNull(subscriptionsApi);
-            ArgumentNullException.ThrowIfNull(klineWriter);
-            ArgumentNullException.ThrowIfNull(tradeWriter);
+            ArgumentNullException.ThrowIfNull(channels);
             ArgumentNullException.ThrowIfNull(orderBookRealtimeState);
             ArgumentNullException.ThrowIfNull(accountRealtimeState);
 
@@ -50,13 +48,13 @@ namespace Cryoptix.Strategy.Subscription
                 klineSubscription = await subscriptionsApi.SubscribeToKlineUpdatesAsync(
                     symbol: strategy.Symbol,
                     interval: strategy.KlineInterval,
-                    onCallback: args => OnKlineCallback(strategy, klineWriter, args),
+                    onCallback: args => OnKlineCallback(strategy, channels.Klines.Writer, args),
                     onError: ex => OnKlineError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
                 tradeSubscription = await subscriptionsApi.SubscribeToTradesAsync(
                     symbol: strategy.Symbol,
-                    onCallback: args => OnTradeCallback(strategy, tradeWriter, args),
+                    onCallback: args => OnTradeCallback(strategy, channels.Trades.Writer, args),
                     onError: ex => OnTradeError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
