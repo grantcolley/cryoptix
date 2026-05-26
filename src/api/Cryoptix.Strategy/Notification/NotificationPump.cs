@@ -26,10 +26,12 @@ namespace Cryoptix.Strategy.Notification
         /// Runs the notification pump, reading broadcasted klines and trades from the provided channels
         /// and publishing them via the configured <see cref="INotificationDispatcher"/> until cancellation.
         /// </summary>
+        /// <param name="strategy">The strategy for which to publish notifications.</param>
         /// <param name="channels">Strategy event channels containing kline and trade broadcast channels.</param>
         /// <param name="cancellationToken">Cancellation token to observe for graceful shutdown.</param>
         /// <returns>A task that completes when the pump stops due to cancellation or channels completion.</returns>
         public async Task RunAsync(
+            Strategies.Strategy strategy,
             StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
@@ -37,8 +39,6 @@ namespace Cryoptix.Strategy.Notification
 
             ChannelReader<Kline> klineReader = channels.KlineBroadcasts.Reader;
             ChannelReader<Trade> tradeReader = channels.TradeBroadcasts.Reader;
-
-            const int maxTradesPerPass = 256;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -67,6 +67,8 @@ namespace Cryoptix.Strategy.Notification
                         _notificationMetrics.RecordPublishFailureKline(kline.Symbol, kline.Interval, ex);
                     }
                 }
+
+                int maxTradesPerPass = strategy.StrategyProcessorMaxTradesPerPass;
 
                 int tradeBatchCount = 0;
 
