@@ -13,24 +13,31 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
         /// Evaluates moving average crossover signals based on provided indicators.
         /// </summary>
         /// <param name="context">The analysis context containing strategy and market data.</param>
-        /// <param name="indicators">Indicator values computed previously (SMA/EMA).</param>
+        /// <param name="indicatorsResult">Indicator values computed previously (SMA/EMA).</param>
         /// <param name="cancellationToken">Cancellation token to observe during evaluation.</param>
         /// <returns>A <see cref="SignalEvaluationResult"/> representing the evaluated signal.</returns>
         public Task<SignalEvaluationResult> EvaluateAsync(
             StrategyAnalysisContext context,
-            IndicatorComputationResult indicators,
+            IndicatorComputationResult indicatorsResult,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!indicators.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
+            if (indicatorsResult.Indicators.TimestampUtc == DateTime.MinValue)
+            {
+                return Task.FromResult(SignalEvaluationResult.None(
+                    DateTime.UtcNow,
+                    "Indicators unavailable."));
+            }
+
+            if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
             {
                 return Task.FromResult(SignalEvaluationResult.None(
                     DateTime.UtcNow,
                     "Fast SMA unavailable."));
             }
 
-            if (!indicators.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
+            if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
             {
                 return Task.FromResult(SignalEvaluationResult.None(
                     DateTime.UtcNow,
@@ -61,7 +68,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 Signal = new Market.Strategy.Signal
                 {
-                    TimestampUtc = DateTime.UtcNow,
+                    TimestampUtc = indicatorsResult.Indicators.TimestampUtc,
                     SignalType = signalType,
                     Reason = reason
                 },

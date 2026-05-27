@@ -1,5 +1,6 @@
 ﻿using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Event;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 
@@ -16,9 +17,10 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             cancellationToken.ThrowIfCancellationRequested();
 
             IReadOnlyList<Kline> klines = context.Klines;
-            if (klines.Count == 0)
+            if (context.CurrentEvent.Kind != MarketEventKind.Kline
+                || klines.Count == 0)
             {
-                return Task.FromResult(IndicatorComputationResult.Empty(DateTime.UtcNow));
+                return Task.FromResult(IndicatorComputationResult.Empty(DateTime.MinValue));
             }
 
             MovingAverageSmoothingType smoothingType = context.Strategy.SmoothingType;
@@ -53,7 +55,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 Indicators = new Market.Strategy.Indicators
                 {
-                    TimestampUtc = DateTime.UtcNow, 
+                    TimestampUtc = context.CurrentEvent.Kline!.CloseTime, 
                     Values = values.ToImmutableDictionary() 
                 },
             });

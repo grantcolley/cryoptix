@@ -63,25 +63,28 @@ namespace Cryoptix.Strategy.Dispatcher
             IStrategyEnginePair enginePair =
                 _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
 
-            IndicatorComputationResult indicators =
+            IndicatorComputationResult indicatorsResult =
                 await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
 
-            session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
-
-            // Broadcast computed indicators
-            if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicators.Indicators))
+            // Broadcast computed indicators for klines
+            if (indicatorsResult.Indicators.TimestampUtc != DateTime.MinValue)
             {
-                _logger.LogDebug(
-                    "Dropped indicators broadcast for {Symbol} due to channel pressure.",
-                    context.Strategy.Symbol);
+                session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicatorsResult.Indicators);
+
+                if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
+                {
+                    _logger.LogDebug(
+                        "Dropped indicators broadcast for {Symbol} due to channel pressure.",
+                        context.Strategy.Symbol);
+                }
             }
 
             SignalEvaluationResult signal =
-                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
+                await enginePair.SignalEngine.EvaluateAsync(context, indicatorsResult, cancellationToken);
 
             if (signal.Signal.SignalType != SignalType.None)
             {
-                session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+                //session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
 
                 // Broadcast signal
                 if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
@@ -128,21 +131,24 @@ namespace Cryoptix.Strategy.Dispatcher
             IStrategyEnginePair enginePair =
                 _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
 
-            IndicatorComputationResult indicators =
+            IndicatorComputationResult indicatorsResult =
                 await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
 
-            // Upsert and broadcast indicators for trades as well
-            session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicators.Indicators);
-
-            if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicators.Indicators))
+            if (indicatorsResult.Indicators.TimestampUtc != DateTime.MinValue)
             {
-                _logger.LogDebug(
-                    "Dropped indicators broadcast for {Symbol} due to channel pressure.",
-                    context.Strategy.Symbol);
+                // Upsert and broadcast indicators for trades as well
+                session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicatorsResult.Indicators);
+
+                if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
+                {
+                    _logger.LogDebug(
+                        "Dropped indicators broadcast for {Symbol} due to channel pressure.",
+                        context.Strategy.Symbol);
+                }
             }
 
             SignalEvaluationResult signal =
-                await enginePair.SignalEngine.EvaluateAsync(context, indicators, cancellationToken);
+                await enginePair.SignalEngine.EvaluateAsync(context, indicatorsResult, cancellationToken);
 
             if (signal.Signal.SignalType != SignalType.None)
             {
