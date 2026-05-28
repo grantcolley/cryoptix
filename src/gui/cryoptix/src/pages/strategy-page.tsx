@@ -258,6 +258,7 @@ export function StrategyPage() {
           lineWidth: 2,
           priceLineVisible: false,
           lastValueVisible: false,
+          priceScaleId: "left",
         });
 
         indicatorSeries.setData(data);
@@ -648,6 +649,10 @@ export function StrategyPage() {
       },
       rightPriceScale: {
         borderColor: "#cbd5e1",
+      },
+      leftPriceScale: {
+        borderColor: "#cbd5e1",
+        visible: true,
       },
       timeScale: {
         borderColor: "#cbd5e1",
