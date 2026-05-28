@@ -24,26 +24,31 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             }
 
             MovingAverageSmoothingType smoothingType = context.Strategy.SmoothingType;
-            int fastPeriod = context.Strategy.FastPeriod;
-            int slowPeriod = context.Strategy.SlowPeriod;
 
             Dictionary<string, decimal> values = [];
 
-            if (smoothingType == MovingAverageSmoothingType.Sma)
+            if (context.Strategy.Periods != null)
             {
-                decimal? fast = TryCalculateSmaRolling(klines, fastPeriod);
-                decimal? slow = TryCalculateSmaRolling(klines, slowPeriod);
+                foreach (var kvp in context.Strategy.Periods)
+                {
+                    string name = kvp.Key ?? string.Empty;
+                    int period = kvp.Value;
 
-                if (fast.HasValue) values[MovingAverageKeys.SmaFast] = fast.Value;
-                if (slow.HasValue) values[MovingAverageKeys.SmaSlow] = slow.Value;
-            }
-            else if (smoothingType == MovingAverageSmoothingType.Ema)
-            {
-                decimal? fast = TryCalculateEma(klines, fastPeriod);
-                decimal? slow = TryCalculateEma(klines, slowPeriod);
+                    decimal? computed = null;
+                    if (smoothingType == MovingAverageSmoothingType.Sma)
+                    {
+                        computed = TryCalculateSmaRolling(klines, period);
+                    }
+                    else if (smoothingType == MovingAverageSmoothingType.Ema)
+                    {
+                        computed = TryCalculateEma(klines, period);
+                    }
 
-                if (fast.HasValue) values[MovingAverageKeys.EmaFast] = fast.Value;
-                if (slow.HasValue) values[MovingAverageKeys.EmaSlow] = slow.Value;
+                    if (computed.HasValue)
+                    {
+                        values[name] = computed.Value;
+                    }
+                }
             }
 
             _logger.LogDebug(

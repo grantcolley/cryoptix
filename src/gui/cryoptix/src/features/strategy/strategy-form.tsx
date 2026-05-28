@@ -64,8 +64,6 @@ type StrategyIntegerFieldName = Extract<
   | "strategyId"
   | "klineSeedSize"
   | "klineSeedLimit"
-  | "fastPeriod"
-  | "slowPeriod"
   | "maxOrderBookAgeSeconds"
   | "maxAccountAgeSeconds"
   | "cacheMaxKlinesPerSeries"
@@ -142,8 +140,11 @@ const fallbackDefaultValues: Strategy = {
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
   smoothingType: MovingAverageSmoothingType.Sma,
-  fastPeriod: 9,
-  slowPeriod: 21,
+  periods: {
+    "9 SMA": 9,
+    "21 SMA": 21,
+    "50 SMA": 50,
+  },
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 1440,
   klineSeedLimit: 1000,
@@ -551,22 +552,6 @@ export function StrategyForm({
         name="smoothingType"
         label="Smoothing type"
         options={movingAverageSmoothingTypeOptions}
-        isReadOnly={isReadOnly}
-        isHorizontal={isHorizontal}
-      />
-
-      <IntegerField
-        control={form.control}
-        name="fastPeriod"
-        label="Fast period"
-        isReadOnly={isReadOnly}
-        isHorizontal={isHorizontal}
-      />
-
-      <IntegerField
-        control={form.control}
-        name="slowPeriod"
-        label="Slow period"
         isReadOnly={isReadOnly}
         isHorizontal={isHorizontal}
       />

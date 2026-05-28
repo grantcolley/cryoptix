@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 export const MovingAverageSmoothingType = {
-  Sma: 0,
-  Ema: 1,
+  None: 0,
+  Sma: 1,
+  Ema: 2,
 } as const;
 
 export const MovingAverageSmoothingTypeSchema = z.enum(
@@ -17,6 +18,7 @@ export const MovingAverageSmoothingTypeLabels: Record<
   MovingAverageSmoothingType,
   string
 > = {
+  [MovingAverageSmoothingType.None]: "None",
   [MovingAverageSmoothingType.Sma]: "SMA",
   [MovingAverageSmoothingType.Ema]: "EMA",
 };

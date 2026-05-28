@@ -2,6 +2,7 @@
 {
     public enum MovingAverageSmoothingType
     {
+        None,
         Sma,
         Ema
     }

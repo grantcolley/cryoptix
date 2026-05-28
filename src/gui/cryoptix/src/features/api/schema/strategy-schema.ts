@@ -21,8 +21,7 @@ export const StrategySchema = z.object({
   exchange: z.enum(Exchange).default(Exchange.None),
 
   // Parameters for strategy logic
-  fastPeriod: z.number().int(),
-  slowPeriod: z.number().int(),
+  periods: z.record(z.string(), z.number().int()),
   smoothingType: z
     .enum(MovingAverageSmoothingType)
     .default(MovingAverageSmoothingType.Sma),
