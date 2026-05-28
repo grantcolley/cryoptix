@@ -84,7 +84,7 @@ namespace Cryoptix.Strategy.Dispatcher
 
             if (signal.Signal.SignalType != SignalType.None)
             {
-                //session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
+                session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
 
                 // Broadcast signal
                 if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
