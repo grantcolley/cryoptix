@@ -23,56 +23,60 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (indicatorsResult.Indicators.TimestampUtc == DateTime.MinValue)
-            {
-                return Task.FromResult(SignalEvaluationResult.None(
-                    DateTime.UtcNow,
-                    "Indicators unavailable."));
-            }
+            return Task.FromResult(SignalEvaluationResult.None(
+                DateTime.UtcNow,
+                "Signal not implemented yet."));
 
-            if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
-            {
-                return Task.FromResult(SignalEvaluationResult.None(
-                    DateTime.UtcNow,
-                    "Fast SMA unavailable."));
-            }
+            //if (indicatorsResult.Indicators.TimestampUtc == DateTime.MinValue)
+            //{
+            //    return Task.FromResult(SignalEvaluationResult.None(
+            //        DateTime.UtcNow,
+            //        "Indicators unavailable."));
+            //}
 
-            if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
-            {
-                return Task.FromResult(SignalEvaluationResult.None(
-                    DateTime.UtcNow,
-                    "Slow SMA unavailable."));
-            }
+            //if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
+            //{
+            //    return Task.FromResult(SignalEvaluationResult.None(
+            //        DateTime.UtcNow,
+            //        "Fast SMA unavailable."));
+            //}
 
-            SignalType signalType = SignalType.None;
-            string reason = "No crossover.";
+            //if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
+            //{
+            //    return Task.FromResult(SignalEvaluationResult.None(
+            //        DateTime.UtcNow,
+            //        "Slow SMA unavailable."));
+            //}
 
-            if (fast > slow)
-            {
-                signalType = SignalType.Buy;
-                reason = "Fast SMA is above Slow SMA.";
-            }
-            else if (fast < slow)
-            {
-                signalType = SignalType.Sell;
-                reason = "Fast SMA is below Slow SMA.";
-            }
+            //SignalType signalType = SignalType.None;
+            //string reason = "No crossover.";
 
-            _logger.LogDebug(
-                "Evaluated signal for {Symbol}. Signal:{Signal} Reason:{Reason}",
-                context.Strategy.Symbol,
-                signalType,
-                reason);
+            //if (fast > slow)
+            //{
+            //    signalType = SignalType.Buy;
+            //    reason = "Fast SMA is above Slow SMA.";
+            //}
+            //else if (fast < slow)
+            //{
+            //    signalType = SignalType.Sell;
+            //    reason = "Fast SMA is below Slow SMA.";
+            //}
 
-            return Task.FromResult(new SignalEvaluationResult
-            {
-                Signal = new Market.Strategy.Signal
-                {
-                    TimestampUtc = indicatorsResult.Indicators.TimestampUtc,
-                    SignalType = signalType,
-                    Reason = reason
-                },
-            });
+            //_logger.LogDebug(
+            //    "Evaluated signal for {Symbol}. Signal:{Signal} Reason:{Reason}",
+            //    context.Strategy.Symbol,
+            //    signalType,
+            //    reason);
+
+            //return Task.FromResult(new SignalEvaluationResult
+            //{
+            //    Signal = new Market.Strategy.Signal
+            //    {
+            //        TimestampUtc = indicatorsResult.Indicators.TimestampUtc,
+            //        SignalType = signalType,
+            //        Reason = reason
+            //    },
+            //});
         }
     }
 }
