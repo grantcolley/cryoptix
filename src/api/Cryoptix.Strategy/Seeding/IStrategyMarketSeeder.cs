@@ -10,6 +10,7 @@ namespace Cryoptix.Strategy.Seeding
             Strategies.Strategy strategy,
             IExchangeRestApi restApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
+            Cache.MarketDataCache cache,
             CancellationToken cancellationToken);
     }
 }

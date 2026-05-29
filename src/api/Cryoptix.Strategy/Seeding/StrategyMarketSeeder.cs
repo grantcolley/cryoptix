@@ -19,6 +19,7 @@ namespace Cryoptix.Strategy.Seeding
             Strategies.Strategy strategy,
             IExchangeRestApi restApi,
             ChannelWriter<KlineMarketEvent> klineWriter,
+            Cache.MarketDataCache cache,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategy);
@@ -32,6 +33,17 @@ namespace Cryoptix.Strategy.Seeding
 
             if (strategy.KlineInterval == default)
                 throw new InvalidOperationException("Strategy kline interval is required.");
+
+            List<Symbol> symbols = await restApi.GetSymbolsAsync(cancellationToken);
+
+            try
+            {
+                cache.SetSymbols(symbols);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to cache exchange symbols during seeding; continuing without cached symbols.");
+            }
 
             DateTime endTime = _clock.UtcNow;
             DateTime startTime = GetSeedStartTime(strategy, endTime);

@@ -15,6 +15,7 @@ namespace Cryoptix.Strategy.Cache
         private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Indicators>> _indicators = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Signal>> _signals = [];
+        private readonly HashSet<Symbol> _symbols = new(SymbolComparer.Instance);
 
         public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries, int maxIndicatorsPerSeries, int maxSignalsPerSeries)
         {
@@ -27,6 +28,65 @@ namespace Cryoptix.Strategy.Cache
             _maxKlinesPerSeries = maxKlinesPerSeries;
             _maxIndicatorsPerSeries = maxIndicatorsPerSeries;
             _maxSignalsPerSeries = maxSignalsPerSeries;
+        }
+
+        /// <summary>
+        /// Replaces the currently cached exchange symbols with the provided list.
+        /// This operation is atomic and will overwrite any existing symbol set.
+        /// </summary>
+        /// <param name="symbols">Collection of exchange symbols to cache.</param>
+        public void SetSymbols(IEnumerable<Symbol> symbols)
+        {
+            ArgumentNullException.ThrowIfNull(symbols);
+
+            lock (_gate)
+            {
+                _symbols.Clear();
+
+                foreach (var s in symbols)
+                {
+                    if (s == null || string.IsNullOrWhiteSpace(s.Name))
+                        continue;
+
+                    _symbols.Add(new Symbol { Name = NormalizeSymbol(s.Name), Exchange = s.Exchange, NameDelimiter = s.NameDelimiter, ExchangeSymbol = s.ExchangeSymbol, BaseAsset = s.BaseAsset, QuoteAsset = s.QuoteAsset, OrderTypes = s.OrderTypes, NotionalMinimumValue = s.NotionalMinimumValue, TickSize = s.TickSize, LotSize = s.LotSize });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Attempts to resolve the canonical cached symbol for the provided strategy symbol.
+        /// Returns null if no matching symbol is present in the cache.
+        /// </summary>
+        /// <param name="strategySymbol">Strategy symbol to resolve.</param>
+        /// <returns>Canonical cached symbol or null if not found.</returns>
+        public Symbol? GetSymbolForStrategy(string strategySymbol)
+        {
+            if (string.IsNullOrWhiteSpace(strategySymbol))
+                return null;
+            string normalized = NormalizeSymbol(strategySymbol);
+
+            lock (_gate)
+            {
+                var found = _symbols.FirstOrDefault(s => string.Equals(s.Name, normalized, StringComparison.OrdinalIgnoreCase));
+                return found;
+            }
+        }
+
+        private sealed class SymbolComparer : IEqualityComparer<Cryoptix.Market.Data.Symbol>
+        {
+            public static readonly SymbolComparer Instance = new SymbolComparer();
+
+            public bool Equals(Cryoptix.Market.Data.Symbol? x, Cryoptix.Market.Data.Symbol? y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+                return string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public int GetHashCode(Cryoptix.Market.Data.Symbol obj)
+            {
+                return obj.Name?.ToUpperInvariant().GetHashCode() ?? 0;
+            }
         }
 
         /// <summary>

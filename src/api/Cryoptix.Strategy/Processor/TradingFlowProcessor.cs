@@ -84,6 +84,7 @@ namespace Cryoptix.Strategy.Processor
                     strategy: strategyProcessorSession.Strategy,
                     restApi: strategyProcessorSession.ExchangeApi.RestApi!,
                     klineWriter: channels.Klines.Writer,
+                    cache: strategyProcessorSession.Cache,
                     cancellationToken: cancellationToken);
 
                 await _strategyStatusNotifier.NotifyMarketDataSnapshotAsync(cancellationToken);
