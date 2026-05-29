@@ -52,6 +52,7 @@ type IndicatorSeriesData = {
   key: string;
   data: LineData<UTCTimestamp>[];
 };
+type IndicatorLatestValues = Record<string, number>;
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -61,6 +62,9 @@ const INDICATOR_SERIES_COLORS = [
   "#db2777",
   "#65a30d",
 ];
+
+const getIndicatorSeriesColor = (index: number) =>
+  INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -86,6 +90,8 @@ export function StrategyPage() {
   const [price, setPrice] = React.useState<string | null>(null);
   const [priceDirection, setPriceDirection] =
     React.useState<PriceDirection>("flat");
+  const [indicatorLatestValues, setIndicatorLatestValues] =
+    React.useState<IndicatorLatestValues>({});
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const previousPriceRef = React.useRef<number | null>(null);
@@ -200,6 +206,34 @@ export function StrategyPage() {
     }));
   };
 
+  const toIndicatorLatestValues = (
+    indicators: Indicators[]
+  ): IndicatorLatestValues => {
+    const latestByKey = new Map<string, { time: number; value: number }>();
+
+    for (const indicator of indicators) {
+      const time = indicator.timestampUtc.getTime();
+
+      for (const item of indicator.values) {
+        const current = latestByKey.get(item.key);
+
+        if (!current || time >= current.time) {
+          latestByKey.set(item.key, {
+            time,
+            value: item.value,
+          });
+        }
+      }
+    }
+
+    return Object.fromEntries(
+      [...latestByKey.entries()].map(([key, latest]) => [key, latest.value])
+    );
+  };
+
+  const formatIndicatorValue = (value: number | undefined): string =>
+    value === undefined ? "--" : String(value);
+
   const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
     const markers = signals
       .filter((signal) => signal.signalType !== SignalType.None)
@@ -253,8 +287,7 @@ export function StrategyPage() {
       ({ key, data }, index) => {
         const indicatorSeries = chart.addSeries(LineSeries, {
           title: key,
-          color:
-            INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length],
+          color: getIndicatorSeriesColor(index),
           lineWidth: 2,
           priceLineVisible: false,
           lastValueVisible: false,
@@ -294,6 +327,7 @@ export function StrategyPage() {
 
   const applyIndicatorsToChart = (indicators: Indicators[]) => {
     indicatorSeriesDataRef.current = toIndicatorSeriesData(indicators);
+    setIndicatorLatestValues(toIndicatorLatestValues(indicators));
     addIndicatorSeriesToChart();
     chartApiRef.current?.timeScale().fitContent();
   };
@@ -315,6 +349,13 @@ export function StrategyPage() {
 
       seriesByKey.set(item.key, sortByTime(nextData));
     }
+
+    setIndicatorLatestValues((latestValues) => ({
+      ...latestValues,
+      ...Object.fromEntries(
+        indicator.values.map((item) => [item.key, item.value])
+      ),
+    }));
 
     indicatorSeriesDataRef.current = [...seriesByKey.entries()].map(
       ([key, data]) => ({
@@ -342,6 +383,7 @@ export function StrategyPage() {
     candleDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
+    setIndicatorLatestValues({});
     candleSeriesRef.current?.setData([]);
     signalMarkersRef.current?.setMarkers([]);
     clearIndicatorSeries();
@@ -593,6 +635,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setEditedStrategy(null);
     setShowParametersOnly(false);
+    setIndicatorLatestValues({});
     latestStrategyRef.current = null;
     resetPriceComparison();
 
@@ -767,6 +810,7 @@ export function StrategyPage() {
     setStrategyFormVersion((version) => version + 1);
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
     setShowParametersOnly(false);
+    setIndicatorLatestValues({});
     resetPriceComparison();
   };
 
@@ -797,6 +841,11 @@ export function StrategyPage() {
       latestStrategyRef.current = nextStrategy;
     },
     []
+  );
+
+  const strategyPeriods = React.useMemo(
+    () => (strategy ? Object.entries(strategy.periods) : []),
+    [strategy]
   );
 
   return (
@@ -874,6 +923,21 @@ export function StrategyPage() {
               {price && (
                 <p className={`px-4 text-sm ${priceClassName}`}>{price}</p>
               )}
+              {strategyPeriods.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-1">
+                  {strategyPeriods.map(([key], index) => (
+                    <span
+                      key={key}
+                      className="rounded px-2 py-0.5 text-xs font-medium leading-5 text-white shadow-sm"
+                      style={{
+                        backgroundColor: getIndicatorSeriesColor(index),
+                      }}
+                    >
+                      {key}: {formatIndicatorValue(indicatorLatestValues[key])}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div className="ml-auto flex items-center gap-1">
               <h4 className="text-sm text-foreground-semimuted mr-2">
