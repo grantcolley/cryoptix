@@ -172,12 +172,11 @@ export function StrategyPage() {
     close: kline.close,
   });
 
-  const sortByTime = React.useCallback(
-    function sortByTime<T extends { time: UTCTimestamp }>(items: T[]) {
-      return items.sort((a, b) => a.time - b.time);
-    },
-    []
-  );
+  const sortByTime = React.useCallback(function sortByTime<
+    T extends { time: UTCTimestamp },
+  >(items: T[]) {
+    return items.sort((a, b) => a.time - b.time);
+  }, []);
 
   const toIndicatorSeriesData = (
     indicators: Indicators[]
@@ -458,7 +457,7 @@ export function StrategyPage() {
           applyIndicatorsToChart(payload.indicators);
           applySignalsToChart(payload.signals);
 
-          setNotificationMessage(message);
+          setNotificationMessage(null);
         }
 
         break;
