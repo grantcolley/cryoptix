@@ -48,7 +48,7 @@ namespace Cryoptix.Strategy.Cache
                     if (s == null || string.IsNullOrWhiteSpace(s.Name))
                         continue;
 
-                    _symbols.Add(new Symbol { Name = NormalizeSymbol(s.Name), Exchange = s.Exchange, NameDelimiter = s.NameDelimiter, ExchangeSymbol = s.ExchangeSymbol, BaseAsset = s.BaseAsset, QuoteAsset = s.QuoteAsset, OrderTypes = s.OrderTypes, NotionalMinimumValue = s.NotionalMinimumValue, TickSize = s.TickSize, LotSize = s.LotSize });
+                    _symbols.Add(new Symbol { Name = NormalizeSymbol(s.Name), Exchange = s.Exchange, NameDelimiter = s.NameDelimiter, ExchangeSymbol = s.ExchangeSymbol, BaseAsset = s.BaseAsset, BaseAssetPrecision = s.BaseAssetPrecision, QuoteAsset = s.QuoteAsset, QuoteAssetPrecision = s.QuoteAssetPrecision, NotionalMinimumValue = s.NotionalMinimumValue, TickSize = s.TickSize, LotSize = s.LotSize });
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace Cryoptix.Strategy.Cache
                 return string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
             }
 
-            public int GetHashCode(Cryoptix.Market.Data.Symbol obj)
+            public int GetHashCode(Symbol obj)
             {
                 return obj.Name?.ToUpperInvariant().GetHashCode() ?? 0;
             }
