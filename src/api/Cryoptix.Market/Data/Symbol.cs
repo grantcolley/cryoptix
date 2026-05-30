@@ -6,9 +6,10 @@
         public Exchange Exchange { get; set; }
         public string? NameDelimiter { get; set; }
         public string? ExchangeSymbol { get; set; }
-        public Asset? BaseAsset { get; set; }
-        public Asset? QuoteAsset { get; set; }
-        public IEnumerable<OrderType>? OrderTypes { get; set; }
+        public string? BaseAsset { get; set; }
+        public int BaseAssetPrecision { get; set; }
+        public string? QuoteAsset { get; set; }
+        public int QuoteAssetPrecision { get; set; }
         public decimal NotionalMinimumValue { get; set; }
         public decimal TickSize { get; set; }
         public decimal LotSize { get; set; }
