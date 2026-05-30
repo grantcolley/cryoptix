@@ -7,6 +7,7 @@ namespace Cryoptix.Strategy.Cache
     {
         public required Strategies.Strategy Strategy { get; init; }
         public required DateTime SnapshotTimeUtc { get; init; }
+        public required Symbol Symbol { get; init; }
         public List<Kline> Klines { get; init; } = [];
         public List<Trade> Trades { get; init; } = [];
         public List<Indicators> Indicators { get; init; } = [];
