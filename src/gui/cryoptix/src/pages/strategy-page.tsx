@@ -46,6 +46,7 @@ import {
 import { icons } from "@/components/icon/icons";
 import { Icon } from "@/components/icon/icon";
 import { ExchangeLabels } from "@/features/api/schema/exchange";
+import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
 type PriceDirection = "up" | "down" | "flat";
 type IndicatorSeriesData = {
@@ -92,6 +93,11 @@ export function StrategyPage() {
     React.useState<PriceDirection>("flat");
   const [indicatorLatestValues, setIndicatorLatestValues] =
     React.useState<IndicatorLatestValues>({});
+  const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
+  const [symbolName, setSymbolName] = React.useState<string | null>(null);
+  const [symbolExchange, setSymbolExchange] = React.useState<
+    ApiSymbol["exchange"] | null
+  >(null);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const previousPriceRef = React.useRef<number | null>(null);
@@ -137,6 +143,13 @@ export function StrategyPage() {
       : priceDirection === "up"
         ? "text-green-600 dark:text-green-400"
         : "text-foreground";
+  const hasSymbol = symbol !== null;
+
+  const applySymbol = (nextSymbol: ApiSymbol | null) => {
+    setSymbol(nextSymbol);
+    setSymbolName(nextSymbol?.name ?? nextSymbol?.exchangeSymbol ?? null);
+    setSymbolExchange(nextSymbol?.exchange ?? null);
+  };
 
   const resetPriceComparison = () => {
     previousPriceRef.current = null;
@@ -453,6 +466,7 @@ export function StrategyPage() {
             : "Market data snapshot received.";
 
           applyRunningStrategyStatus(payload.strategy, message);
+          applySymbol(payload.symbol);
           applyKlinesToChart(payload.klines, true);
           applyIndicatorsToChart(payload.indicators);
           applySignalsToChart(payload.signals);
@@ -635,6 +649,7 @@ export function StrategyPage() {
     setEditedStrategy(null);
     setShowParametersOnly(false);
     setIndicatorLatestValues({});
+    applySymbol(null);
     latestStrategyRef.current = null;
     resetPriceComparison();
 
@@ -659,6 +674,7 @@ export function StrategyPage() {
     setShowParametersOnly(false);
     resetPriceComparison();
     setNotificationMessage(null);
+    applySymbol(null);
     resetChartData();
     void stopSignalRSubscription();
   };
@@ -733,7 +749,7 @@ export function StrategyPage() {
     applySignalMarkersToChart,
     showStrategyRunning,
     sortByTime,
-    strategy?.symbol,
+    symbolName,
   ]);
 
   const handleStrategyAction = async (
@@ -810,6 +826,7 @@ export function StrategyPage() {
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
     setShowParametersOnly(false);
     setIndicatorLatestValues({});
+    applySymbol(null);
     resetPriceComparison();
   };
 
@@ -904,21 +921,27 @@ export function StrategyPage() {
           <p className="px-4 text-sm text-destructive">{connectError}</p>
         )}
 
-        {notificationMessage && (
+        {/* {notificationMessage && (
           <p className="px-4 text-sm text-muted-foreground">
             {notificationMessage}
           </p>
-        )}
+        )} */}
 
         {showStrategyRunning && strategy ? (
           <div className="flex flex-row items-baseline gap-4 px-4 py-1">
             <div className="flex items-center gap-1">
-              <h4 className="text-sm text-foreground-semimuted mr-2">
-                {ExchangeLabels[strategy.exchange]}
-              </h4>
-              <h4 className="text-sm text-foreground-semimuted">
-                {strategy.symbol}
-              </h4>
+              {hasSymbol ? (
+                <>
+                  <h4 className="text-sm text-foreground-semimuted mr-2">
+                    {symbolExchange == null
+                      ? null
+                      : ExchangeLabels[symbolExchange]}
+                  </h4>
+                  <h4 className="text-sm text-foreground-semimuted">
+                    {symbolName}
+                  </h4>
+                </>
+              ) : null}
               {price && (
                 <p className={`px-4 text-sm ${priceClassName}`}>{price}</p>
               )}
@@ -1000,7 +1023,7 @@ export function StrategyPage() {
           <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
             <Card className="min-h-0 flex-1">
               <CardHeader>
-                <CardTitle>{strategy?.symbol}</CardTitle>
+                <CardTitle>{hasSymbol ? symbolName : null}</CardTitle>
               </CardHeader>
               <CardContent className="min-h-0 flex-1">
                 <div ref={chartRef} className="h-full w-full" />
