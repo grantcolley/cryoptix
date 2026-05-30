@@ -921,11 +921,11 @@ export function StrategyPage() {
           <p className="px-4 text-sm text-destructive">{connectError}</p>
         )}
 
-        {/* {notificationMessage && (
+        {notificationMessage && (
           <p className="px-4 text-sm text-muted-foreground">
             {notificationMessage}
           </p>
-        )} */}
+        )}
 
         {showStrategyRunning && strategy ? (
           <div className="flex flex-row items-baseline gap-4 px-4 py-1">
