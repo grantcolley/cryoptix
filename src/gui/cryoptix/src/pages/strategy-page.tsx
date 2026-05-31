@@ -722,8 +722,8 @@ export function StrategyPage() {
         textColor: "#475569",
       },
       grid: {
-        vertLines: { color: "#e2e8f0" },
-        horzLines: { color: "#e2e8f0" },
+        vertLines: { color: "#e2e8f0", style: 2 },
+        horzLines: { color: "#e2e8f0", style: 2 },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
