@@ -54,6 +54,7 @@ type IndicatorSeriesData = {
   data: LineData<UTCTimestamp>[];
 };
 type IndicatorLatestValues = Record<string, number>;
+type IndicatorValueDirections = Record<string, PriceDirection>;
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -93,6 +94,8 @@ export function StrategyPage() {
     React.useState<PriceDirection>("flat");
   const [indicatorLatestValues, setIndicatorLatestValues] =
     React.useState<IndicatorLatestValues>({});
+  const [indicatorValueDirections, setIndicatorValueDirections] =
+    React.useState<IndicatorValueDirections>({});
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
   const [symbolName, setSymbolName] = React.useState<string | null>(null);
   const [symbolExchange, setSymbolExchange] = React.useState<
@@ -110,9 +113,11 @@ export function StrategyPage() {
   const signalMarkersDataRef = React.useRef<SeriesMarker<Time>[]>([]);
   const indicatorSeriesRefs = React.useRef<ISeriesApi<"Line">[]>([]);
   const indicatorSeriesDataRef = React.useRef<IndicatorSeriesData[]>([]);
+  const indicatorLatestValuesRef = React.useRef<IndicatorLatestValues>({});
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
+  const marketDataSnapshotCountRef = React.useRef(0);
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
   > | null>(null);
@@ -143,7 +148,15 @@ export function StrategyPage() {
       : priceDirection === "up"
         ? "text-green-600 dark:text-green-400"
         : "text-foreground";
+  const getValueDirectionClassName = (direction: PriceDirection) =>
+    direction === "down"
+      ? "text-destructive"
+      : direction === "up"
+        ? "text-green-600 dark:text-green-400"
+        : "";
   const hasSymbol = symbol !== null;
+  const valuePrecision = Math.max(0, symbol?.baseAssetPrecision ?? 0);
+  const valueWidthCh = Math.max(14, valuePrecision + 10);
 
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
     setSymbol(nextSymbol);
@@ -243,8 +256,19 @@ export function StrategyPage() {
     );
   };
 
-  const formatIndicatorValue = (value: number | undefined): string =>
-    value === undefined ? "--" : String(value);
+  const formatDisplayValue = (value: number | string | undefined): string => {
+    if (value === undefined || value === null) {
+      return "--";
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+      return String(value);
+    }
+
+    return numericValue.toFixed(valuePrecision).replace(/\.?0+$/, "");
+  };
 
   const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
     const markers = signals
@@ -338,8 +362,12 @@ export function StrategyPage() {
   };
 
   const applyIndicatorsToChart = (indicators: Indicators[]) => {
+    const latestValues = toIndicatorLatestValues(indicators);
+
     indicatorSeriesDataRef.current = toIndicatorSeriesData(indicators);
-    setIndicatorLatestValues(toIndicatorLatestValues(indicators));
+    indicatorLatestValuesRef.current = latestValues;
+    setIndicatorLatestValues(latestValues);
+    setIndicatorValueDirections({});
     addIndicatorSeriesToChart();
     chartApiRef.current?.timeScale().fitContent();
   };
@@ -362,12 +390,34 @@ export function StrategyPage() {
       seriesByKey.set(item.key, sortByTime(nextData));
     }
 
-    setIndicatorLatestValues((latestValues) => ({
-      ...latestValues,
+    const previousLatestValues = indicatorLatestValuesRef.current;
+    const updatedValueKeys = new Set(indicator.values.map((item) => item.key));
+    const nextLatestValues = {
+      ...previousLatestValues,
       ...Object.fromEntries(
         indicator.values.map((item) => [item.key, item.value])
       ),
-    }));
+    };
+
+    indicatorLatestValuesRef.current = nextLatestValues;
+    setIndicatorLatestValues(nextLatestValues);
+    setIndicatorValueDirections(
+      Object.fromEntries(
+        Object.entries(nextLatestValues).map(([key, value]) => {
+          const previousValue = previousLatestValues[key];
+          const direction =
+            !updatedValueKeys.has(key) ||
+            previousValue === undefined ||
+            value === previousValue
+              ? "flat"
+              : value > previousValue
+                ? "up"
+                : "down";
+
+          return [key, direction];
+        })
+      )
+    );
 
     indicatorSeriesDataRef.current = [...seriesByKey.entries()].map(
       ([key, data]) => ({
@@ -395,7 +445,9 @@ export function StrategyPage() {
     candleDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
+    indicatorLatestValuesRef.current = {};
     setIndicatorLatestValues({});
+    setIndicatorValueDirections({});
     candleSeriesRef.current?.setData([]);
     signalMarkersRef.current?.setMarkers([]);
     clearIndicatorSeries();
@@ -456,6 +508,8 @@ export function StrategyPage() {
         const payload = envelope.payload as MarketDataSnapshot | undefined;
 
         if (payload) {
+          const marketDataSnapshotCount =
+            (marketDataSnapshotCountRef.current += 1);
           const snapshotTime =
             payload?.snapshotTimeUtc instanceof Date
               ? payload.snapshotTimeUtc.toISOString()
@@ -471,7 +525,11 @@ export function StrategyPage() {
           applyIndicatorsToChart(payload.indicators);
           applySignalsToChart(payload.signals);
 
-          setNotificationMessage(null);
+          setNotificationMessage(
+            payload.symbol.name
+              ? `Market data snapshot #${marketDataSnapshotCount} for ${payload.symbol.name} received. ${payload.klines.length} klines, ${payload.indicators.length} indicators, and ${payload.signals.length} signals included. Symbol precision is ${payload.symbol.baseAssetPrecision}.`
+              : `Market data snapshot #${marketDataSnapshotCount} received.`
+          );
         }
 
         break;
@@ -483,7 +541,7 @@ export function StrategyPage() {
           applyKlinesToChart([payload]);
         }
 
-        setNotificationMessage(null);
+        // setNotificationMessage(null);
         break;
       }
       case MessageType.Indicator: {
@@ -493,7 +551,7 @@ export function StrategyPage() {
           applyIndicatorToChart(payload);
         }
 
-        setNotificationMessage(null);
+        // setNotificationMessage(null);
         break;
       }
       case MessageType.Signal: {
@@ -503,7 +561,7 @@ export function StrategyPage() {
           applySignalToChart(payload);
         }
 
-        setNotificationMessage(null);
+        // setNotificationMessage(null);
         break;
       }
       case MessageType.Trade: {
@@ -524,7 +582,7 @@ export function StrategyPage() {
           previousPriceRef.current = nextPrice;
         }
 
-        setNotificationMessage(null);
+        // setNotificationMessage(null);
         break;
       }
       case MessageType.StrategyStarted: {
@@ -649,6 +707,8 @@ export function StrategyPage() {
     setEditedStrategy(null);
     setShowParametersOnly(false);
     setIndicatorLatestValues({});
+    indicatorLatestValuesRef.current = {};
+    setIndicatorValueDirections({});
     applySymbol(null);
     latestStrategyRef.current = null;
     resetPriceComparison();
@@ -695,6 +755,7 @@ export function StrategyPage() {
     const chart = createChart(container, {
       autoSize: true,
       layout: {
+        attributionLogo: false,
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#475569",
       },
@@ -826,6 +887,8 @@ export function StrategyPage() {
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
     setShowParametersOnly(false);
     setIndicatorLatestValues({});
+    indicatorLatestValuesRef.current = {};
+    setIndicatorValueDirections({});
     applySymbol(null);
     resetPriceComparison();
   };
@@ -943,19 +1006,31 @@ export function StrategyPage() {
                 </>
               ) : null}
               {price && (
-                <p className={`px-4 text-sm ${priceClassName}`}>{price}</p>
+                <p
+                  className={`px-4 text-left text-sm tabular-nums ${priceClassName}`}
+                  style={{ width: `${valueWidthCh}ch` }}
+                >
+                  {formatDisplayValue(price)}
+                </p>
               )}
               {strategyPeriods.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-1">
                   {strategyPeriods.map(([key], index) => (
                     <span
                       key={key}
-                      className="rounded px-2 py-0.5 text-xs font-medium leading-5 text-white shadow-sm"
-                      style={{
-                        backgroundColor: getIndicatorSeriesColor(index),
-                      }}
+                      className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium leading-5 text-foreground shadow-sm"
                     >
-                      {key}: {formatIndicatorValue(indicatorLatestValues[key])}
+                      <span style={{ color: getIndicatorSeriesColor(index) }}>
+                        {key}:
+                      </span>
+                      <span
+                        className={`text-left tabular-nums ${getValueDirectionClassName(
+                          indicatorValueDirections[key] ?? "flat"
+                        )}`}
+                        style={{ width: `${valueWidthCh}ch` }}
+                      >
+                        {formatDisplayValue(indicatorLatestValues[key])}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -1021,12 +1096,20 @@ export function StrategyPage() {
 
         {showStrategyRunning ? (
           <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
-            <Card className="min-h-0 flex-1">
+            <Card className="flex min-h-0 flex-1 flex-col">
               <CardHeader>
                 <CardTitle>{hasSymbol ? symbolName : null}</CardTitle>
               </CardHeader>
-              <CardContent className="min-h-0 flex-1">
-                <div ref={chartRef} className="h-full w-full" />
+              <CardContent className="flex min-h-0 flex-1 flex-col">
+                <div ref={chartRef} className="min-h-0 flex-1 w-full" />
+                <a
+                  href="https://www.tradingview.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 text-left text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                >
+                  Charting by TradingView
+                </a>
               </CardContent>
             </Card>
           </div>
