@@ -20,6 +20,7 @@ import { Config } from "@/config/config";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 import { StrategyExecution } from "@/features/strategy/strategy-execution";
+import { StrategyHeader } from "@/features/strategy/strategy-header";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
@@ -37,15 +38,6 @@ import {
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { icons } from "@/components/icon/icons";
-import { Icon } from "@/components/icon/icon";
-import { ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
 type PriceDirection = "up" | "down" | "flat";
@@ -136,30 +128,11 @@ export function StrategyPage() {
     !showStartButton && !showStrategyRunning && !showDisconnectButton;
   const isStrategyConfigActive = isStrategyConfigOpen && !showParametersOnly;
   const isStrategyParametersActive = isStrategyConfigOpen && showParametersOnly;
-  const strategyConfigTooltip = isStrategyConfigActive
-    ? "Hide strategy config"
-    : "Show strategy config";
-  const strategyParametersTooltip = isStrategyParametersActive
-    ? "Hide strategy parameters"
-    : "Show strategy parameters";
-  const priceClassName =
-    priceDirection === "down"
-      ? "text-destructive"
-      : priceDirection === "up"
-        ? "text-green-600 dark:text-green-400"
-        : "text-foreground";
-  const getValueDirectionClassName = (direction: PriceDirection) =>
-    direction === "down"
-      ? "text-destructive"
-      : direction === "up"
-        ? "text-green-600 dark:text-green-400"
-        : "";
   const hasSymbol = symbol !== null;
   const valuePrecision = Math.min(
     100,
     Math.max(0, symbol?.baseAssetPrecision ?? 0)
   );
-  const valueWidthCh = Math.max(14, valuePrecision + 10);
 
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
     setSymbol(nextSymbol);
@@ -257,20 +230,6 @@ export function StrategyPage() {
     return Object.fromEntries(
       [...latestByKey.entries()].map(([key, latest]) => [key, latest.value])
     );
-  };
-
-  const formatDisplayValue = (value: number | string | undefined): string => {
-    if (value === undefined || value === null) {
-      return "--";
-    }
-
-    const numericValue = Number(value);
-
-    if (!Number.isFinite(numericValue)) {
-      return String(value);
-    }
-
-    return numericValue.toFixed(valuePrecision);
   };
 
   const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
@@ -983,107 +942,25 @@ export function StrategyPage() {
           />
         </form>
 
-        {connectError && (
-          <p className="px-4 text-sm text-destructive">{connectError}</p>
-        )}
-
-        {notificationMessage && (
-          <p className="px-4 text-sm text-muted-foreground">
-            {notificationMessage}
-          </p>
-        )}
-
-        {showStrategyRunning && strategy ? (
-          <div className="flex flex-row items-baseline gap-4 px-4 py-1">
-            <div className="flex items-center gap-1">
-              {hasSymbol ? (
-                <>
-                  <h4 className="text-sm text-foreground-semimuted mr-2">
-                    {symbolExchange == null
-                      ? null
-                      : ExchangeLabels[symbolExchange]}
-                  </h4>
-                  <h4 className="text-sm text-foreground-semimuted">
-                    {symbolName}
-                  </h4>
-                </>
-              ) : null}
-              {price && (
-                <p
-                  className={`px-4 text-left text-sm tabular-nums ${priceClassName}`}
-                  style={{ width: `${valueWidthCh}ch` }}
-                >
-                  {formatDisplayValue(price)}
-                </p>
-              )}
-              {strategyPeriods.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-1">
-                  {strategyPeriods.map(([key], index) => (
-                    <span
-                      key={key}
-                      className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium leading-5 text-foreground shadow-sm"
-                    >
-                      <span style={{ color: getIndicatorSeriesColor(index) }}>
-                        {key}:
-                      </span>
-                      <span
-                        className={`text-left tabular-nums ${getValueDirectionClassName(
-                          indicatorValueDirections[key] ?? "flat"
-                        )}`}
-                        style={{ width: `${valueWidthCh}ch` }}
-                      >
-                        {formatDisplayValue(indicatorLatestValues[key])}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <div className="ml-auto flex items-center gap-1">
-              <h4 className="text-sm text-foreground-semimuted mr-2">
-                {strategy.name}
-              </h4>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    id="btnStrategyParameters"
-                    variant="outline"
-                    size="icon"
-                    aria-label={strategyParametersTooltip}
-                    onClick={handleToggleStrategyParameters}
-                  >
-                    <Icon
-                      icon={
-                        isStrategyParametersActive
-                          ? icons.minimize2
-                          : icons.slidersHorizontal
-                      }
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{strategyParametersTooltip}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    id="btnStrategyConfig"
-                    variant="outline"
-                    size="icon"
-                    aria-label={strategyConfigTooltip}
-                    onClick={handleToggleStrategyConfig}
-                  >
-                    <Icon
-                      icon={
-                        isStrategyConfigActive ? icons.minimize2 : icons.cog
-                      }
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{strategyConfigTooltip}</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        ) : null}
+        <StrategyHeader
+          connectError={connectError}
+          notificationMessage={notificationMessage}
+          showStrategyRunning={showStrategyRunning}
+          strategy={strategy}
+          hasSymbol={hasSymbol}
+          symbolExchange={symbolExchange}
+          symbolName={symbolName}
+          price={price}
+          priceDirection={priceDirection}
+          valuePrecision={valuePrecision}
+          strategyPeriods={strategyPeriods}
+          indicatorLatestValues={indicatorLatestValues}
+          indicatorValueDirections={indicatorValueDirections}
+          isStrategyParametersActive={isStrategyParametersActive}
+          isStrategyConfigActive={isStrategyConfigActive}
+          onToggleStrategyParameters={handleToggleStrategyParameters}
+          onToggleStrategyConfig={handleToggleStrategyConfig}
+        />
 
         <StrategySelect
           canSelectStrategy={showStartButton}
