@@ -19,7 +19,7 @@ import {
 import { Config } from "@/config/config";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
-import { StrategyHeader } from "@/features/strategy/strategy-header";
+import { StrategyExecution } from "@/features/strategy/strategy-execution";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
@@ -937,7 +937,7 @@ export function StrategyPage() {
           className="flex items-center gap-1 px-4 pt-4 pb-2"
           onSubmit={handleServerConnectSubmit}
         >
-          <StrategyHeader
+          <StrategyExecution
             isConnecting={isConnecting}
             showConnectButton={showConnectButton}
             showStartButton={showStartButton}
