@@ -67,16 +67,16 @@ namespace Cryoptix.Strategy.Cache
 
             lock (_gate)
             {
-                var found = _symbols.FirstOrDefault(s => string.Equals(s.Name, normalized, StringComparison.OrdinalIgnoreCase));
+                var found = _symbols.FirstOrDefault(s => string.Equals(s.ExchangeSymbol, normalized, StringComparison.OrdinalIgnoreCase));
                 return found;
             }
         }
 
-        private sealed class SymbolComparer : IEqualityComparer<Cryoptix.Market.Data.Symbol>
+        private sealed class SymbolComparer : IEqualityComparer<Symbol>
         {
             public static readonly SymbolComparer Instance = new SymbolComparer();
 
-            public bool Equals(Cryoptix.Market.Data.Symbol? x, Cryoptix.Market.Data.Symbol? y)
+            public bool Equals(Symbol? x, Symbol? y)
             {
                 if (ReferenceEquals(x, y)) return true;
                 if (x is null || y is null) return false;
