@@ -155,7 +155,10 @@ export function StrategyPage() {
         ? "text-green-600 dark:text-green-400"
         : "";
   const hasSymbol = symbol !== null;
-  const valuePrecision = Math.max(0, symbol?.baseAssetPrecision ?? 0);
+  const valuePrecision = Math.min(
+    100,
+    Math.max(0, symbol?.baseAssetPrecision ?? 0)
+  );
   const valueWidthCh = Math.max(14, valuePrecision + 10);
 
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
@@ -267,7 +270,7 @@ export function StrategyPage() {
       return String(value);
     }
 
-    return numericValue.toFixed(valuePrecision).replace(/\.?0+$/, "");
+    return numericValue.toFixed(valuePrecision);
   };
 
   const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
