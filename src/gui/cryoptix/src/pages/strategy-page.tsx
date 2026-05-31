@@ -69,6 +69,7 @@ export function StrategyPage() {
   const [selectedStrategyId, setSelectedStrategyId] = React.useState("");
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
   const [showStartButton, setShowStartButton] = React.useState(false);
+  const [showChart, setShowChart] = React.useState(false);
 
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -109,7 +110,7 @@ export function StrategyPage() {
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
-  const marketDataSnapshotCountRef = React.useRef(0);
+
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
   > | null>(null);
@@ -408,6 +409,7 @@ export function StrategyPage() {
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
     indicatorLatestValuesRef.current = {};
+    setShowChart(false);
     setIndicatorLatestValues({});
     setIndicatorValueDirections({});
     candleSeriesRef.current?.setData([]);
@@ -470,28 +472,16 @@ export function StrategyPage() {
         const payload = envelope.payload as MarketDataSnapshot | undefined;
 
         if (payload) {
-          const marketDataSnapshotCount =
-            (marketDataSnapshotCountRef.current += 1);
-          const snapshotTime =
-            payload?.snapshotTimeUtc instanceof Date
-              ? payload.snapshotTimeUtc.toISOString()
-              : undefined;
-
-          const message = snapshotTime
-            ? `Market data snapshot received at ${snapshotTime}.`
-            : "Market data snapshot received.";
-
-          applyRunningStrategyStatus(payload.strategy, message);
+          applyRunningStrategyStatus(payload.strategy, null);
           applySymbol(payload.symbol);
           applyKlinesToChart(payload.klines, true);
+          if (payload.klines.length > 0) {
+            setShowChart(true);
+          }
           applyIndicatorsToChart(payload.indicators);
           applySignalsToChart(payload.signals);
 
-          setNotificationMessage(
-            payload.symbol.name
-              ? `Market data snapshot #${marketDataSnapshotCount} for ${payload.symbol.name} received. ${payload.klines.length} klines, ${payload.indicators.length} indicators, and ${payload.signals.length} signals included. Symbol precision is ${payload.symbol.baseAssetPrecision}.`
-              : `Market data snapshot #${marketDataSnapshotCount} received.`
-          );
+          setNotificationMessage(null);
         }
 
         break;
@@ -501,9 +491,10 @@ export function StrategyPage() {
 
         if (payload) {
           applyKlinesToChart([payload]);
+          setShowChart(true);
         }
 
-        // setNotificationMessage(null);
+        setNotificationMessage(null);
         break;
       }
       case MessageType.Indicator: {
@@ -513,7 +504,7 @@ export function StrategyPage() {
           applyIndicatorToChart(payload);
         }
 
-        // setNotificationMessage(null);
+        setNotificationMessage(null);
         break;
       }
       case MessageType.Signal: {
@@ -523,7 +514,7 @@ export function StrategyPage() {
           applySignalToChart(payload);
         }
 
-        // setNotificationMessage(null);
+        setNotificationMessage(null);
         break;
       }
       case MessageType.Trade: {
@@ -544,7 +535,7 @@ export function StrategyPage() {
           previousPriceRef.current = nextPrice;
         }
 
-        // setNotificationMessage(null);
+        setNotificationMessage(null);
         break;
       }
       case MessageType.StrategyStarted: {
@@ -562,7 +553,7 @@ export function StrategyPage() {
 
           applyRunningStrategyStatus(payload, message);
 
-          setNotificationMessage(message);
+          setNotificationMessage(null);
         }
 
         break;
@@ -671,6 +662,7 @@ export function StrategyPage() {
     setIndicatorLatestValues({});
     indicatorLatestValuesRef.current = {};
     setIndicatorValueDirections({});
+    resetChartData();
     applySymbol(null);
     latestStrategyRef.current = null;
     resetPriceComparison();
@@ -710,7 +702,7 @@ export function StrategyPage() {
   React.useEffect(() => {
     const container = chartRef.current;
 
-    if (!showStrategyRunning || !container) {
+    if (!showStrategyRunning || !showChart || !container) {
       return;
     }
 
@@ -770,6 +762,7 @@ export function StrategyPage() {
   }, [
     addIndicatorSeriesToChart,
     applySignalMarkersToChart,
+    showChart,
     showStrategyRunning,
     sortByTime,
     symbolName,
@@ -792,6 +785,7 @@ export function StrategyPage() {
         setIsStrategyConfigOpen(false);
         setShowParametersOnly(false);
         setShowStartButton(false);
+        resetChartData();
         await startSignalRSubscription(accessToken);
       }
 
@@ -851,6 +845,7 @@ export function StrategyPage() {
     setIndicatorLatestValues({});
     indicatorLatestValuesRef.current = {};
     setIndicatorValueDirections({});
+    resetChartData();
     applySymbol(null);
     resetPriceComparison();
   };
@@ -981,15 +976,27 @@ export function StrategyPage() {
                 <CardTitle>{hasSymbol ? symbolName : null}</CardTitle>
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col">
-                <div ref={chartRef} className="min-h-0 flex-1 w-full" />
-                <a
-                  href="https://www.tradingview.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 text-left text-[10px] leading-none text-muted-foreground hover:text-foreground"
-                >
-                  Charting by TradingView
-                </a>
+                {showChart ? (
+                  <>
+                    <div ref={chartRef} className="min-h-0 flex-1 w-full" />
+                    <a
+                      href="https://www.tradingview.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 text-left text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                    >
+                      Charting by TradingView
+                    </a>
+                  </>
+                ) : (
+                  <div
+                    className="flex min-h-0 flex-1 items-center justify-center"
+                    aria-label="Waiting for chart data"
+                    role="status"
+                  >
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
