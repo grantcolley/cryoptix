@@ -118,7 +118,9 @@ export function StrategyHeader({
             {hasSymbol ? (
               <>
                 <h4 className="text-sm text-foreground-semimuted mr-2">
-                  {symbolExchange == null ? null : ExchangeLabels[symbolExchange]}
+                  {symbolExchange == null
+                    ? null
+                    : ExchangeLabels[symbolExchange]}
                 </h4>
                 <h4 className="text-sm text-foreground-semimuted">
                   {symbolName}
@@ -133,7 +135,7 @@ export function StrategyHeader({
                 {formatDisplayValue(price)}
               </p>
             )}
-            {strategyPeriods.length > 0 ? (
+            {/* {strategyPeriods.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1">
                 {strategyPeriods.map(([key], index) => (
                   <span
@@ -154,7 +156,7 @@ export function StrategyHeader({
                   </span>
                 ))}
               </div>
-            ) : null}
+            ) : null} */}
           </div>
           <div className="ml-auto flex items-center gap-1">
             <h4 className="text-sm text-foreground-semimuted mr-2">
