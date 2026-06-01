@@ -38,6 +38,7 @@ import {
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
 type PriceDirection = "up" | "down" | "flat";
@@ -47,6 +48,17 @@ type IndicatorSeriesData = {
 };
 type IndicatorLatestValues = Record<string, number>;
 type IndicatorValueDirections = Record<string, PriceDirection>;
+type ChartSeriesVisibility = Record<string, boolean>;
+type ChartSeriesLabelPosition = {
+  key: string;
+  label: string;
+  color: string;
+  x: number;
+  y: number;
+};
+
+const PRICE_SERIES_KEY = "price";
+const PRICE_SERIES_COLOR = "#16a34a";
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -70,6 +82,15 @@ export function StrategyPage() {
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
   const [showStartButton, setShowStartButton] = React.useState(false);
   const [showChart, setShowChart] = React.useState(false);
+  const [indicatorSeriesKeys, setIndicatorSeriesKeys] = React.useState<
+    string[]
+  >([]);
+  const [chartSeriesVisibility, setChartSeriesVisibility] =
+    React.useState<ChartSeriesVisibility>({
+      [PRICE_SERIES_KEY]: true,
+    });
+  const [chartSeriesLabelPositions, setChartSeriesLabelPositions] =
+    React.useState<ChartSeriesLabelPosition[]>([]);
 
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -104,9 +125,14 @@ export function StrategyPage() {
     null
   );
   const signalMarkersDataRef = React.useRef<SeriesMarker<Time>[]>([]);
-  const indicatorSeriesRefs = React.useRef<ISeriesApi<"Line">[]>([]);
+  const indicatorSeriesByKeyRef = React.useRef<Map<string, ISeriesApi<"Line">>>(
+    new Map()
+  );
   const indicatorSeriesDataRef = React.useRef<IndicatorSeriesData[]>([]);
   const indicatorLatestValuesRef = React.useRef<IndicatorLatestValues>({});
+  const chartSeriesVisibilityRef = React.useRef<ChartSeriesVisibility>({
+    [PRICE_SERIES_KEY]: true,
+  });
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
@@ -151,6 +177,34 @@ export function StrategyPage() {
     const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
     return new URL(route, normalizedBaseUrl).toString();
   };
+
+  const getChartSeriesKeys = (
+    indicatorSeriesData = indicatorSeriesDataRef.current
+  ) => [
+    PRICE_SERIES_KEY,
+    ...indicatorSeriesData.map((indicatorSeries) => indicatorSeries.key),
+  ];
+
+  const syncChartSeriesVisibility = (
+    indicatorSeriesData = indicatorSeriesDataRef.current
+  ) => {
+    const keys = getChartSeriesKeys(indicatorSeriesData);
+    const currentVisibility = chartSeriesVisibilityRef.current;
+    const nextVisibility = Object.fromEntries(
+      keys.map((key) => [key, currentVisibility[key] ?? true])
+    );
+    const hasChanged =
+      Object.keys(currentVisibility).length !== keys.length ||
+      keys.some((key) => currentVisibility[key] !== nextVisibility[key]);
+
+    if (hasChanged) {
+      chartSeriesVisibilityRef.current = nextVisibility;
+      setChartSeriesVisibility(nextVisibility);
+    }
+  };
+
+  const isChartSeriesVisible = (key: string) =>
+    chartSeriesVisibilityRef.current[key] ?? true;
 
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof TypeError && error.message === "Failed to fetch") {
@@ -265,12 +319,75 @@ export function StrategyPage() {
     const chart = chartApiRef.current;
 
     if (chart) {
-      for (const indicatorSeries of indicatorSeriesRefs.current) {
+      for (const indicatorSeries of indicatorSeriesByKeyRef.current.values()) {
         chart.removeSeries(indicatorSeries);
       }
     }
 
-    indicatorSeriesRefs.current = [];
+    indicatorSeriesByKeyRef.current = new Map();
+  }, []);
+
+  const updateChartSeriesLabelPositions = React.useCallback(() => {
+    const chart = chartApiRef.current;
+    const container = chartRef.current;
+
+    if (!chart || !container) {
+      setChartSeriesLabelPositions([]);
+      return;
+    }
+
+    const timeScale = chart.timeScale();
+    const visibleRange = timeScale.getVisibleRange();
+    const from = visibleRange ? Number(visibleRange.from) : null;
+    const to = visibleRange ? Number(visibleRange.to) : null;
+    const maxX = Math.max(8, container.clientWidth - 160);
+    const maxY = Math.max(6, container.clientHeight - 22);
+
+    const nextLabelPositions = indicatorSeriesDataRef.current.flatMap(
+      ({ key, data }, index) => {
+        if (!isChartSeriesVisible(key)) {
+          return [];
+        }
+
+        const indicatorSeries = indicatorSeriesByKeyRef.current.get(key);
+
+        if (!indicatorSeries) {
+          return [];
+        }
+
+        const labelPoint =
+          data.find((point) => {
+            const time = Number(point.time);
+
+            return (
+              (from === null || time >= from) && (to === null || time <= to)
+            );
+          }) ?? data[0];
+
+        if (!labelPoint) {
+          return [];
+        }
+
+        const x = timeScale.timeToCoordinate(labelPoint.time);
+        const y = indicatorSeries.priceToCoordinate(labelPoint.value);
+
+        if (x === null || y === null) {
+          return [];
+        }
+
+        return [
+          {
+            key,
+            label: key,
+            color: getIndicatorSeriesColor(index),
+            x: Math.min(maxX, Math.max(8, x + 8)),
+            y: Math.min(maxY, Math.max(6, y - 10)),
+          },
+        ];
+      }
+    );
+
+    setChartSeriesLabelPositions(nextLabelPositions);
   }, []);
 
   const addIndicatorSeriesToChart = React.useCallback(() => {
@@ -282,23 +399,31 @@ export function StrategyPage() {
 
     clearIndicatorSeries();
 
-    indicatorSeriesRefs.current = indicatorSeriesDataRef.current.map(
-      ({ key, data }, index) => {
-        const indicatorSeries = chart.addSeries(LineSeries, {
-          title: key,
-          color: getIndicatorSeriesColor(index),
-          lineWidth: 2,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          priceScaleId: "left",
-        });
+    const indicatorSeriesByKey = new Map<string, ISeriesApi<"Line">>();
 
-        indicatorSeries.setData(data);
-
-        return indicatorSeries;
+    for (const [
+      index,
+      { key, data },
+    ] of indicatorSeriesDataRef.current.entries()) {
+      if (!isChartSeriesVisible(key)) {
+        continue;
       }
-    );
-  }, [clearIndicatorSeries]);
+
+      const indicatorSeries = chart.addSeries(LineSeries, {
+        color: getIndicatorSeriesColor(index),
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        priceScaleId: "right",
+      });
+
+      indicatorSeries.setData(data);
+      indicatorSeriesByKey.set(key, indicatorSeries);
+    }
+
+    indicatorSeriesByKeyRef.current = indicatorSeriesByKey;
+    updateChartSeriesLabelPositions();
+  }, [clearIndicatorSeries, updateChartSeriesLabelPositions]);
 
   const applyKlinesToChart = (klines: Kline[], replace = false) => {
     const candleSeries = candleSeriesRef.current;
@@ -321,18 +446,26 @@ export function StrategyPage() {
         sortByTime([...candleDataByTimeRef.current.values()])
       );
       chartApiRef.current?.timeScale().fitContent();
+      updateChartSeriesLabelPositions();
     }
   };
 
   const applyIndicatorsToChart = (indicators: Indicators[]) => {
     const latestValues = toIndicatorLatestValues(indicators);
 
-    indicatorSeriesDataRef.current = toIndicatorSeriesData(indicators);
+    const indicatorSeriesData = toIndicatorSeriesData(indicators);
+
+    indicatorSeriesDataRef.current = indicatorSeriesData;
     indicatorLatestValuesRef.current = latestValues;
+    setIndicatorSeriesKeys(
+      indicatorSeriesData.map((indicatorSeries) => indicatorSeries.key)
+    );
+    syncChartSeriesVisibility(indicatorSeriesData);
     setIndicatorLatestValues(latestValues);
     setIndicatorValueDirections({});
     addIndicatorSeriesToChart();
     chartApiRef.current?.timeScale().fitContent();
+    updateChartSeriesLabelPositions();
   };
 
   const applyIndicatorToChart = (indicator: Indicators) => {
@@ -382,12 +515,17 @@ export function StrategyPage() {
       )
     );
 
-    indicatorSeriesDataRef.current = [...seriesByKey.entries()].map(
+    const indicatorSeriesData = [...seriesByKey.entries()].map(
       ([key, data]) => ({
         key,
         data,
       })
     );
+    indicatorSeriesDataRef.current = indicatorSeriesData;
+    setIndicatorSeriesKeys(
+      indicatorSeriesData.map((indicatorSeries) => indicatorSeries.key)
+    );
+    syncChartSeriesVisibility(indicatorSeriesData);
     addIndicatorSeriesToChart();
   };
 
@@ -409,12 +547,38 @@ export function StrategyPage() {
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
     indicatorLatestValuesRef.current = {};
+    chartSeriesVisibilityRef.current = { [PRICE_SERIES_KEY]: true };
     setShowChart(false);
+    setIndicatorSeriesKeys([]);
+    setChartSeriesVisibility({ [PRICE_SERIES_KEY]: true });
+    setChartSeriesLabelPositions([]);
     setIndicatorLatestValues({});
     setIndicatorValueDirections({});
     candleSeriesRef.current?.setData([]);
     signalMarkersRef.current?.setMarkers([]);
     clearIndicatorSeries();
+  };
+
+  const handleChartSeriesVisibilityChange = (
+    key: string,
+    checked: boolean | "indeterminate"
+  ) => {
+    const nextVisibility = {
+      ...chartSeriesVisibilityRef.current,
+      [key]: checked === true,
+    };
+
+    chartSeriesVisibilityRef.current = nextVisibility;
+    setChartSeriesVisibility(nextVisibility);
+
+    if (key === PRICE_SERIES_KEY) {
+      candleSeriesRef.current?.applyOptions({
+        visible: nextVisibility[PRICE_SERIES_KEY],
+      });
+      return;
+    }
+
+    addIndicatorSeriesToChart();
   };
 
   const applyRunningStrategyStatus = (
@@ -725,7 +889,7 @@ export function StrategyPage() {
       },
       leftPriceScale: {
         borderColor: "#cbd5e1",
-        visible: true,
+        visible: false,
       },
       timeScale: {
         borderColor: "#cbd5e1",
@@ -741,6 +905,7 @@ export function StrategyPage() {
       borderDownColor: "#dc2626",
       wickUpColor: "#16a34a",
       wickDownColor: "#dc2626",
+      visible: isChartSeriesVisible(PRICE_SERIES_KEY),
     });
 
     chartApiRef.current = chart;
@@ -750,13 +915,26 @@ export function StrategyPage() {
     applySignalMarkersToChart();
     addIndicatorSeriesToChart();
     chart.timeScale().fitContent();
+    updateChartSeriesLabelPositions();
+
+    const handleVisibleTimeRangeChange = () => {
+      updateChartSeriesLabelPositions();
+    };
+
+    chart
+      .timeScale()
+      .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
 
     return () => {
+      chart
+        .timeScale()
+        .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
       signalMarkersRef.current?.detach();
       chartApiRef.current = null;
       candleSeriesRef.current = null;
       signalMarkersRef.current = null;
-      indicatorSeriesRefs.current = [];
+      indicatorSeriesByKeyRef.current = new Map();
+      setChartSeriesLabelPositions([]);
       chart.remove();
     };
   }, [
@@ -766,6 +944,7 @@ export function StrategyPage() {
     showStrategyRunning,
     sortByTime,
     symbolName,
+    updateChartSeriesLabelPositions,
   ]);
 
   const handleStrategyAction = async (
@@ -884,6 +1063,18 @@ export function StrategyPage() {
     [strategy]
   );
 
+  const chartSeriesControls = [
+    {
+      key: PRICE_SERIES_KEY,
+      label: hasSymbol ? (symbolName ?? "Price") : "Price",
+      color: PRICE_SERIES_COLOR,
+    },
+    ...indicatorSeriesKeys.map((key, index) => ({
+      key,
+      label: key,
+      color: getIndicatorSeriesColor(index),
+    })),
+  ];
   return (
     <div className="flex h-[calc(100svh-var(--header-height))] min-h-0 flex-1 flex-col p-2 md:h-[calc(100svh-var(--header-height)-1rem)]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-muted/50">
@@ -978,7 +1169,54 @@ export function StrategyPage() {
               <CardContent className="flex min-h-0 flex-1 flex-col">
                 {showChart ? (
                   <>
-                    <div ref={chartRef} className="min-h-0 flex-1 w-full" />
+                    <div
+                      className="mb-2 flex min-h-7 flex-wrap items-center gap-x-4 gap-y-2"
+                      aria-label="Chart series visibility"
+                    >
+                      {chartSeriesControls.map((series) => (
+                        <label
+                          key={series.key}
+                          className="flex min-w-0 cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground"
+                        >
+                          <Checkbox
+                            checked={chartSeriesVisibility[series.key] ?? true}
+                            onCheckedChange={(checked) =>
+                              handleChartSeriesVisibilityChange(
+                                series.key,
+                                checked
+                              )
+                            }
+                            aria-label={`Show ${series.label} series`}
+                          />
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: series.color }}
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">{series.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="relative min-h-0 flex-1 w-full">
+                      {chartSeriesLabelPositions.map((series) => (
+                        <div
+                          key={series.key}
+                          className="pointer-events-none absolute z-10 flex max-w-36 items-center gap-1.5 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground shadow-sm"
+                          style={{
+                            left: series.x,
+                            top: series.y,
+                          }}
+                        >
+                          <span
+                            className="size-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: series.color }}
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">{series.label}</span>
+                        </div>
+                      ))}
+                      <div ref={chartRef} className="h-full w-full" />
+                    </div>
                     <a
                       href="https://www.tradingview.com/"
                       target="_blank"
