@@ -46,8 +46,6 @@ type IndicatorSeriesData = {
   key: string;
   data: LineData<UTCTimestamp>[];
 };
-type IndicatorLatestValues = Record<string, number>;
-type IndicatorValueDirections = Record<string, PriceDirection>;
 type ChartSeriesVisibility = Record<string, boolean>;
 type ChartSeriesLabelPosition = {
   key: string;
@@ -109,10 +107,6 @@ export function StrategyPage() {
   const [price, setPrice] = React.useState<string | null>(null);
   const [priceDirection, setPriceDirection] =
     React.useState<PriceDirection>("flat");
-  const [indicatorLatestValues, setIndicatorLatestValues] =
-    React.useState<IndicatorLatestValues>({});
-  const [indicatorValueDirections, setIndicatorValueDirections] =
-    React.useState<IndicatorValueDirections>({});
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
   const [symbolName, setSymbolName] = React.useState<string | null>(null);
   const [symbolExchange, setSymbolExchange] = React.useState<
@@ -132,7 +126,6 @@ export function StrategyPage() {
     new Map()
   );
   const indicatorSeriesDataRef = React.useRef<IndicatorSeriesData[]>([]);
-  const indicatorLatestValuesRef = React.useRef<IndicatorLatestValues>({});
   const chartSeriesVisibilityRef = React.useRef<ChartSeriesVisibility>({
     [PRICE_SERIES_KEY]: true,
   });
@@ -263,31 +256,6 @@ export function StrategyPage() {
       key,
       data: sortByTime([...dataByTime.values()]),
     }));
-  };
-
-  const toIndicatorLatestValues = (
-    indicators: Indicators[]
-  ): IndicatorLatestValues => {
-    const latestByKey = new Map<string, { time: number; value: number }>();
-
-    for (const indicator of indicators) {
-      const time = indicator.timestampUtc.getTime();
-
-      for (const item of indicator.values) {
-        const current = latestByKey.get(item.key);
-
-        if (!current || time >= current.time) {
-          latestByKey.set(item.key, {
-            time,
-            value: item.value,
-          });
-        }
-      }
-    }
-
-    return Object.fromEntries(
-      [...latestByKey.entries()].map(([key, latest]) => [key, latest.value])
-    );
   };
 
   const toSignalMarkers = (signals: Signal[]): SeriesMarker<Time>[] => {
@@ -480,18 +448,13 @@ export function StrategyPage() {
   };
 
   const applyIndicatorsToChart = (indicators: Indicators[]) => {
-    const latestValues = toIndicatorLatestValues(indicators);
-
     const indicatorSeriesData = toIndicatorSeriesData(indicators);
 
     indicatorSeriesDataRef.current = indicatorSeriesData;
-    indicatorLatestValuesRef.current = latestValues;
     setIndicatorSeriesKeys(
       indicatorSeriesData.map((indicatorSeries) => indicatorSeries.key)
     );
     syncChartSeriesVisibility(indicatorSeriesData);
-    setIndicatorLatestValues(latestValues);
-    setIndicatorValueDirections({});
     addIndicatorSeriesToChart();
     applyInitialVisibleKlineRange();
     updateChartSeriesLabelPositions();
@@ -514,35 +477,6 @@ export function StrategyPage() {
 
       seriesByKey.set(item.key, sortByTime(nextData));
     }
-
-    const previousLatestValues = indicatorLatestValuesRef.current;
-    const updatedValueKeys = new Set(indicator.values.map((item) => item.key));
-    const nextLatestValues = {
-      ...previousLatestValues,
-      ...Object.fromEntries(
-        indicator.values.map((item) => [item.key, item.value])
-      ),
-    };
-
-    indicatorLatestValuesRef.current = nextLatestValues;
-    setIndicatorLatestValues(nextLatestValues);
-    setIndicatorValueDirections(
-      Object.fromEntries(
-        Object.entries(nextLatestValues).map(([key, value]) => {
-          const previousValue = previousLatestValues[key];
-          const direction =
-            !updatedValueKeys.has(key) ||
-            previousValue === undefined ||
-            value === previousValue
-              ? "flat"
-              : value > previousValue
-                ? "up"
-                : "down";
-
-          return [key, direction];
-        })
-      )
-    );
 
     const indicatorSeriesData = [...seriesByKey.entries()].map(
       ([key, data]) => ({
@@ -575,14 +509,11 @@ export function StrategyPage() {
     candleDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
-    indicatorLatestValuesRef.current = {};
     chartSeriesVisibilityRef.current = { [PRICE_SERIES_KEY]: true };
     setShowChart(false);
     setIndicatorSeriesKeys([]);
     setChartSeriesVisibility({ [PRICE_SERIES_KEY]: true });
     setChartSeriesLabelPositions([]);
-    setIndicatorLatestValues({});
-    setIndicatorValueDirections({});
     candleSeriesRef.current?.setData([]);
     signalMarkersRef.current?.setMarkers([]);
     clearIndicatorSeries();
@@ -852,9 +783,6 @@ export function StrategyPage() {
     setShowStartButton(false);
     setEditedStrategy(null);
     setShowParametersOnly(false);
-    setIndicatorLatestValues({});
-    indicatorLatestValuesRef.current = {};
-    setIndicatorValueDirections({});
     resetChartData();
     applySymbol(null);
     latestStrategyRef.current = null;
@@ -1052,9 +980,6 @@ export function StrategyPage() {
     setStrategyFormVersion((version) => version + 1);
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
     setShowParametersOnly(false);
-    setIndicatorLatestValues({});
-    indicatorLatestValuesRef.current = {};
-    setIndicatorValueDirections({});
     resetChartData();
     applySymbol(null);
     resetPriceComparison();
@@ -1087,11 +1012,6 @@ export function StrategyPage() {
       latestStrategyRef.current = nextStrategy;
     },
     []
-  );
-
-  const strategyPeriods = React.useMemo(
-    () => (strategy ? Object.entries(strategy.periods) : []),
-    [strategy]
   );
 
   const chartSeriesControls = [
@@ -1170,9 +1090,6 @@ export function StrategyPage() {
           price={price}
           priceDirection={priceDirection}
           valuePrecision={valuePrecision}
-          strategyPeriods={strategyPeriods}
-          indicatorLatestValues={indicatorLatestValues}
-          indicatorValueDirections={indicatorValueDirections}
           isStrategyParametersActive={isStrategyParametersActive}
           isStrategyConfigActive={isStrategyConfigActive}
           onToggleStrategyParameters={handleToggleStrategyParameters}
