@@ -56,6 +56,7 @@ import {
 } from "@/features/api/schema/strategy-schema";
 
 import { enumToOptions, type EnumOption } from "@/lib/enum-helper";
+import { cn } from "@/lib/utils";
 
 type StrategyFormValues = z.input<typeof StrategySchema>;
 
@@ -99,6 +100,7 @@ type StrategyFormProps = {
   submitLabel?: string;
   showSubmitButton?: boolean;
   isReadOnly?: boolean;
+  isCompact?: boolean;
   showParametersOnly?: boolean;
   isSubscriptionOpen?: boolean;
   isParametersOpen?: boolean;
@@ -459,6 +461,7 @@ export function StrategyForm({
   submitLabel = "Update strategy",
   showSubmitButton = true,
   isReadOnly = false,
+  isCompact = false,
   showParametersOnly = false,
   isSubscriptionOpen,
   isParametersOpen,
@@ -567,25 +570,45 @@ export function StrategyForm({
             }
           : undefined
       }
-      className="space-y-6"
+      className={cn(showSubmitButton && "space-y-6")}
     >
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+      <div
+        className={cn(
+          "grid grid-cols-1 lg:grid-cols-4",
+          isCompact ? "gap-1.5" : "gap-2"
+        )}
+      >
         {showParametersOnly ? (
-          <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm lg:col-span-4">
-            <FieldGroup className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <FieldSet
+            className={cn(
+              "space-y-4 rounded-2xl shadow-sm lg:col-span-4",
+              isCompact ? "p-3" : "p-4"
+            )}
+          >
+            <FieldGroup
+              className={cn(
+                "grid grid-cols-1 lg:grid-cols-3",
+                isCompact ? "gap-3" : "gap-4"
+              )}
+            >
               {renderParameterFields(true)}
             </FieldGroup>
           </FieldSet>
         ) : (
           <>
-            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+            <FieldSet
+              className={cn(
+                "space-y-4 rounded-2xl shadow-sm",
+                isCompact ? "p-3" : "p-4"
+              )}
+            >
               <FieldGroup>
                 <Collapsible
                   open={strategyOpen}
                   onOpenChange={handleStrategyOpenChange}
                   className="group/collapsible"
                 >
-                  <div className="flex items-center gap-1 space-y-6">
+                  <div className="flex items-center gap-1">
                     <div>
                       <p className="text-md">Strategy</p>
                       <p className="text-sm text-muted-foreground">
@@ -659,14 +682,19 @@ export function StrategyForm({
               </FieldGroup>
             </FieldSet>
 
-            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+            <FieldSet
+              className={cn(
+                "space-y-4 rounded-2xl shadow-sm",
+                isCompact ? "p-3" : "p-4"
+              )}
+            >
               <FieldGroup>
                 <Collapsible
                   open={parametersOpen}
                   onOpenChange={handleParametersOpenChange}
                   className="group/collapsible"
                 >
-                  <div className="flex items-center gap-1 space-y-6">
+                  <div className="flex items-center gap-1">
                     <div>
                       <p className="text-md">Parameters</p>
                       <p className="text-sm text-muted-foreground">
@@ -695,14 +723,19 @@ export function StrategyForm({
               </FieldGroup>
             </FieldSet>
 
-            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+            <FieldSet
+              className={cn(
+                "space-y-4 rounded-2xl shadow-sm",
+                isCompact ? "p-3" : "p-4"
+              )}
+            >
               <FieldGroup>
                 <Collapsible
                   open={subscriptionOpen}
                   onOpenChange={handleSubscriptionOpenChange}
                   className="group/collapsible"
                 >
-                  <div className="flex items-center gap-1 space-y-6">
+                  <div className="flex items-center gap-1">
                     <div>
                       <p className="text-md">Subscription and caching</p>
                       <p className="text-sm text-muted-foreground">
@@ -838,14 +871,19 @@ export function StrategyForm({
               </FieldGroup>
             </FieldSet>
 
-            <FieldSet className="space-y-4 rounded-2xl p-4 shadow-sm">
+            <FieldSet
+              className={cn(
+                "space-y-4 rounded-2xl shadow-sm",
+                isCompact ? "p-3" : "p-4"
+              )}
+            >
               <FieldGroup>
                 <Collapsible
                   open={broadcastOpen}
                   onOpenChange={handleBroadcastOpenChange}
                   className="group/collapsible"
                 >
-                  <div className="flex items-center gap-1 space-y-6">
+                  <div className="flex items-center gap-1">
                     <div>
                       <p className="text-md">Broadcast</p>
                       <p className="text-sm text-muted-foreground">
