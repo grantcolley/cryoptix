@@ -621,7 +621,7 @@ export function StrategyForm({
                         variant="outline"
                         size="icon"
                         aria-label="Toggle details"
-                        className="p-0"
+                        className="ml-auto p-0"
                       >
                         <Icon icon={strategyOpen ? icons.minus : icons.plus} />
                       </Button>
@@ -707,7 +707,7 @@ export function StrategyForm({
                         variant="outline"
                         size="icon"
                         aria-label="Toggle details"
-                        className="p-0"
+                        className="ml-auto p-0"
                       >
                         <Icon
                           icon={parametersOpen ? icons.minus : icons.plus}
@@ -748,7 +748,7 @@ export function StrategyForm({
                         variant="outline"
                         size="icon"
                         aria-label="Toggle details"
-                        className="p-0"
+                        className="ml-auto p-0"
                       >
                         <Icon
                           icon={subscriptionOpen ? icons.minus : icons.plus}
@@ -896,7 +896,7 @@ export function StrategyForm({
                         variant="outline"
                         size="icon"
                         aria-label="Toggle details"
-                        className="p-0"
+                        className="ml-auto p-0"
                       >
                         <Icon icon={broadcastOpen ? icons.minus : icons.plus} />
                       </Button>
