@@ -612,7 +612,7 @@ export function StrategyForm({
                     <div>
                       <p className="text-md">Strategy</p>
                       <p className="text-sm text-muted-foreground">
-                        Core strategy metadata and runtime selections.
+                        Core strategy metadata.
                       </p>
                     </div>
 
@@ -739,7 +739,7 @@ export function StrategyForm({
                     <div>
                       <p className="text-md">Subscription and caching</p>
                       <p className="text-sm text-muted-foreground">
-                        Kline, trade, cache, and processor buffer settings.
+                        Kline, trade, cache, and processor settings.
                       </p>
                     </div>
 
@@ -887,7 +887,7 @@ export function StrategyForm({
                     <div>
                       <p className="text-md">Broadcast</p>
                       <p className="text-sm text-muted-foreground">
-                        Broadcast channel capacities and overflow behavior.
+                        Broadcast channel behavior.
                       </p>
                     </div>
 
