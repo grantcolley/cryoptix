@@ -8,7 +8,12 @@ namespace Cryoptix.Strategy.Cache
         private readonly int _maxKlinesPerSeries;
         private readonly int _maxIndicatorsPerSeries;
         private readonly int _maxSignalsPerSeries;
-        private readonly object _gate = new();
+
+        private readonly object _symbolsGate = new();
+        private readonly object _klinesGate = new();
+        private readonly object _tradesGate = new();
+        private readonly object _indicatorsGate = new();
+        private readonly object _signalsGate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
@@ -30,16 +35,11 @@ namespace Cryoptix.Strategy.Cache
             _maxSignalsPerSeries = maxSignalsPerSeries;
         }
 
-        /// <summary>
-        /// Replaces the currently cached exchange symbols with the provided list.
-        /// This operation is atomic and will overwrite any existing symbol set.
-        /// </summary>
-        /// <param name="symbols">Collection of exchange symbols to cache.</param>
         public void SetSymbols(IEnumerable<Symbol> symbols)
         {
             ArgumentNullException.ThrowIfNull(symbols);
 
-            lock (_gate)
+            lock (_symbolsGate)
             {
                 _symbols.Clear();
 
@@ -48,61 +48,47 @@ namespace Cryoptix.Strategy.Cache
                     if (s == null || string.IsNullOrWhiteSpace(s.Name))
                         continue;
 
-                    _symbols.Add(new Symbol { Name = NormalizeSymbol(s.Name), Exchange = s.Exchange, NameDelimiter = s.NameDelimiter, ExchangeSymbol = s.ExchangeSymbol, BaseAsset = s.BaseAsset, BaseAssetPrecision = s.BaseAssetPrecision, QuoteAsset = s.QuoteAsset, QuoteAssetPrecision = s.QuoteAssetPrecision, NotionalMinimumValue = s.NotionalMinimumValue, TickSize = s.TickSize, LotSize = s.LotSize });
+                    _symbols.Add(new Symbol
+                    {
+                        Name = NormalizeSymbol(s.Name),
+                        Exchange = s.Exchange,
+                        NameDelimiter = s.NameDelimiter,
+                        ExchangeSymbol = s.ExchangeSymbol,
+                        BaseAsset = s.BaseAsset,
+                        BaseAssetPrecision = s.BaseAssetPrecision,
+                        QuoteAsset = s.QuoteAsset,
+                        QuoteAssetPrecision = s.QuoteAssetPrecision,
+                        NotionalMinimumValue = s.NotionalMinimumValue,
+                        TickSize = s.TickSize,
+                        LotSize = s.LotSize
+                    });
                 }
             }
         }
 
-        /// <summary>
-        /// Attempts to resolve the canonical cached symbol for the provided strategy symbol.
-        /// Returns null if no matching symbol is present in the cache.
-        /// </summary>
-        /// <param name="strategySymbol">Strategy symbol to resolve.</param>
-        /// <returns>Canonical cached symbol or null if not found.</returns>
         public Symbol? GetSymbolForStrategy(string strategySymbol)
         {
             if (string.IsNullOrWhiteSpace(strategySymbol))
                 return null;
+
             string normalized = NormalizeSymbol(strategySymbol);
 
-            lock (_gate)
+            lock (_symbolsGate)
             {
-                var found = _symbols.FirstOrDefault(s => string.Equals(s.ExchangeSymbol, normalized, StringComparison.OrdinalIgnoreCase));
-                return found;
+                return _symbols.FirstOrDefault(s =>
+                    string.Equals(s.ExchangeSymbol, normalized, StringComparison.OrdinalIgnoreCase));
             }
         }
 
-        private sealed class SymbolComparer : IEqualityComparer<Symbol>
-        {
-            public static readonly SymbolComparer Instance = new SymbolComparer();
-
-            public bool Equals(Symbol? x, Symbol? y)
-            {
-                if (ReferenceEquals(x, y)) return true;
-                if (x is null || y is null) return false;
-                return string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode(Symbol obj)
-            {
-                return obj.Name?.ToUpperInvariant().GetHashCode() ?? 0;
-            }
-        }
-
-        /// <summary>
-        /// Upserts a computed indicator result for the specified symbol.
-        /// The result is stored by its TimestampUtc and the series will be trimmed to the configured maximum.
-        /// </summary>
-        /// <param name="symbol">Trading symbol for which the indicator was computed.</param>
-        /// <param name="indicators">Computed indicator result.</param>
         public void UpsertIndicators(string symbol, Market.Strategy.Indicators indicators)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
             ArgumentNullException.ThrowIfNull(indicators);
 
-            lock (_gate)
+            lock (_indicatorsGate)
             {
                 string key = NormalizeSymbol(symbol);
+
                 if (!_indicators.TryGetValue(key, out var series))
                 {
                     series = new SortedDictionary<DateTime, Market.Strategy.Indicators>();
@@ -119,18 +105,14 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
-        /// <summary>
-        /// Retrieves computed indicators for the specified symbol in chronological order.
-        /// </summary>
-        /// <param name="symbol">Trading symbol to query.</param>
-        /// <returns>List of indicator computation results for the symbol.</returns>
         public IReadOnlyList<Market.Strategy.Indicators> GetIndicators(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
 
-            lock (_gate)
+            lock (_indicatorsGate)
             {
                 string key = NormalizeSymbol(symbol);
+
                 if (!_indicators.TryGetValue(key, out var series))
                     return [];
 
@@ -138,18 +120,15 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
-        /// <summary>
-        /// Upserts a evaluated signal for the specified symbol.
-        /// The result is stored by its TimestampUtc and the series will be trimmed to the configured maximum.
-        /// </summary>
         public void UpsertSignal(string symbol, Market.Strategy.Signal signal)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
             ArgumentNullException.ThrowIfNull(signal);
 
-            lock (_gate)
+            lock (_signalsGate)
             {
                 string key = NormalizeSymbol(symbol);
+
                 if (!_signals.TryGetValue(key, out var series))
                 {
                     series = new SortedDictionary<DateTime, Market.Strategy.Signal>();
@@ -166,20 +145,18 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
-        /// <summary>
-        /// Retrieves evaluated signals for the specified symbol in chronological order.
-        /// </summary>
         public IReadOnlyList<Market.Strategy.Signal> GetSignals(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
 
-            lock (_gate)
+            lock (_signalsGate)
             {
                 string key = NormalizeSymbol(symbol);
-                if (!_signals.TryGetValue(key, out var series))
-                    return Array.Empty<Market.Strategy.Signal>();
 
-                return series.Values.Select(CloneSignal).ToList();
+                if (!_signals.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneSignal)];
             }
         }
 
@@ -187,7 +164,7 @@ namespace Cryoptix.Strategy.Cache
         {
             ArgumentNullException.ThrowIfNull(kline);
 
-            lock (_gate)
+            lock (_klinesGate)
             {
                 string symbol = NormalizeSymbol(kline.Symbol!);
                 var key = (symbol, kline.Interval);
@@ -199,6 +176,7 @@ namespace Cryoptix.Strategy.Cache
                 }
 
                 bool existed = series.TryGetValue(kline.OpenTime, out Kline? existing);
+
                 series[kline.OpenTime] = CloneKline(kline);
 
                 while (series.Count > _maxKlinesPerSeries)
@@ -226,11 +204,26 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_klinesGate)
+            {
+                var key = (NormalizeSymbol(symbol), interval);
+
+                if (!_klines.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneKline)];
+            }
+        }
+
         public bool AddTrade(Trade trade)
         {
             ArgumentNullException.ThrowIfNull(trade);
 
-            lock (_gate)
+            lock (_tradesGate)
             {
                 string symbol = NormalizeSymbol(trade.Symbol!);
 
@@ -254,6 +247,7 @@ namespace Cryoptix.Strategy.Cache
                 while (trades.Count > _maxTradesPerSymbol)
                 {
                     LinkedListNode<Trade>? oldest = trades.First;
+
                     if (oldest == null)
                         break;
 
@@ -265,27 +259,14 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
-        public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_gate)
-            {
-                var key = (NormalizeSymbol(symbol), interval);
-                if (!_klines.TryGetValue(key, out var series))
-                    return [];
-
-                return [.. series.Values.Select(CloneKline)];
-            }
-        }
-
         public IReadOnlyList<Trade> GetTrades(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
 
-            lock (_gate)
+            lock (_tradesGate)
             {
                 symbol = NormalizeSymbol(symbol);
+
                 if (!_trades.TryGetValue(symbol, out var trades))
                     return [];
 
@@ -293,8 +274,25 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
-        private static string NormalizeSymbol(string symbol) =>
-            symbol.Trim().ToUpperInvariant();
+        private sealed class SymbolComparer : IEqualityComparer<Symbol>
+        {
+            public static readonly SymbolComparer Instance = new();
+
+            public bool Equals(Symbol? x, Symbol? y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+
+                return string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public int GetHashCode(Symbol obj)
+            {
+                return obj.Name?.ToUpperInvariant().GetHashCode() ?? 0;
+            }
+        }
+
+        private static string NormalizeSymbol(string symbol) => symbol.Trim().ToUpperInvariant();
 
         private static bool AreEquivalent(Kline x, Kline y)
         {
