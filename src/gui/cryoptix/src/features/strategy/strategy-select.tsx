@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 interface StrategySelectProps {
   isOpen: boolean;
@@ -38,15 +39,19 @@ export function StrategySelect({
   const [isSubscriptionOpen, setIsSubscriptionOpen] = React.useState(true);
   const [isParametersOpen, setIsParametersOpen] = React.useState(true);
   const [isBroadcastOpen, setIsBroadcastOpen] = React.useState(true);
+  const hasVisibleContent = canSelectStrategy || (isOpen && strategy !== null);
 
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={onOpenChange}
-      className="group/collapsible grid auto-rows-min rounded-xl px-4 py-2"
+      className={cn(
+        "group/collapsible grid auto-rows-min rounded-xl px-4",
+        hasVisibleContent && "py-1"
+      )}
     >
       {canSelectStrategy && (
-        <div className="flex items-center gap-1 py-2">
+        <div className="flex items-center gap-1 py-1">
           <Select
             value={selectedStrategyId}
             onValueChange={onStrategyChange}
@@ -68,11 +73,12 @@ export function StrategySelect({
       )}
 
       {strategy && (
-        <CollapsibleContent className="flex flex-col gap-2 pt-2 pb-2">
+        <CollapsibleContent className="flex flex-col gap-2 py-1">
           <StrategyForm
             key={`${strategy.strategyId}-${strategyFormVersion}`}
             defaultValues={strategy}
             showSubmitButton={false}
+            isCompact
             isStrategyOpen={isStrategyOpen}
             isReadOnly={!canSelectStrategy}
             showParametersOnly={showParametersOnly}
