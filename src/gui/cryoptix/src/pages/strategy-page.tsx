@@ -412,11 +412,13 @@ export function StrategyPage() {
         continue;
       }
 
+      const color = getIndicatorSeriesColor(index);
       const indicatorSeries = chart.addSeries(LineSeries, {
-        color: getIndicatorSeriesColor(index),
+        color,
         lineWidth: 2,
-        priceLineVisible: false,
-        lastValueVisible: false,
+        priceLineColor: color,
+        priceLineVisible: true,
+        lastValueVisible: true,
         priceScaleId: "right",
       });
 
@@ -932,6 +934,8 @@ export function StrategyPage() {
       borderDownColor: "#dc2626",
       wickUpColor: "#16a34a",
       wickDownColor: "#dc2626",
+      priceLineColor: PRICE_SERIES_COLOR,
+      lastValueVisible: true,
       visible: isChartSeriesVisible(PRICE_SERIES_KEY),
     });
 
