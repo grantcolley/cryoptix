@@ -462,10 +462,7 @@ export function StrategyPage() {
       return;
     }
 
-    const visibleKlineCount = Math.min(
-      klineCount,
-      INITIAL_VISIBLE_KLINE_LIMIT
-    );
+    const visibleKlineCount = Math.min(klineCount, INITIAL_VISIBLE_KLINE_LIMIT);
     const initialBarSpacing = Math.max(
       MIN_INITIAL_BAR_SPACING,
       Math.min(
