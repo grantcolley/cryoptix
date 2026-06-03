@@ -56,10 +56,13 @@ type ChartSeriesLabelPosition = {
 };
 
 const PRICE_SERIES_KEY = "price";
-const PRICE_SERIES_COLOR = "#16a34a";
+const PRICE_SERIES_UP_COLOR = "#16a34a";
+const PRICE_SERIES_DOWN_COLOR = "#dc2626";
+const PRICE_SERIES_COLOR = PRICE_SERIES_UP_COLOR;
 const INITIAL_VISIBLE_KLINE_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
+const MANUAL_SCROLL_THRESHOLD = 0.5;
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -72,6 +75,44 @@ const INDICATOR_SERIES_COLORS = [
 
 const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
+
+const chartTimeAxisFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+const chartTimeCrosshairFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
+function chartTimeToDate(time: Time): Date | null {
+  if (typeof time === "number") {
+    return new Date(time * 1000);
+  }
+
+  if (typeof time === "string") {
+    const [year, month, day] = time.split("-").map(Number);
+
+    if (!year || !month || !day) {
+      return null;
+    }
+
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date(time.year, time.month - 1, time.day);
+}
+
+function formatChartLocalTime(
+  time: Time,
+  formatter: Intl.DateTimeFormat
+): string {
+  const date = chartTimeToDate(time);
+
+  return date ? formatter.format(date) : "";
+}
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
@@ -132,6 +173,8 @@ export function StrategyPage() {
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
   >(new Map());
+  const hasAppliedInitialVisibleKlineRangeRef = React.useRef(false);
+  const hasUserInteractedWithChartRef = React.useRef(false);
 
   const notificationConnectionRef = React.useRef<ReturnType<
     typeof createSignalRConnection
@@ -231,6 +274,28 @@ export function StrategyPage() {
     return items.sort((a, b) => a.time - b.time);
   }, []);
 
+  const getPriceSeriesColor = (candle: CandlestickData<UTCTimestamp>) =>
+    candle.close < candle.open
+      ? PRICE_SERIES_DOWN_COLOR
+      : PRICE_SERIES_UP_COLOR;
+
+  const getLatestCandle = React.useCallback(
+    () => sortByTime([...candleDataByTimeRef.current.values()]).at(-1) ?? null,
+    [sortByTime]
+  );
+
+  const syncPriceSeriesColor = React.useCallback(() => {
+    const latestCandle = getLatestCandle();
+
+    if (!latestCandle) {
+      return;
+    }
+
+    candleSeriesRef.current?.applyOptions({
+      priceLineColor: getPriceSeriesColor(latestCandle),
+    });
+  }, [getLatestCandle]);
+
   const toIndicatorSeriesData = (
     indicators: Indicators[]
   ): IndicatorSeriesData[] => {
@@ -271,20 +336,6 @@ export function StrategyPage() {
 
     return markers.sort((a, b) => Number(a.time) - Number(b.time));
   };
-
-  const applySignalMarkersToChart = React.useCallback(() => {
-    const candleSeries = candleSeriesRef.current;
-
-    if (!candleSeries) {
-      return;
-    }
-
-    const signalMarkers =
-      signalMarkersRef.current ?? createSeriesMarkers(candleSeries);
-
-    signalMarkersRef.current = signalMarkers;
-    signalMarkers.setMarkers(signalMarkersDataRef.current);
-  }, []);
 
   const clearIndicatorSeries = React.useCallback(() => {
     const chart = chartApiRef.current;
@@ -361,6 +412,53 @@ export function StrategyPage() {
     setChartSeriesLabelPositions(nextLabelPositions);
   }, []);
 
+  const preserveVisibleLogicalRange = React.useCallback(
+    (applyChartChanges: () => void, afterChartChanges?: () => void) => {
+      const chart = chartApiRef.current;
+      const timeScale = chart?.timeScale();
+      const shouldPreserveVisibleRange =
+        hasUserInteractedWithChartRef.current &&
+        hasAppliedInitialVisibleKlineRangeRef.current &&
+        timeScale !== undefined &&
+        Math.abs(timeScale.scrollPosition()) > MANUAL_SCROLL_THRESHOLD;
+      const visibleLogicalRange = shouldPreserveVisibleRange
+        ? timeScale.getVisibleLogicalRange()
+        : null;
+
+      applyChartChanges();
+
+      if (timeScale && visibleLogicalRange) {
+        timeScale.setVisibleLogicalRange(visibleLogicalRange);
+        afterChartChanges?.();
+
+        window.requestAnimationFrame(() => {
+          timeScale.setVisibleLogicalRange(visibleLogicalRange);
+          afterChartChanges?.();
+        });
+        return;
+      }
+
+      afterChartChanges?.();
+    },
+    []
+  );
+
+  const applySignalMarkersToChart = React.useCallback(() => {
+    const candleSeries = candleSeriesRef.current;
+
+    if (!candleSeries) {
+      return;
+    }
+
+    preserveVisibleLogicalRange(() => {
+      const signalMarkers =
+        signalMarkersRef.current ?? createSeriesMarkers(candleSeries);
+
+      signalMarkersRef.current = signalMarkers;
+      signalMarkers.setMarkers(signalMarkersDataRef.current);
+    }, updateChartSeriesLabelPositions);
+  }, [preserveVisibleLogicalRange, updateChartSeriesLabelPositions]);
+
   const addIndicatorSeriesToChart = React.useCallback(() => {
     const chart = chartApiRef.current;
 
@@ -368,58 +466,83 @@ export function StrategyPage() {
       return;
     }
 
-    clearIndicatorSeries();
+    preserveVisibleLogicalRange(
+      () => {
+        clearIndicatorSeries();
 
-    const indicatorSeriesByKey = new Map<string, ISeriesApi<"Line">>();
+        const indicatorSeriesByKey = new Map<string, ISeriesApi<"Line">>();
 
-    for (const [
-      index,
-      { key, data },
-    ] of indicatorSeriesDataRef.current.entries()) {
-      if (!isChartSeriesVisible(key)) {
-        continue;
-      }
+        for (const [
+          index,
+          { key, data },
+        ] of indicatorSeriesDataRef.current.entries()) {
+          if (!isChartSeriesVisible(key)) {
+            continue;
+          }
 
-      const color = getIndicatorSeriesColor(index);
-      const indicatorSeries = chart.addSeries(LineSeries, {
-        color,
-        lineWidth: 2,
-        priceLineColor: color,
-        priceLineVisible: true,
-        lastValueVisible: true,
-        priceScaleId: "right",
-      });
+          const color = getIndicatorSeriesColor(index);
+          const indicatorSeries = chart.addSeries(LineSeries, {
+            color,
+            lineWidth: 2,
+            priceLineColor: color,
+            priceLineVisible: true,
+            lastValueVisible: true,
+            priceScaleId: "right",
+          });
 
-      indicatorSeries.setData(data);
-      indicatorSeriesByKey.set(key, indicatorSeries);
-    }
+          indicatorSeries.setData(data);
+          indicatorSeriesByKey.set(key, indicatorSeries);
+        }
 
-    indicatorSeriesByKeyRef.current = indicatorSeriesByKey;
-    updateChartSeriesLabelPositions();
-  }, [clearIndicatorSeries, updateChartSeriesLabelPositions]);
+        indicatorSeriesByKeyRef.current = indicatorSeriesByKey;
+      },
+      updateChartSeriesLabelPositions
+    );
+  }, [
+    clearIndicatorSeries,
+    preserveVisibleLogicalRange,
+    updateChartSeriesLabelPositions,
+  ]);
 
   const applyKlinesToChart = (klines: Kline[], replace = false) => {
     const candleSeries = candleSeriesRef.current;
+    const nextCandles = klines.map(toCandleData);
 
     if (replace) {
       candleDataByTimeRef.current = new Map();
     }
 
-    for (const kline of klines) {
-      const candle = toCandleData(kline);
+    for (const candle of nextCandles) {
       candleDataByTimeRef.current.set(candle.time, candle);
+    }
 
-      if (!replace && candleSeries) {
-        candleSeries.update(candle);
-      }
+    if (!replace && candleSeries) {
+      preserveVisibleLogicalRange(
+        () => {
+          for (const candle of nextCandles) {
+            candleSeries.update(candle);
+          }
+          syncPriceSeriesColor();
+        },
+        updateChartSeriesLabelPositions
+      );
+    }
+
+    if (!replace && !candleSeries) {
+      return;
     }
 
     if (replace && candleSeries) {
-      candleSeries.setData(
-        sortByTime([...candleDataByTimeRef.current.values()])
+      preserveVisibleLogicalRange(
+        () => {
+          candleSeries.setData(
+            sortByTime([...candleDataByTimeRef.current.values()])
+          );
+          syncPriceSeriesColor();
+        },
+        updateChartSeriesLabelPositions
       );
       applyInitialVisibleKlineRange();
-      updateChartSeriesLabelPositions();
     }
   };
 
@@ -428,7 +551,12 @@ export function StrategyPage() {
     const container = chartRef.current;
     const klineCount = candleDataByTimeRef.current.size;
 
-    if (!chart || !container || klineCount === 0) {
+    if (
+      !chart ||
+      !container ||
+      klineCount === 0 ||
+      hasAppliedInitialVisibleKlineRangeRef.current
+    ) {
       return;
     }
 
@@ -445,6 +573,7 @@ export function StrategyPage() {
       barSpacing: initialBarSpacing,
     });
     chart.timeScale().scrollToPosition(0, false);
+    hasAppliedInitialVisibleKlineRangeRef.current = true;
   };
 
   const applyIndicatorsToChart = (indicators: Indicators[]) => {
@@ -509,6 +638,8 @@ export function StrategyPage() {
     candleDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
+    hasAppliedInitialVisibleKlineRangeRef.current = false;
+    hasUserInteractedWithChartRef.current = false;
     chartSeriesVisibilityRef.current = { [PRICE_SERIES_KEY]: true };
     setShowChart(false);
     setIndicatorSeriesKeys([]);
@@ -841,6 +972,10 @@ export function StrategyPage() {
       crosshair: {
         mode: CrosshairMode.Normal,
       },
+      localization: {
+        timeFormatter: (time: Time) =>
+          formatChartLocalTime(time, chartTimeCrosshairFormatter),
+      },
       rightPriceScale: {
         borderColor: "#cbd5e1",
       },
@@ -852,16 +987,18 @@ export function StrategyPage() {
         borderColor: "#cbd5e1",
         timeVisible: true,
         secondsVisible: true,
+        tickMarkFormatter: (time: Time) =>
+          formatChartLocalTime(time, chartTimeAxisFormatter),
       },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "#16a34a",
-      downColor: "#dc2626",
-      borderUpColor: "#16a34a",
-      borderDownColor: "#dc2626",
-      wickUpColor: "#16a34a",
-      wickDownColor: "#dc2626",
+      upColor: PRICE_SERIES_UP_COLOR,
+      downColor: PRICE_SERIES_DOWN_COLOR,
+      borderUpColor: PRICE_SERIES_UP_COLOR,
+      borderDownColor: PRICE_SERIES_DOWN_COLOR,
+      wickUpColor: PRICE_SERIES_UP_COLOR,
+      wickDownColor: PRICE_SERIES_DOWN_COLOR,
       priceLineColor: PRICE_SERIES_COLOR,
       lastValueVisible: true,
       visible: isChartSeriesVisible(PRICE_SERIES_KEY),
@@ -871,20 +1008,42 @@ export function StrategyPage() {
     candleSeriesRef.current = candleSeries;
 
     candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+    syncPriceSeriesColor();
     applySignalMarkersToChart();
     addIndicatorSeriesToChart();
     applyInitialVisibleKlineRange();
     updateChartSeriesLabelPositions();
 
+    const handleChartInteraction = () => {
+      hasUserInteractedWithChartRef.current = true;
+    };
+
     const handleVisibleTimeRangeChange = () => {
+      if (
+        Math.abs(chart.timeScale().scrollPosition()) <= MANUAL_SCROLL_THRESHOLD
+      ) {
+        hasUserInteractedWithChartRef.current = false;
+      }
+
       updateChartSeriesLabelPositions();
     };
+
+    container.addEventListener("pointerdown", handleChartInteraction);
+    container.addEventListener("wheel", handleChartInteraction, {
+      passive: true,
+    });
+    container.addEventListener("touchstart", handleChartInteraction, {
+      passive: true,
+    });
 
     chart
       .timeScale()
       .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
 
     return () => {
+      container.removeEventListener("pointerdown", handleChartInteraction);
+      container.removeEventListener("wheel", handleChartInteraction);
+      container.removeEventListener("touchstart", handleChartInteraction);
       chart
         .timeScale()
         .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
@@ -902,6 +1061,7 @@ export function StrategyPage() {
     showChart,
     showStrategyRunning,
     sortByTime,
+    syncPriceSeriesColor,
     symbolName,
     updateChartSeriesLabelPositions,
   ]);
