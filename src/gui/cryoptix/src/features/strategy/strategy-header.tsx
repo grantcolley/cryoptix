@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ExchangeLabels } from "@/features/api/schema/exchange";
+import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 
@@ -58,6 +58,10 @@ export function StrategyHeader({
         ? "text-green-600 dark:text-green-400"
         : "text-foreground";
   const valueWidthCh = Math.max(14, valuePrecision + 10);
+  const exchangeLabel =
+    symbolExchange === null || symbolExchange === Exchange.None
+      ? null
+      : ExchangeLabels[symbolExchange];
 
   return (
     <>
@@ -76,11 +80,11 @@ export function StrategyHeader({
           <div className="flex items-center gap-1">
             {hasSymbol ? (
               <>
-                <h4 className="text-sm text-foreground-semimuted mr-2">
-                  {symbolExchange == null
-                    ? null
-                    : ExchangeLabels[symbolExchange]}
-                </h4>
+                {exchangeLabel ? (
+                  <h4 className="text-sm text-foreground-semimuted mr-2">
+                    {exchangeLabel}
+                  </h4>
+                ) : null}
                 <h4 className="text-sm text-foreground-semimuted">
                   {symbolName}
                 </h4>
