@@ -97,7 +97,7 @@ Cryoptix uses Auth0 for authentication and authorization. The implementation is 
 
 [Auth0](https://auth0.com/) offers a free tier and provides an easy-to-use dashboard for registering applications, managing roles, and creating users.
 
-> ![TIP]
+> [!TIP]
 > Read [Securing ASP.Net Minimal Web APIs with Auth0](https://auth0.com/blog/securing-aspnet-minimal-webapis-with-auth0/)
 
 #### Create the Auth0 API
