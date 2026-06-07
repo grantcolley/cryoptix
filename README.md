@@ -36,6 +36,7 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
   * [Running the Application](#running-the-application)
     * [Start the API](#start-the-api)
     * [Start the UI](#start-the-ui)
+* [Running a Strategy](#running-a-strategy)
 * [Deployment](#deployment)	
 * [Disclaimer](#disclaimer)
 * [License](#license)
@@ -223,6 +224,30 @@ The application will be available at:
 
 `http://localhost:5173`
 
+# Running a Strategy
+
+Click the login icon in the upper-right corner of the application.
+
+![Launch Page](/readme-images/cryoptix-ui-launch-page.png?raw=true "Launch Page")
+
+You will be redirected to Auth0 to authenticate.
+
+![Auth0 Login](/readme-images/cryoptix-auth0-login.png?raw=true "Auth0 Login")
+
+After successful authentication, the navigation panel is displayed. Select a Strategy from the menu.
+
+Enter the server URL and click the **Connect to Server** button.
+
+![Connect to server](/readme-images/cryoptix-ui-connect-to-server.png?raw=true "Connect to server")
+
+Select a strategy from the dropdown list.
+
+![Select strategy](/readme-images/cryoptix-ui-select-strategy.png?raw=true "Select strategy")
+
+Click **Start Strategy** to begin execution.
+
+![Cryoptix UI](/readme-images/cryoptix-ui.png?raw=true "Cryoptix UI")
+
 ## Deployment
 
 Deployment documentation will be added in a future release.
@@ -244,4 +269,6 @@ See the [LICENSE](https://github.com/grantcolley/cryoptix/blob/main/LICENSE) fil
 
 - Azure deployment
 - Support multiple exchanges
+- Update strategy parameters in realtime
 - Trading analytics
+- Order execution
