@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and deploy
     env:
-      VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
-      VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
-      VITE_AUTH_AUDIENCE: ${{ secrets.VITE_AUTH_AUDIENCE }}
-      VITE_API_ROUTE_STATUS: ${{ secrets.VITE_API_ROUTE_STATUS }}
-      VITE_API_ROUTE_START: ${{ secrets.VITE_API_ROUTE_START }}
-      VITE_API_ROUTE_STOP: ${{ secrets.VITE_API_ROUTE_STOP }}
-      VITE_API_ROUTE_UPDATE: ${{ secrets.VITE_API_ROUTE_UPDATE }}
-      VITE_API_ROUTE_SUBSCRIBE: ${{ secrets.VITE_API_ROUTE_SUBSCRIBE }}
+      VITE_AUTH_DOMAIN: ${{ vars.VITE_AUTH_DOMAIN }}
+      VITE_AUTH_CLIENT_ID: ${{ vars.VITE_AUTH_CLIENT_ID }}
+      VITE_AUTH_AUDIENCE: ${{ vars.VITE_AUTH_AUDIENCE }}
+      VITE_API_ROUTE_STATUS: ${{ vars.VITE_API_ROUTE_STATUS }}
+      VITE_API_ROUTE_START: ${{ vars.VITE_API_ROUTE_START }}
+      VITE_API_ROUTE_STOP: ${{ vars.VITE_API_ROUTE_STOP }}
+      VITE_API_ROUTE_UPDATE: ${{ vars.VITE_API_ROUTE_UPDATE }}
+      VITE_API_ROUTE_SUBSCRIBE: ${{ vars.VITE_API_ROUTE_SUBSCRIBE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
