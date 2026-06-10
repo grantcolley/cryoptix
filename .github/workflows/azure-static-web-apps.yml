@@ -20,6 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug icon files
+        run: |
+          pwd
+          find . -iname "*invertocat*"
+          ls -la src/gui/src/assets/icons
+          test -f src/gui/src/assets/icons/github_invertocat_white.svg
+          test -f src/gui/src/assets/icons/github_invertocat_black.svg
+
       - name: Build and deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
