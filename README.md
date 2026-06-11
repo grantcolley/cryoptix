@@ -37,7 +37,17 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
     * [Start the API](#start-the-api)
     * [Start the UI](#start-the-ui)
 * [Running a Strategy](#running-a-strategy)
-* [Deployment](#deployment)	
+* [Azure Deployment](#azure-deployment)
+  * [Deploying the Vite + React Web Application](#deploying-the-vite--react-web-application)
+	   * [Azure Static Web Apps Configuration](#azure-static-web-apps-configuration)
+	   * [Create an Azure Static Web App](#create-an-azure-static-web-app)
+	   * [Add the Azure Static Web App URL to Auth0](#add-the-azure-static-web-app-url-to-auth0)
+	   * [Deployment Options](#deployment-options)
+	     * [Manual Deployment Using Azure CLI](#manual-deployment-using-azure-cli)
+	     * [Deployment Using GitHub Actions](#deployment-using-github-actions)
+	       * [GitHub Workflow](#github-workflow)
+        * [Create GitHub Secrets and Variables](#create-github-secrets-and-variables)
+        * [Run the Azure Static Web Apps workflow](#run-the-azure-static-web-apps-workflow)
 * [Disclaimer](#disclaimer)
 * [License](#license)
 * [Roadmap](#roadmap)
@@ -248,10 +258,171 @@ Click **Start Strategy** to begin execution.
 
 ![Cryoptix UI](/readme-images/cryoptix-ui.png?raw=true "Cryoptix UI")
 
-## Deployment
+# Azure Deployment
 
-Deployment documentation will be added in a future release.
+Create an Azure account using the free tier.
 
+> [!NOTE]
+> 
+>This section covers deployment of the React UI to Azure Static Web Apps.
+Deployment guidance for the ASP.NET Core Web API will be added in a future release.
+
+## Deploying the Vite + React Web Application
+
+### Azure Static Web Apps Configuration
+
+The file `public/staticwebapp.config.json` enables client-side routing for the React application.
+
+Without this configuration, refreshing or directly navigating to a route such as `/strategies/foo` would return a 404 from Azure Static Web Apps. The `navigationFallback` rule ensures that unmatched routes are rewritten to `index.html`, allowing React Router to handle navigation.
+
+```JSON
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/icons/*", "/favicon.ico", "/favicon.svg", "/manifest.webmanifest"]
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  }
+}
+```
+
+### Create an Azure Static Web App
+
+Create an Azure Static Web App using the following settings:
+
+- Hosting Plan: `Free`
+- Deployment Source: `Other`
+
+### Add the Azure Static Web App URL to Auth0
+
+Log in to Auth0 and open the Cryoptix application configuration.
+
+Under Application URIs, add the Azure Static Web App URL.
+
+> [!WARNING]
+>
+> Failing to add the Azure Static Web App URL will prevent users from authenticating successfully.
+
+### Deployment Options
+
+#### Manual Deployment Using Azure CLI
+
+Documentation for manual deployment using the Azure CLI will be added in a future release.
+
+#### Deployment Using GitHub Actions
+
+##### GitHub Workflow
+
+The workflow file `.github/workflows/azure-static-web-apps.yml` is configured for manual deployment and is automatically available in GitHub Actions.
+
+```YAML
+name: Azure Static Web Apps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and deploy
+    env:
+      VITE_AUTH_DOMAIN: ${{ vars.VITE_AUTH_DOMAIN }}
+      VITE_AUTH_CLIENT_ID: ${{ vars.VITE_AUTH_CLIENT_ID }}
+      VITE_AUTH_AUDIENCE: ${{ vars.VITE_AUTH_AUDIENCE }}
+      VITE_API_ROUTE_STATUS: ${{ vars.VITE_API_ROUTE_STATUS }}
+      VITE_API_ROUTE_START: ${{ vars.VITE_API_ROUTE_START }}
+      VITE_API_ROUTE_STOP: ${{ vars.VITE_API_ROUTE_STOP }}
+      VITE_API_ROUTE_UPDATE: ${{ vars.VITE_API_ROUTE_UPDATE }}
+      VITE_API_ROUTE_SUBSCRIBE: ${{ vars.VITE_API_ROUTE_SUBSCRIBE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: src/gui
+          api_location: ""
+          output_location: dist
+          app_build_command: npm run build
+```
+
+##### Create GitHub Secrets and Variables
+
+Navigate to:
+
+GitHub → Repository → Settings → Secrets and variables → Actions
+
+Create the following repository secret:
+
+| Secret Name | 
+| --- |
+| ``AZURE_STATIC_WEB_APPS_API_TOKEN`` | 
+
+Copy the Azure Static Web App deployment token into this secret.
+
+Create the following repository variables:
+
+| Variable Name | Value |
+| --- | --- |
+| ``VITE_AUTH_DOMAIN`` | *your_auth0_domain* |
+| ``VITE_AUTH_CLIENT_ID`` | *your_auth0_app_client_id* |
+| ``VITE_AUTH_AUDIENCE`` | *your_auth0_api_audience* |
+| ``VITE_API_ROUTE_STATUS`` | api/strategy/status |
+| ``VITE_API_ROUTE_START`` | api/strategy/start |
+| ``VITE_API_ROUTE_STOP`` | api/strategy/stop |
+| ``VITE_API_ROUTE_UPDATE`` | api/strategy/update |
+| ``VITE_API_ROUTE_SUBSCRIBE`` | api/strategy/subscribe |
+
+**How GitHub Actions + Vite interact:**
+
+**1. GitHub Actions starts a workflow**
+
+GitHub provisions a clean Linux build environment and checks out the repository.
+
+The environment contains:
+- Node.js
+- Repository source code
+- Repository secrets
+- Repository variables
+
+**2. GitHub Actions Provides Environment Variables**
+
+The workflow injects the configured variables into the build environment:
+
+```yaml
+env:
+  VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+  VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
+```
+
+**3. Vite Builds the Application**
+
+GitHub Actions executes:
+
+`npm run build`
+
+During the build, Vite:
+-Reads environment variables
+-Exposes them through `import.meta.env`
+-Executes configuration validation
+-Produces the final static assets in `dist/`
+
+**4. Azure Receives the Built Application**
+
+The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
+
+Azure only receives the final compiled static assets and does not execute the application build process itself.
+
+##### Run the Azure Static Web Apps workflow
+
+Open GitHub Actions, select Azure Static Web Apps, and click Run workflow.
+
+![GitHub Action Azure Static Web App](/readme-images/github-action-azure-static-web-apps.png?raw=true "GitHub Action Azure Static Web App")
+ 
 ## Disclaimer
 
 Cryoptix is provided for educational and research purposes only.
