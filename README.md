@@ -42,12 +42,10 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
 	   * [Azure Static Web Apps Configuration](#azure-static-web-apps-configuration)
 	   * [Create an Azure Static Web App](#create-an-azure-static-web-app)
 	   * [Add the Azure Static Web App URL to Auth0](#add-the-azure-static-web-app-url-to-auth0)
-	   * [Deployment Options](#deployment-options)
-	     * [Manual Deployment Using Azure CLI](#manual-deployment-using-azure-cli)
-	     * [Deployment Using GitHub Actions](#deployment-using-github-actions)
-	       * [GitHub Workflow](#github-workflow)
-           * [Create GitHub Secrets and Variables](#create-github-secrets-and-variables)
-           * [Run the Azure Static Web Apps workflow](#run-the-azure-static-web-apps-workflow)
+	   * [Deployment Using GitHub Actions](#deployment-using-github-actions)
+	     * [GitHub Workflow](#github-workflow)
+         * [Create GitHub Secrets and Variables](#create-github-secrets-and-variables)
+         * [Run the Azure Static Web Apps workflow](#run-the-azure-static-web-apps-workflow)
 * [Disclaimer](#disclaimer)
 * [License](#license)
 * [Roadmap](#roadmap)
@@ -304,15 +302,9 @@ Under Application URIs, add the Azure Static Web App URL.
 >
 > Failing to add the Azure Static Web App URL will prevent users from authenticating successfully.
 
-### Deployment Options
+### Deployment Using GitHub Actions
 
-#### Manual Deployment Using Azure CLI
-
-Documentation for manual deployment using the Azure CLI will be added in a future release.
-
-#### Deployment Using GitHub Actions
-
-##### GitHub Workflow
+#### GitHub Workflow
 
 The workflow file `.github/workflows/azure-static-web-apps.yml` is configured for manual deployment and is automatically available in GitHub Actions.
 
@@ -350,7 +342,7 @@ jobs:
           app_build_command: npm run build
 ```
 
-##### Create GitHub Secrets and Variables
+#### Create GitHub Secrets and Variables
 
 Navigate to:
 
@@ -419,7 +411,7 @@ The deployment step uploads the generated `dist/` folder to Azure Static Web App
 Azure only receives the final compiled static assets and does not execute the application build process itself.
 </details>
 
-##### Run the Azure Static Web Apps workflow
+#### Run the Azure Static Web Apps workflow
 
 Open GitHub Actions, select Azure Static Web Apps, and click Run workflow.
 
