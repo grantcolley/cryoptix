@@ -377,8 +377,9 @@ Create the following repository variables:
 | ``VITE_API_ROUTE_UPDATE`` | api/strategy/update |
 | ``VITE_API_ROUTE_SUBSCRIBE`` | api/strategy/subscribe |
 
-**How GitHub Actions + Vite interact:**
-
+<details>
+<summary>How GitHub Actions + Vite interact</summary>
+	
 **1. GitHub Actions starts a workflow**
 
 GitHub provisions a clean Linux build environment and checks out the repository.
@@ -416,6 +417,7 @@ During the build, Vite:
 The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
 
 Azure only receives the final compiled static assets and does not execute the application build process itself.
+</details>
 
 ##### Run the Azure Static Web Apps workflow
 
