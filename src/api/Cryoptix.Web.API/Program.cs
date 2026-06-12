@@ -71,18 +71,8 @@ builder.Services.Configure<AuthOptions>(builder.Configuration.GetRequiredSection
 
 builder.Host.UseSerilog((ctx, lc) =>
 {
-    // %HOME% exists on App Service (Windows + Linux). On Windows it maps to D:\home.
-    var home = Environment.GetEnvironmentVariable("HOME") ?? "";
-    var logDir = Path.Combine(home, "LogFiles", "Application");
-    Directory.CreateDirectory(logDir);
-
     lc.ReadFrom.Configuration(ctx.Configuration)
-      .WriteTo.Console()
-      .WriteTo.File(
-          path: Path.Combine(logDir, "cryoptix-.log"),
-          rollingInterval: RollingInterval.Day,
-          retainedFileCountLimit: 7,
-          shared: true);
+      .WriteTo.Console();
 });
 
 // Add services to the container.
