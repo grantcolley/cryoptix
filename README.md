@@ -369,47 +369,47 @@ Create the following repository variables:
 | ``VITE_API_ROUTE_UPDATE`` | api/strategy/update |
 | ``VITE_API_ROUTE_SUBSCRIBE`` | api/strategy/subscribe |
 
-<details>
-<summary>How GitHub Actions + Vite interact</summary>
-	
-**1. GitHub Actions starts a workflow**
-
-GitHub provisions a clean Linux build environment and checks out the repository.
-
-The environment contains:
-- Node.js
-- Repository source code
-- Repository secrets
-- Repository variables
-
-**2. GitHub Actions Provides Environment Variables**
-
-The workflow injects the configured variables into the build environment:
-
-```yaml
-env:
-  VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
-  VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
-```
-
-**3. Vite Builds the Application**
-
-GitHub Actions executes:
-
-`npm run build`
-
-During the build, Vite:
--Reads environment variables
--Exposes them through `import.meta.env`
--Executes configuration validation
--Produces the final static assets in `dist/`
-
-**4. Azure Receives the Built Application**
-
-The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
-
-Azure only receives the final compiled static assets and does not execute the application build process itself.
-</details>
+> [!TIP]
+> 
+> How GitHub Actions + Vite interact
+> 	
+> **1. GitHub Actions starts a workflow**
+> 
+> GitHub provisions a clean Linux build environment and checks out the repository.
+> 
+> The environment contains:
+> - Node.js
+> - Repository source code
+> - Repository secrets
+> - Repository variables
+> 
+> **2. GitHub Actions Provides Environment Variables**
+> 
+> The workflow injects the configured variables into the build environment:
+> 
+> ```yaml
+> env:
+>   VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+>   VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
+> ```
+> 
+> **3. Vite Builds the Application**
+> 
+> GitHub Actions executes:
+> 
+> `npm run build`
+> 
+> During the build, Vite:
+> -Reads environment variables
+> -Exposes them through `import.meta.env`
+> -Executes configuration validation
+> -Produces the final static assets in `dist/`
+> 
+> **4. Azure Receives the Built Application**
+> 
+> The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
+>
+> Azure only receives the final compiled static assets and does not execute the application build process itself.
 
 #### Run the Azure Static Web Apps workflow
 
