@@ -46,6 +46,13 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
 	     * [GitHub Workflow for Azure Static Web App](#github-workflow-for-azure-static-web-app)
          * [Create GitHub Secrets and Variables for Azure Static Web App](#create-github-secrets-and-variables-for-azure-static-web-app)
          * [Run the Azure Static Web App workflow](#run-the-azure-static-web-apps-workflow)
+  * [Deploying the ASP.NET Core Web API](#deploying-the-aspnet-core-web-api)
+	   * [Azure App Service Configuration](#azure-app-service-configuration)
+	   * [Create an Azure App Service](#create-an-azure-app-service)
+	   * [Deployment Using GitHub Actions for Azure App Service](#deployment-using-github-actions-for-azure-app-service)
+	     * [GitHub Workflow for Azure App Service](#github-workflow-for-azure-app-service)
+         * [Create GitHub Secrets and Variables for Azure App Service](#create-github-secrets-and-variables-for-azure-app-service)
+         * [Run the Azure App Service workflow](#run-the-azure-app-service-workflow)
 * [Disclaimer](#disclaimer)
 * [License](#license)
 * [Roadmap](#roadmap)
@@ -298,7 +305,7 @@ Log in to Auth0 and open the Cryoptix application configuration.
 
 Under Application URIs, add the Azure Static Web App URL.
 
-> [!WARNING]
+> [!IMPORTANT]
 >
 > Failing to add the Azure Static Web App URL will prevent users from authenticating successfully.
 
@@ -371,7 +378,13 @@ Create the following repository variables:
 
 #### Run the Azure Static Web Apps workflow
 
-Open GitHub Actions, select Azure Static Web Apps, and click Run workflow.
+1. Open **GitHub Actions**
+2. Select **Azure Static Web Apps**
+3. Click **Run workflow**
+4. Select the target branch.
+5. Click **Run workflow**.
+
+GitHub Actions will build, publish, configure, and deploy the React SPA application to Azure Static Web Apps.
 
 ![GitHub Action Azure Static Web App](/readme-images/github-action-azure-static-web-apps.png?raw=true "GitHub Action Azure Static Web App")
 
@@ -416,6 +429,268 @@ Open GitHub Actions, select Azure Static Web Apps, and click Run workflow.
 > The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
 >
 > Azure only receives the final compiled static assets and does not execute the application build process itself.
+
+## Deploying the ASP.NET Core Web API
+
+### Azure App Service Configuration
+
+GitHub Actions must authenticate to Azure before deploying resources. Microsoft recommends using OpenID Connect (OIDC), which allows GitHub Actions to authenticate without storing long-lived client secrets.
+
+The authentication flow is:
+
+```text
+GitHub Actions
+    ↓
+Requests short-lived identity token from GitHub
+    ↓
+Azure validates the token
+    ↓
+Azure issues temporary access token
+    ↓
+Deploys to Azure App Service
+```
+
+Before deploying, create:
+
+- Microsoft Entra ID App Registration
+- Federated Credential
+
+<details>
+<summary>Configure GitHub OIDC for Azure App Service deployments</summary>
+
+### Step 1: Create an App Registration
+
+1. Open the Azure Portal.
+2. Navigate to **Microsoft Entra ID**.
+3. Select **App registrations**.
+4. Click **New registration**.
+5. Enter a name, for example:
+
+```text
+github-cryoptix-api-deploy
+```
+
+6. Leave the account type as:
+
+```text
+Accounts in this organizational directory only
+```
+
+7. Click **Register**.
+
+After creation, note the following values:
+
+- Application (Client) ID
+- Directory (Tenant) ID
+
+These values will be required later.
+
+### Step 2: Create a Federated Credential
+
+Within the App Registration:
+
+1. Select **Certificates & secrets**.
+2. Open the **Federated credentials** tab.
+3. Click **Add credential**.
+
+Select:
+
+```text
+Federated credential scenario:
+GitHub Actions deploying Azure resources
+```
+
+Provide:
+
+- GitHub Organization/User
+- Repository Name
+- Entity Type: `Branch`
+- Branch: `main`
+- Credential Name (for example `github-cryoptix-main`)
+
+Click **Add**.
+
+Azure will now trust workflows running from the specified repository and branch.
+
+### Step 3: Assign Azure Permissions
+
+The App Registration exists but cannot deploy resources until permissions are granted.
+
+Recommended scope: Resource Group
+
+1. Open the Resource Group.
+2. Select **Access Control (IAM)**.
+3. Click **Add Role Assignment**.
+4. Choose the **Contributor** role.
+5. Select **User, group, or service principal**.
+6. Search for the App Registration created earlier.
+7. Complete the assignment.
+
+### Step 4: Obtain the Subscription ID
+
+Navigate to:
+
+```text
+Subscriptions → Your Subscription
+```
+
+Copy the **Subscription ID**.
+
+</details>
+
+### Create an Azure App Service
+
+Cryoptix is designed to run on Azure App Service using the **B1 (Basic)** pricing tier, which supports:
+
+- Always On
+- WebSockets
+- Background Hosted Services
+- SignalR
+- Continuous real-time processing
+
+#### 1. Create the App Service
+
+In the Azure Portal:
+
+- Create a new **App Service**
+- Select a Resource Group (for example `Cryoptix-RG`)
+- Specify an App Service name (for example `Cryoptix-API`)
+- Runtime Stack: `.NET 10`
+- Region: Closest to your users
+- Pricing Plan: `B1 (Basic)`
+
+Click **Review + Create**, then **Create**.
+
+#### 2. Enable WebSockets
+
+Within the App Service:
+
+```text
+Configuration → General Settings → WebSockets
+```
+
+Enable WebSockets and restart the application.
+
+> [!IMPORTANT]
+>
+> WebSockets must be enabled for SignalR and real-time exchange connectivity.
+
+### Deployment Using GitHub Actions for Azure App Service
+
+#### GitHub Workflow for Azure App Service
+
+The workflow file `.github/workflows/azure-app-service.yml` is configured for manual deployment and is automatically available in GitHub Actions.
+
+```YAML
+name: Azure App Service
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj
+
+      - name: Build
+        run: dotnet build src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o ./publish --no-build
+
+      - name: Login to Azure using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure App Service application settings
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          set -e
+
+          # Map configuration keys to App Settings using __ to represent : in IConfiguration
+          az webapp config appsettings set --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --settings \
+            Auth__Domain="${{ vars.AUTH_DOMAIN }}" \
+            Auth__Audience="${{ vars.AUTH_AUDIENCE }}" \
+            Auth__Issuer="${{ vars.AUTH_ISSUER }}" \
+            Auth__ClientIds__0="${{ secrets.AUTH_CLIENTID_0 }}" \
+            Credentials__AccountName="${{ secrets.CREDENTIALS_ACCOUNT_NAME }}" \
+            Credentials__ApiKey="${{ secrets.CREDENTIALS_API_KEY }}" \
+            Credentials__ApiSecret="${{ secrets.CREDENTIALS_API_SECRET }}" \
+            CorsOrigins__Policy="${{ vars.CORS_POLICY }}" \
+            CorsOrigins__Urls="${{ vars.CORS_URLS }}"
+
+      - name: Deploy to Azure Web App
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path ./publish
+
+      - name: Logout of Azure
+        run: az logout || true
+```
+
+#### Create GitHub Secrets and Variables for Azure App Service
+
+Navigate to:
+
+GitHub → Repository → Settings → Secrets and variables → Actions
+
+Create the following repository secrets:
+
+| Secret Name | Value | 
+| --- | --- |
+| ``CREDENTIALS_ACCOUNT_NAME`` | *your_exchange_account_name* |
+| ``CREDENTIALS_API_KEY`` | *your_exchange_account_api_key* |
+| ``CREDENTIALS_API_SECRET`` | *your_exchange_account_api_secret* |
+| ``AUTH_CLIENTID_0`` | *your_auth0_client_ids* |
+
+Create the following repository variables:
+
+| Variable Name | Value |
+| --- | --- |
+| ``AUTH_DOMAIN`` | *your_auth0_domain* |
+| ``AUTH_AUDIENCE`` | *your_auth0_api_audience* |
+| ``AUTH_ISSUER`` | *your_auth0_api_issuer* |
+| ``AZURE_RESOURCE_GROUP`` | *your_azure_resource_group* |
+| ``AZURE_WEBAPP_NAME`` | *your_azure_webb_app_name* |
+| ``AZURE_CLIENT_ID`` | *your_azure_client_id* |
+| ``AZURE_TENANT_ID`` | *your_azure_tenant_id* |
+| ``AZURE_SUBSCRIPTION_ID`` | *your_azure_subscription_id* |
+| ``CORS_POLICY`` | *cryoptix-cors-policy* |
+| ``CORS_URLS`` | *your_azure_static_web_app_url* |
+
+#### Run the Azure App Service Workflow
+
+1. Open **GitHub Actions**.
+2. Select **Azure App Service**.
+3. Click **Run workflow**.
+4. Select the target branch.
+5. Click **Run workflow**.
+
+GitHub Actions will build, publish, configure, and deploy the ASP.NET Core Web API to Azure App Service.
+
+![GitHub Action Azure App Service](/readme-images/github-action-azure-app-service.png?raw=true "GitHub Action Azure App Service")
 
 ## Disclaimer
 
