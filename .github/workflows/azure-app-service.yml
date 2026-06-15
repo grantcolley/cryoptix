@@ -1,0 +1,66 @@
+name: Azure App Service
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj
+
+      - name: Build
+        run: dotnet build src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o ./publish --no-build
+
+      - name: Login to Azure using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure App Service application settings
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          set -e
+
+          # Map configuration keys to App Settings using __ to represent : in IConfiguration
+          az webapp config appsettings set --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --settings \
+            Auth__Domain="${{ vars.AUTH_DOMAIN }}" \
+            Auth__Audience="${{ vars.AUTH_AUDIENCE }}" \
+            Auth__Issuer="${{ vars.AUTH_ISSUER }}" \
+            Auth__ClientIds__0="${{ secrets.AUTH_CLIENTID_0 }}" \
+            Credentials__AccountName="${{ secrets.CREDENTIALS_ACCOUNT_NAME }}" \
+            Credentials__ApiKey="${{ secrets.CREDENTIALS_API_KEY }}" \
+            Credentials__ApiSecret="${{ secrets.CREDENTIALS_API_SECRET }}" \
+            CorsOrigins__Policy="${{ vars.CORS_POLICY }}" \
+            CorsOrigins__Urls="${{ vars.CORS_URLS }}"
+
+      - name: Deploy to Azure Web App
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path ./publish
+
+      - name: Logout of Azure
+        run: az logout || true
