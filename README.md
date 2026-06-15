@@ -160,7 +160,7 @@ In the *Roles* tab, click `Assign Role`. Select `cryoptix-user-read` from the dr
 
 ### Securing the ASP.NET Core Web API
 
-In the `Cryoptix.Web.API` project, update `appsettings.json` with `Auth`, and `CorsOrigins` values.
+In the `Cryoptix.Web.API` project, update [`appsettings.json`](https://github.com/grantcolley/cryoptix/blob/main/src/api/Cryoptix.Web.API/appsettings.json) with `Auth`, and `CorsOrigins` values.
 
 ```JSON
 {
@@ -271,7 +271,7 @@ Create an Azure account using the free tier.
 
 ### Azure Static Web Apps Configuration
 
-The file `public/staticwebapp.config.json` enables client-side routing for the React application.
+The file [`public/staticwebapp.config.json`](https://github.com/grantcolley/cryoptix/blob/main/src/gui/public/staticwebapp.config.json) enables client-side routing for the React application.
 
 Without this configuration, refreshing or directly navigating to a route such as `/strategies/foo` would return a 404 from Azure Static Web Apps. The `navigationFallback` rule ensures that unmatched routes are rewritten to `index.html`, allowing React Router to handle navigation.
 
@@ -308,7 +308,7 @@ Under Application URIs, add the Azure Static Web App URL.
 
 #### GitHub Workflow for Azure Static Web App
 
-The workflow file `.github/workflows/azure-static-web-apps.yml` is configured for manual deployment and is automatically available in GitHub Actions.
+The workflow file [`.github/workflows/azure-static-web-apps.yml`](https://github.com/grantcolley/cryoptix/blob/main/.github/workflows/azure-static-web-apps.yml) is configured for manual deployment and is automatically available in GitHub Actions.
 
 ```YAML
 name: Azure Static Web Apps
@@ -574,7 +574,7 @@ Enable WebSockets and restart the application.
 
 #### GitHub Workflow for Azure App Service
 
-The workflow file `.github/workflows/azure-app-service.yml` is configured for manual deployment and is automatically available in GitHub Actions.
+The workflow file [`.github/workflows/azure-app-service.yml`](https://github.com/grantcolley/cryoptix/blob/main/.github/workflows/azure-app-service.yml) is configured for manual deployment and is automatically available in GitHub Actions.
 
 ```YAML
 name: Azure App Service
