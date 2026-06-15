@@ -267,11 +267,6 @@ Click **Start Strategy** to begin execution.
 
 Create an Azure account using the free tier.
 
-> [!NOTE]
-> 
->This section covers deployment of the React UI to Azure Static Web Apps.
-Deployment guidance for the ASP.NET Core Web API will be added in a future release.
-
 ## Deploying the Vite + React Web Application
 
 ### Azure Static Web Apps Configuration
