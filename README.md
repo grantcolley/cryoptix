@@ -42,10 +42,10 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
 	   * [Azure Static Web Apps Configuration](#azure-static-web-apps-configuration)
 	   * [Create an Azure Static Web App](#create-an-azure-static-web-app)
 	   * [Add the Azure Static Web App URL to Auth0](#add-the-azure-static-web-app-url-to-auth0)
-	   * [Deployment Using GitHub Actions](#deployment-using-github-actions)
-	     * [GitHub Workflow](#github-workflow)
-         * [Create GitHub Secrets and Variables](#create-github-secrets-and-variables)
-         * [Run the Azure Static Web Apps workflow](#run-the-azure-static-web-apps-workflow)
+	   * [Deployment Using GitHub Actions for Azure Static Web App](#deployment-using-github-actions-for-azure-static-web-app)
+	     * [GitHub Workflow for Azure Static Web App](#github-workflow-for-azure-static-web-app)
+         * [Create GitHub Secrets and Variables for Azure Static Web App](#create-github-secrets-and-variables-for-azure-static-web-app)
+         * [Run the Azure Static Web App workflow](#run-the-azure-static-web-apps-workflow)
 * [Disclaimer](#disclaimer)
 * [License](#license)
 * [Roadmap](#roadmap)
@@ -302,9 +302,9 @@ Under Application URIs, add the Azure Static Web App URL.
 >
 > Failing to add the Azure Static Web App URL will prevent users from authenticating successfully.
 
-### Deployment Using GitHub Actions
+### Deployment Using GitHub Actions for Azure Static Web App
 
-#### GitHub Workflow
+#### GitHub Workflow for Azure Static Web App
 
 The workflow file `.github/workflows/azure-static-web-apps.yml` is configured for manual deployment and is automatically available in GitHub Actions.
 
@@ -342,7 +342,7 @@ jobs:
           app_build_command: npm run build
 ```
 
-#### Create GitHub Secrets and Variables
+#### Create GitHub Secrets and Variables for Azure Static Web App
 
 Navigate to:
 
@@ -369,54 +369,54 @@ Create the following repository variables:
 | ``VITE_API_ROUTE_UPDATE`` | api/strategy/update |
 | ``VITE_API_ROUTE_SUBSCRIBE`` | api/strategy/subscribe |
 
-<details>
-<summary>How GitHub Actions + Vite interact</summary>
-	
-**1. GitHub Actions starts a workflow**
-
-GitHub provisions a clean Linux build environment and checks out the repository.
-
-The environment contains:
-- Node.js
-- Repository source code
-- Repository secrets
-- Repository variables
-
-**2. GitHub Actions Provides Environment Variables**
-
-The workflow injects the configured variables into the build environment:
-
-```yaml
-env:
-  VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
-  VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
-```
-
-**3. Vite Builds the Application**
-
-GitHub Actions executes:
-
-`npm run build`
-
-During the build, Vite:
--Reads environment variables
--Exposes them through `import.meta.env`
--Executes configuration validation
--Produces the final static assets in `dist/`
-
-**4. Azure Receives the Built Application**
-
-The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
-
-Azure only receives the final compiled static assets and does not execute the application build process itself.
-</details>
-
 #### Run the Azure Static Web Apps workflow
 
 Open GitHub Actions, select Azure Static Web Apps, and click Run workflow.
 
 ![GitHub Action Azure Static Web App](/readme-images/github-action-azure-static-web-apps.png?raw=true "GitHub Action Azure Static Web App")
- 
+
+> [!TIP]
+> 
+> How GitHub Actions + Vite interact
+> 	
+> **1. GitHub Actions starts a workflow**
+> 
+> GitHub provisions a clean Linux build environment and checks out the repository.
+> 
+> The environment contains:
+> - Node.js
+> - Repository source code
+> - Repository secrets
+> - Repository variables
+> 
+> **2. GitHub Actions Provides Environment Variables**
+> 
+> The workflow injects the configured variables into the build environment:
+> 
+> ```yaml
+> env:
+>   VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+>   VITE_AUTH_CLIENT_ID: ${{ secrets.VITE_AUTH_CLIENT_ID }}
+> ```
+> 
+> **3. Vite Builds the Application**
+> 
+> GitHub Actions executes:
+> 
+> `npm run build`
+> 
+> During the build, Vite:
+> -Reads environment variables
+> -Exposes them through `import.meta.env`
+> -Executes configuration validation
+> -Produces the final static assets in `dist/`
+> 
+> **4. Azure Receives the Built Application**
+> 
+> The deployment step uploads the generated `dist/` folder to Azure Static Web Apps.
+>
+> Azure only receives the final compiled static assets and does not execute the application build process itself.
+
 ## Disclaimer
 
 Cryoptix is provided for educational and research purposes only.
