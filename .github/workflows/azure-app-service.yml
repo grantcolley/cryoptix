@@ -33,7 +33,7 @@ jobs:
         run: ls -la "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish" || true
         
       - name: Publish output 2       
-        run: du -sh "${{ github.workspace }}src/api/Cryoptix.Web.API/publish" || true
+        run: du -sh "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish" || true
 
       - name: Login to Azure using OIDC
         uses: azure/login@v2
