@@ -218,8 +218,6 @@ WebApplication app = builder.Build();
 
 app.UseApiExceptionHandling();
 
-app.UseHttpsRedirection();
-
 if (!string.IsNullOrWhiteSpace(corsPolicy))
 {
     app.UseCors(corsPolicy);
