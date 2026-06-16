@@ -609,8 +609,13 @@ jobs:
         run: dotnet build src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o ./publish --no-build
-
+        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o "${{ github.workspace }}/publish" --no-build
+        
+      - name: Zip publish output
+        run: |
+          cd "${{ github.workspace }}/publish"
+          zip -r "${{ github.workspace }}/api.zip" .
+        
       - name: Login to Azure using OIDC
         uses: azure/login@v2
         with:
@@ -627,6 +632,10 @@ jobs:
 
           # Map configuration keys to App Settings using __ to represent : in IConfiguration
           az webapp config appsettings set --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --settings \
+            WEBSITES_INCLUDE_CLOUD_CERTS="true" \
+            WEBSITES_CONTAINER_START_TIME_LIMIT="1800" \
+            WEBSITES_PORT="8080" \
+            ASPNETCORE_URLS="http://+:8080" \
             Auth__Domain="${{ vars.AUTH_DOMAIN }}" \
             Auth__Audience="${{ vars.AUTH_AUDIENCE }}" \
             Auth__Issuer="${{ vars.AUTH_ISSUER }}" \
@@ -637,12 +646,22 @@ jobs:
             CorsOrigins__Policy="${{ vars.CORS_POLICY }}" \
             CorsOrigins__Urls="${{ vars.CORS_URLS }}"
 
+      - name: Show Azure app settings
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp config appsettings list \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --query "[?name=='ASPNETCORE_URLS' || name=='WEBSITES_PORT' || name=='PORT']"
+
       - name: Deploy to Azure Web App
         env:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
         run: |
-          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path ./publish
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/api.zip" --type zip
 
       - name: Logout of Azure
         run: az logout || true
