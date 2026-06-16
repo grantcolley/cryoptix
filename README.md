@@ -5,7 +5,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A cryptocurrency trading platform built with ASP.NET Core and React for running, monitoring, and visualizing automated trading strategies in real time.
+> A cryptocurrency trading platform built with ASP.NET Core and React for running, monitoring, and visualizing automated trading strategies in real time, with deployment support for Azure App Service and Azure Static Web Apps.
 
 ## Features
 
@@ -15,15 +15,25 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
 - Auth0 authentication and authorization
 - Role-based access control
 - Configurable trading strategy execution
+- Cloud deployment support using Azure App Service and Azure Static Web Apps
 
 ![Cryoptix UI](/readme-images/cryoptix-ui.png?raw=true "Cryoptixm UI")
 
 #### Table of Contents
 * [Features](#features)
 * [Architecture](#architecture)
+  * [Frontend](#frontend)
+  * [Backend](#backend)
+  * [Authentication](#authentication)
+  * [Hosting](#hosting)
+  * [CI/CD](#cicd)
   * [Technologies](#technologies)
 * [Getting Started](#getting-started)
-  * [Prerequisites](#prerequisites)	
+  * [Prerequisites](#prerequisites)
+  	* [Local Development](#local-development)
+  	* [Authentication](#authentication-1)
+  	* [Trading](#trading)
+  	* [Azure Deployment (optional)](#azure-deployment-optional) 
   * [Clone the Repository](#clone-the-repository)
   * [Install Dependencies](#install-dependencies)  
   * [Setting up Authentication](#setting-up-authentication)
@@ -62,11 +72,30 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
 
 Cryoptix consists of:
 
-- ASP.NET Core Web API
+### Frontend
+
 - React + TypeScript SPA
-- SignalR real-time communication
-- TradingView chart integration
-- Auth0 authentication
+- shadcn/ui
+- TradingView Charting Library
+
+### Backend
+
+- ASP.NET Core Web API
+- SignalR real-time messaging
+
+### Authentication
+
+- Auth0
+- OAuth 2.0
+
+### Hosting
+
+- Azure Static Web Apps
+- Azure App Service
+
+### CI/CD
+
+- GitHub Actions
 
 ### Technologies
 
@@ -77,6 +106,10 @@ Cryoptix consists of:
 - TypeScript
 - shadcn/ui
 - TradingView Charting Library
+- Auth0
+- Azure App Service
+- Azure Static Web Apps
+- GitHub Actions
 
 ## Getting Started
 
@@ -84,11 +117,25 @@ This section describes the steps to get Cryoptix running in a local development 
 
 ### Prerequisites
 
+#### Local Development
+
 - .NET 10 SDK
 - Node.js 22+
 - npm
+
+#### Authentication
+
 - Auth0 account
+
+#### Trading
+
 - Exchange API credentials (optional)
+
+#### Azure Deployment (optional)
+
+- Azure account
+- Azure CLI (optional)
+- GitHub account
 
 ### Clone the Repository
 
@@ -609,8 +656,13 @@ jobs:
         run: dotnet build src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o ./publish --no-build
-
+        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o "${{ github.workspace }}/publish" --no-build
+        
+      - name: Zip publish output
+        run: |
+          cd "${{ github.workspace }}/publish"
+          zip -r "${{ github.workspace }}/api.zip" .
+        
       - name: Login to Azure using OIDC
         uses: azure/login@v2
         with:
@@ -627,6 +679,10 @@ jobs:
 
           # Map configuration keys to App Settings using __ to represent : in IConfiguration
           az webapp config appsettings set --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --settings \
+            WEBSITES_INCLUDE_CLOUD_CERTS="true" \
+            WEBSITES_CONTAINER_START_TIME_LIMIT="1800" \
+            WEBSITES_PORT="8080" \
+            ASPNETCORE_URLS="http://+:8080" \
             Auth__Domain="${{ vars.AUTH_DOMAIN }}" \
             Auth__Audience="${{ vars.AUTH_AUDIENCE }}" \
             Auth__Issuer="${{ vars.AUTH_ISSUER }}" \
@@ -637,12 +693,22 @@ jobs:
             CorsOrigins__Policy="${{ vars.CORS_POLICY }}" \
             CorsOrigins__Urls="${{ vars.CORS_URLS }}"
 
+      - name: Show Azure app settings
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp config appsettings list \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --query "[?name=='ASPNETCORE_URLS' || name=='WEBSITES_PORT' || name=='PORT']"
+
       - name: Deploy to Azure Web App
         env:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
         run: |
-          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path ./publish
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/api.zip" --type zip
 
       - name: Logout of Azure
         run: az logout || true
