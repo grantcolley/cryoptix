@@ -50,6 +50,8 @@ jobs:
 
           # Map configuration keys to App Settings using __ to represent : in IConfiguration
           az webapp config appsettings set --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --settings \
+            WEBSITES_INCLUDE_CLOUD_CERTS="true" \
+            WEBSITES_CONTAINER_START_TIME_LIMIT="1800" \
             WEBSITES_PORT="8080" \
             ASPNETCORE_URLS="http://+:8080" \
             Auth__Domain="${{ vars.AUTH_DOMAIN }}" \
