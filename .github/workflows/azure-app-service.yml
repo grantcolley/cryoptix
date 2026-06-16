@@ -40,6 +40,11 @@ jobs:
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" 
           ls -la "$GITHUB_WORKSPACE/src/api/Cryoptix.Web.API/publish" || true
         
+      - name: Zip publish output
+        run: |
+          cd "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish"
+          zip -r "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish/api.zip" .
+        
       - name: Login to Azure using OIDC
         uses: azure/login@v2
         with:
@@ -71,7 +76,7 @@ jobs:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
         run: |
-          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish"
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish/api.zip" --type zip
 
       - name: Logout of Azure
         run: az logout || true
