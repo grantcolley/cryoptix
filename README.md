@@ -48,6 +48,7 @@ A cryptocurrency trading platform built with ASP.NET Core and React for running,
          * [Run the Azure Static Web App workflow](#run-the-azure-static-web-apps-workflow)
   * [Deploying the ASP.NET Core Web API](#deploying-the-aspnet-core-web-api)
 	   * [Azure App Service Configuration](#azure-app-service-configuration)
+     	 * [Configure GitHub OIDC for Azure App Service deployments](#configure-github-oidc-for-azure-app-service-deployments) 
 	   * [Create an Azure App Service](#create-an-azure-app-service)
 	   * [Deployment Using GitHub Actions for Azure App Service](#deployment-using-github-actions-for-azure-app-service)
 	     * [GitHub Workflow for Azure App Service](#github-workflow-for-azure-app-service)
@@ -450,8 +451,10 @@ Before deploying, create:
 - Microsoft Entra ID App Registration
 - Federated Credential
 
+#### Configure GitHub OIDC for Azure App Service deployments
+
 <details>
-<summary>Configure GitHub OIDC for Azure App Service deployments</summary>
+<summary>How to configure GitHub OIDC for Azure App Service deployments</summary>
 
 ### Step 1: Create an App Registration
 
