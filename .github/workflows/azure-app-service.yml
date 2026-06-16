@@ -35,6 +35,9 @@ jobs:
       - name: Publish output 2       
         run: du -sh "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish" || true
 
+      - name: Publish output 3
+        run: | echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" ls -la "$GITHUB_WORKSPACE/src/api/Cryoptix.Web.API/publish" || true
+        
       - name: Login to Azure using OIDC
         uses: azure/login@v2
         with:
