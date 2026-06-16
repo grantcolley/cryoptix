@@ -29,7 +29,10 @@ jobs:
       - name: Publish
         run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish" --no-build
 
+      - name: Publish output 1
         run: ls -la "${{ github.workspace }}/src/api/Cryoptix.Web.API/publish" || true
+        
+      - name: Publish output 2       
         run: du -sh "${{ github.workspace }}src/api/Cryoptix.Web.API/publish" || true
 
       - name: Login to Azure using OIDC
