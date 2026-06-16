@@ -64,6 +64,16 @@ jobs:
             CorsOrigins__Policy="${{ vars.CORS_POLICY }}" \
             CorsOrigins__Urls="${{ vars.CORS_URLS }}"
 
+      - name: Show Azure app settings
+        env:
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp config appsettings list \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --query "[?name=='ASPNETCORE_URLS' || name=='WEBSITES_PORT' || name=='PORT']"
+
       - name: Deploy to Azure Web App
         env:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
