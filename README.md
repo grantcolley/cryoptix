@@ -309,7 +309,11 @@ Select a strategy from the dropdown list.
 
 Click **Start Strategy** to begin execution.
 
+Cryoptix UI
+
 ![Cryoptix UI](/readme-images/cryoptix-ui-2.png?raw=true "Cryoptix UI")
+
+Cryoptix API
 
 ![Cryoptix API](/readme-images/cryoptix-api.png?raw=true "Cryoptix API")
 
