@@ -311,6 +311,8 @@ Click **Start Strategy** to begin execution.
 
 ![Cryoptix UI](/readme-images/cryoptix-ui.png?raw=true "Cryoptix UI")
 
+![Cryoptix API](/readme-images/cryoptix-api.png?raw=true "Cryoptix API")
+
 # Azure Deployment
 
 Create an Azure account using the free tier.
