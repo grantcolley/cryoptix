@@ -1,5 +1,4 @@
-﻿using Cryoptix.Market.Strategy;
-using Cryoptix.Strategy.Analysis;
+﻿using Cryoptix.Strategy.Analysis;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Engine.MovingAverage
@@ -23,6 +22,8 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // TODO: Implement the moving average crossover logic here. For now, return a placeholder result indicating that the signal is not implemented.
+
             return Task.FromResult(SignalEvaluationResult.None(
                 DateTime.UtcNow,
                 "Signal not implemented yet."));
@@ -34,18 +35,18 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             //        "Indicators unavailable."));
             //}
 
-            //if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_FAST", out decimal fast))
+            //if (!indicatorsResult.Indicators.Values.TryGetValue("9 SMA", out decimal fast))
             //{
             //    return Task.FromResult(SignalEvaluationResult.None(
             //        DateTime.UtcNow,
-            //        "Fast SMA unavailable."));
+            //        "9 SMA unavailable."));
             //}
 
-            //if (!indicatorsResult.Indicators.Values.TryGetValue("SMA_SLOW", out decimal slow))
+            //if (!indicatorsResult.Indicators.Values.TryGetValue("21 SMA", out decimal slow))
             //{
             //    return Task.FromResult(SignalEvaluationResult.None(
             //        DateTime.UtcNow,
-            //        "Slow SMA unavailable."));
+            //        "21 SMA unavailable."));
             //}
 
             //SignalType signalType = SignalType.None;
@@ -54,12 +55,12 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             //if (fast > slow)
             //{
             //    signalType = SignalType.Buy;
-            //    reason = "Fast SMA is above Slow SMA.";
+            //    reason = "9 SMA is above 21 SMA.";
             //}
             //else if (fast < slow)
             //{
             //    signalType = SignalType.Sell;
-            //    reason = "Fast SMA is below Slow SMA.";
+            //    reason = "9 SMA is below 21 SMA.";
             //}
 
             //_logger.LogDebug(
