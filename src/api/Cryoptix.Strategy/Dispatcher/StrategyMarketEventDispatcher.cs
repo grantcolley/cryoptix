@@ -55,7 +55,7 @@ namespace Cryoptix.Strategy.Dispatcher
             Channel.StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
-            KlineUpsertResult upsertKlineResult = session.Cache.UpsertKline(marketEvent.Kline);
+            _ = session.Cache.UpsertKline(marketEvent.Kline);
 
             StrategyAnalysisContext context =
                 _strategyAnalysisContextFactory.CreateForKline(session, marketEvent);

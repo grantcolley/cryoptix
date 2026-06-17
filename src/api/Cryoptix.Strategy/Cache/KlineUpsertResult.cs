@@ -2,23 +2,15 @@
 
 namespace Cryoptix.Strategy.Cache
 {
-    public readonly struct KlineUpsertResult
+    public readonly struct KlineUpsertResult(
+        bool inserted,
+        bool updated,
+        Kline? previous,
+        Kline current)
     {
-        public KlineUpsertResult(
-            bool inserted,
-            bool updated,
-            Kline? previous,
-            Kline current)
-        {
-            Inserted = inserted;
-            Updated = updated;
-            Previous = previous;
-            Current = current ?? throw new ArgumentNullException(nameof(current));
-        }
-
-        public bool Inserted { get; }
-        public bool Updated { get; }
-        public Kline? Previous { get; }
-        public Kline Current { get; }
+        public bool Inserted { get; } = inserted;
+        public bool Updated { get; } = updated;
+        public Kline? Previous { get; } = previous;
+        public Kline Current { get; } = current ?? throw new ArgumentNullException(nameof(current));
     }
 }

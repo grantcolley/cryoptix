@@ -80,7 +80,7 @@ namespace Cryoptix.Exchange.Binance
 
             int pageLimit = limit ?? 1000;
 
-            List<IBinanceKline> allBinanceKlines = new();
+            List<IBinanceKline> allBinanceKlines = [];
             DateTime currentStart = startTime;
 
             while (!cancellationToken.IsCancellationRequested)

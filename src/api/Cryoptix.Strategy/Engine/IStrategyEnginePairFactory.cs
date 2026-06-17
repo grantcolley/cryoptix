@@ -1,6 +1,4 @@
-﻿using Cryoptix.Strategy.Processor;
-
-namespace Cryoptix.Strategy.Engine
+﻿namespace Cryoptix.Strategy.Engine
 {
     public interface IStrategyEnginePairFactory
     {

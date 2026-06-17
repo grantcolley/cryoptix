@@ -4,7 +4,7 @@ namespace Cryoptix.Strategy.Snapshot
 {
     public sealed class OrderBookRealtimeState
     {
-        private readonly object _gate = new();
+        private readonly Lock _gate = new();
         private OrderBook? _orderBook;
 
         public void Update(OrderBook orderBook)

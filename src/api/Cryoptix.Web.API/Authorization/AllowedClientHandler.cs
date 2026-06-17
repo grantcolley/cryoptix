@@ -3,14 +3,9 @@ using Microsoft.Extensions.Options;
 
 namespace Cryoptix.Web.API.Authorization
 {
-    public sealed class AllowedClientHandler : AuthorizationHandler<AllowedClientRequirement>
+    public sealed class AllowedClientHandler(IOptions<AuthOptions> options) : AuthorizationHandler<AllowedClientRequirement>
     {
-        private readonly AuthOptions _authOptions;
-
-        public AllowedClientHandler(IOptions<AuthOptions> options)
-        {
-            _authOptions = options.Value;
-        }
+        private readonly AuthOptions _authOptions = options.Value;
 
         protected override Task HandleRequirementAsync(
             AuthorizationHandlerContext context,

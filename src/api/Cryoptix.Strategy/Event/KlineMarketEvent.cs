@@ -2,15 +2,9 @@
 
 namespace Cryoptix.Strategy.Event
 {
-    public sealed class KlineMarketEvent : MarketEvent
+    public sealed class KlineMarketEvent(Kline kline, MarketEventSource source) : MarketEvent
     {
-        public KlineMarketEvent(Kline kline, MarketEventSource source)
-        {
-            Kline = kline ?? throw new ArgumentNullException(nameof(kline));
-            Source = source;
-        }
-
-        public Kline Kline { get; }
-        public MarketEventSource Source { get; }
+        public Kline Kline { get; } = kline ?? throw new ArgumentNullException(nameof(kline));
+        public MarketEventSource Source { get; } = source;
     }
 }

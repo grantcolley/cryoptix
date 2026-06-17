@@ -31,7 +31,7 @@ namespace Cryoptix.Observer.Subscription
         public Task<IReadOnlyCollection<SubscriberConnection>> GetAllAsync(
             CancellationToken cancellationToken = default)
         {
-            IReadOnlyCollection<SubscriberConnection> result = _subscribers.Values.ToArray();
+            IReadOnlyCollection<SubscriberConnection> result = [.. _subscribers.Values];
             return Task.FromResult(result);
         }
 

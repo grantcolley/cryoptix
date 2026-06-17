@@ -153,16 +153,10 @@ namespace Cryoptix.Strategy.Order
             throw new InvalidOperationException($"Unable to parse base/quote assets from symbol '{symbol}'.");
         }
 
-        private readonly struct SymbolParts
+        private readonly struct SymbolParts(string baseAsset, string quoteAsset)
         {
-            public SymbolParts(string baseAsset, string quoteAsset)
-            {
-                BaseAsset = baseAsset;
-                QuoteAsset = quoteAsset;
-            }
-
-            public string BaseAsset { get; }
-            public string QuoteAsset { get; }
+            public string BaseAsset { get; } = baseAsset;
+            public string QuoteAsset { get; } = quoteAsset;
         }
     }
 }

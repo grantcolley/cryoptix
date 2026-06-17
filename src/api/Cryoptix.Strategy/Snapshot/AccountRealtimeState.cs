@@ -4,7 +4,7 @@ namespace Cryoptix.Strategy.Snapshot
 {
     public sealed class AccountRealtimeState
     {
-        private readonly object _gate = new();
+        private readonly Lock _gate = new();
 
         private Account? _account;
 

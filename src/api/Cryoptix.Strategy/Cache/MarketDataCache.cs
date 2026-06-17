@@ -9,11 +9,11 @@ namespace Cryoptix.Strategy.Cache
         private readonly int _maxIndicatorsPerSeries;
         private readonly int _maxSignalsPerSeries;
 
-        private readonly object _symbolsGate = new();
-        private readonly object _klinesGate = new();
-        private readonly object _tradesGate = new();
-        private readonly object _indicatorsGate = new();
-        private readonly object _signalsGate = new();
+        private readonly Lock _symbolsGate = new();
+        private readonly Lock _klinesGate = new();
+        private readonly Lock _tradesGate = new();
+        private readonly Lock _indicatorsGate = new();
+        private readonly Lock _signalsGate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
@@ -91,7 +91,7 @@ namespace Cryoptix.Strategy.Cache
 
                 if (!_indicators.TryGetValue(key, out var series))
                 {
-                    series = new SortedDictionary<DateTime, Market.Strategy.Indicators>();
+                    series = [];
                     _indicators[key] = series;
                 }
 
@@ -131,7 +131,7 @@ namespace Cryoptix.Strategy.Cache
 
                 if (!_signals.TryGetValue(key, out var series))
                 {
-                    series = new SortedDictionary<DateTime, Market.Strategy.Signal>();
+                    series = [];
                     _signals[key] = series;
                 }
 

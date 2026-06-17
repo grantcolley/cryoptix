@@ -1,14 +1,9 @@
 ﻿namespace Cryoptix.Strategy.Processor
 {
-    public sealed class CompositeAsyncDisposable : IAsyncDisposable
+    public sealed class CompositeAsyncDisposable(params IAsyncDisposable[] inner) : IAsyncDisposable
     {
-        private readonly IAsyncDisposable[] _inner;
+        private readonly IAsyncDisposable[] _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         private int _disposed;
-
-        public CompositeAsyncDisposable(params IAsyncDisposable[] inner)
-        {
-            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-        }
 
         public async ValueTask DisposeAsync()
         {

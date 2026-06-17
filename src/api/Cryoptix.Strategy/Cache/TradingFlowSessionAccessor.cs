@@ -4,7 +4,7 @@ namespace Cryoptix.Strategy.Cache
 {
     public sealed class TradingFlowSessionAccessor : ITradingFlowSessionAccessor
     {
-        private readonly object _gate = new();
+        private readonly Lock _gate = new();
         private StrategyProcessorSession? _current;
 
         public void SetCurrent(StrategyProcessorSession session)

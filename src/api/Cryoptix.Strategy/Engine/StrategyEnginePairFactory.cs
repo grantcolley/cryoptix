@@ -1,11 +1,9 @@
-﻿using Cryoptix.Strategy.Processor;
-
-namespace Cryoptix.Strategy.Engine
+﻿namespace Cryoptix.Strategy.Engine
 {
     public sealed class StrategyEnginePairFactory(
         IEnumerable<IStrategyEnginePair> enginePairs) : IStrategyEnginePairFactory
     {
-        private readonly IReadOnlyDictionary<StrategyEngineType, IStrategyEnginePair> _enginePairs =
+        private readonly Dictionary<StrategyEngineType, IStrategyEnginePair> _enginePairs =
             enginePairs.ToDictionary(x => x.StrategyEngineType);
 
         public IStrategyEnginePair Get(StrategyEngineType strategyEngineType)
