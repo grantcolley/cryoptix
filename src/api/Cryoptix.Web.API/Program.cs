@@ -147,7 +147,7 @@ builder.Services.AddApiExceptionHandling();
 builder.Services.AddSingleton<IAuthorizationHandler, AllowedClientHandler>();
 
 builder.Services.AddSingleton<Credentials>(
-    builder.Configuration.GetRequiredSection("Credentials").Get<Credentials>() 
+    builder.Configuration.GetRequiredSection("Credentials").Get<Credentials>()
     ?? throw new NullReferenceException("BinanceApi credentials not found in configuration"));
 
 builder.Services.AddHostedService<StrategyBackgroundService>();

@@ -34,7 +34,7 @@ namespace Cryoptix.Exchange.Binance
             ApiCredentials apiCredentials = new(credentials.ApiKey, credentials.ApiSecret);
 
             // IMPORTANT: do NOT 'using' this. The returned handle owns it.
-            BinanceSocketClient socketClient = new (options =>
+            BinanceSocketClient socketClient = new(options =>
             {
                 options.ApiCredentials = apiCredentials;
             });

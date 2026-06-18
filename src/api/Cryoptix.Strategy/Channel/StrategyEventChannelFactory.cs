@@ -1,6 +1,6 @@
-﻿using Cryoptix.Strategy.Event;
-using Cryoptix.Market.Data;
+﻿using Cryoptix.Market.Data;
 using Cryoptix.Market.Strategy;
+using Cryoptix.Strategy.Event;
 
 namespace Cryoptix.Strategy.Channel
 {

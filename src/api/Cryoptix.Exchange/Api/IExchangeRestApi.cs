@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Exchange.Api
 {
-    public interface IExchangeRestApi: IDisposable
+    public interface IExchangeRestApi : IDisposable
     {
         /// <summary>
         /// The exchange supported by this REST API implementation.

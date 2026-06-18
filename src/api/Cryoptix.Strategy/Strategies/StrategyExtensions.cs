@@ -6,7 +6,7 @@
         {
             message = null;
 
-            if(strategy == null)
+            if (strategy == null)
             {
                 message = "Strategy cannot be null.";
             }

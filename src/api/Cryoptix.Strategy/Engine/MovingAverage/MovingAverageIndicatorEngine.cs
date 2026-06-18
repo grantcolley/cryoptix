@@ -60,8 +60,8 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 Indicators = new Market.Strategy.Indicators
                 {
-                    TimestampUtc = context.CurrentEvent.Kline!.CloseTime, 
-                    Values = values.ToImmutableDictionary() 
+                    TimestampUtc = context.CurrentEvent.Kline!.CloseTime,
+                    Values = values.ToImmutableDictionary()
                 },
             });
         }

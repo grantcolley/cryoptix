@@ -72,7 +72,7 @@ namespace Cryoptix.Exchange.Binance
             ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
 
             if (startTime > endTime)
-            { 
+            {
                 throw new ArgumentException($"GetKlinesAsync startTime:{startTime} must be less than (or equal to) endTime:{endTime}", nameof(startTime));
             }
 
@@ -245,12 +245,12 @@ namespace Cryoptix.Exchange.Binance
                 throw new ArgumentOutOfRangeException(nameof(clientOrder), clientOrder.Quantity, "clientOrder.Quantity must be greater than 0.");
             }
 
-            if(clientOrder.Type == OrderType.Limit && (!clientOrder.Price.HasValue || clientOrder.Price <= 0))
+            if (clientOrder.Type == OrderType.Limit && (!clientOrder.Price.HasValue || clientOrder.Price <= 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(clientOrder), clientOrder.Price, "clientOrder.Price must be greater than 0 for Limit orders.");
             }
 
-            if((clientOrder.Type == OrderType.StopLoss || clientOrder.Type == OrderType.StopLossLimit) && (!clientOrder.StopPrice.HasValue || clientOrder.StopPrice <= 0))
+            if ((clientOrder.Type == OrderType.StopLoss || clientOrder.Type == OrderType.StopLossLimit) && (!clientOrder.StopPrice.HasValue || clientOrder.StopPrice <= 0))
             {
                 throw new ArgumentOutOfRangeException(nameof(clientOrder), clientOrder.StopPrice, "clientOrder.StopPrice must be greater than 0 for StopLoss/StopLossLimit orders.");
             }

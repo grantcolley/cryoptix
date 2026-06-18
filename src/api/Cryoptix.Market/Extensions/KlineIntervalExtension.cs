@@ -4,7 +4,7 @@ namespace Cryoptix.Market.Extensions
 {
     public static class KlineIntervalExtension
     {
-        public static  int KlineIntervalToMinutes(this KlineInterval interval)
+        public static int KlineIntervalToMinutes(this KlineInterval interval)
         {
             return interval switch
             {

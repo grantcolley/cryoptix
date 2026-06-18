@@ -1,6 +1,4 @@
-﻿using Cryoptix.Strategy.Processor;
-
-namespace Cryoptix.Strategy.Engine.MovingAverage
+﻿namespace Cryoptix.Strategy.Engine.MovingAverage
 {
     public sealed class MovingAverageStrategyEnginePair(
         MovingAverageIndicatorEngine indicatorEngine,

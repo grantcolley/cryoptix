@@ -1,5 +1,5 @@
-﻿using Cryoptix.Strategy.Command;
-using Cryoptix.Strategy.Agent;
+﻿using Cryoptix.Strategy.Agent;
+using Cryoptix.Strategy.Command;
 
 namespace Cryoptix.Web.API.Services
 {

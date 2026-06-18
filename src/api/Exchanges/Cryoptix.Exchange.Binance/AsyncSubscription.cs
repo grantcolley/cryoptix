@@ -25,14 +25,14 @@
 
         private async Task RunDisposeAsync(TaskCompletionSource<object?> tcs)
         {
-            try 
+            try
             {
                 await dispose().ConfigureAwait(false);
                 tcs.TrySetResult(null);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                tcs.TrySetException(ex); 
+                tcs.TrySetException(ex);
             }
         }
     }

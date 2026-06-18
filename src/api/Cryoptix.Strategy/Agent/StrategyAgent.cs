@@ -7,8 +7,8 @@ using Cryoptix.Strategy.Strategies;
 namespace Cryoptix.Strategy.Agent
 {
     public class StrategyAgent(
-        StrategyStateStore state, 
-        IStrategyProcessorCatalog strategyProcessorCatalog, 
+        StrategyStateStore state,
+        IStrategyProcessorCatalog strategyProcessorCatalog,
         IExchangeApiFactory exchangeApiFactory)
         : IStrategyAgent
     {
@@ -138,7 +138,7 @@ namespace Cryoptix.Strategy.Agent
 
                     return;
                 }
-                
+
                 Volatile.Write(ref _activeStrategy, strategy);
 
                 signalToSet = _activeStrategyUpdatedSignal;
@@ -175,7 +175,7 @@ namespace Cryoptix.Strategy.Agent
 
             Task? taskToAwait = null;
             CancellationTokenSource? cancellationTokenSourceToCancel = null;
-            
+
             await _semaphoreSlim.WaitAsync();
 
             try
