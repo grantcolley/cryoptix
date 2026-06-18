@@ -4,10 +4,12 @@ import {
   CandlestickSeries,
   ColorType,
   CrosshairMode,
+  HistogramSeries,
   LineSeries,
   createChart,
   createSeriesMarkers,
   type CandlestickData,
+  type HistogramData,
   type IChartApi,
   type ISeriesMarkersPluginApi,
   type ISeriesApi,
@@ -56,9 +58,13 @@ type ChartSeriesLabelPosition = {
 };
 
 const PRICE_SERIES_KEY = "price";
+const VOLUME_SERIES_KEY = "volume";
 const PRICE_SERIES_UP_COLOR = "#16a34a";
 const PRICE_SERIES_DOWN_COLOR = "#dc2626";
 const PRICE_SERIES_COLOR = PRICE_SERIES_UP_COLOR;
+const VOLUME_SERIES_UP_COLOR = "rgba(22, 163, 74, 0.28)";
+const VOLUME_SERIES_DOWN_COLOR = "rgba(220, 38, 38, 0.28)";
+const VOLUME_SERIES_COLOR = "rgba(71, 85, 105, 0.32)";
 const INITIAL_VISIBLE_KLINE_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
@@ -130,6 +136,7 @@ export function StrategyPage() {
   const [chartSeriesVisibility, setChartSeriesVisibility] =
     React.useState<ChartSeriesVisibility>({
       [PRICE_SERIES_KEY]: true,
+      [VOLUME_SERIES_KEY]: true,
     });
   const [chartSeriesLabelPositions, setChartSeriesLabelPositions] =
     React.useState<ChartSeriesLabelPosition[]>([]);
@@ -159,6 +166,7 @@ export function StrategyPage() {
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const chartApiRef = React.useRef<IChartApi | null>(null);
   const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const volumeSeriesRef = React.useRef<ISeriesApi<"Histogram"> | null>(null);
   const signalMarkersRef = React.useRef<ISeriesMarkersPluginApi<Time> | null>(
     null
   );
@@ -169,9 +177,13 @@ export function StrategyPage() {
   const indicatorSeriesDataRef = React.useRef<IndicatorSeriesData[]>([]);
   const chartSeriesVisibilityRef = React.useRef<ChartSeriesVisibility>({
     [PRICE_SERIES_KEY]: true,
+    [VOLUME_SERIES_KEY]: true,
   });
   const candleDataByTimeRef = React.useRef<
     Map<number, CandlestickData<UTCTimestamp>>
+  >(new Map());
+  const volumeDataByTimeRef = React.useRef<
+    Map<number, HistogramData<UTCTimestamp>>
   >(new Map());
   const hasAppliedInitialVisibleKlineRangeRef = React.useRef(false);
   const hasUserInteractedWithChartRef = React.useRef(false);
@@ -221,6 +233,7 @@ export function StrategyPage() {
     indicatorSeriesData = indicatorSeriesDataRef.current
   ) => [
     PRICE_SERIES_KEY,
+    VOLUME_SERIES_KEY,
     ...indicatorSeriesData.map((indicatorSeries) => indicatorSeries.key),
   ];
 
@@ -266,6 +279,15 @@ export function StrategyPage() {
     high: kline.high,
     low: kline.low,
     close: kline.close,
+  });
+
+  const toVolumeData = (kline: Kline): HistogramData<UTCTimestamp> => ({
+    time: toChartTime(kline.openTime),
+    value: kline.volume,
+    color:
+      kline.close < kline.open
+        ? VOLUME_SERIES_DOWN_COLOR
+        : VOLUME_SERIES_UP_COLOR,
   });
 
   const sortByTime = React.useCallback(function sortByTime<
@@ -506,21 +528,31 @@ export function StrategyPage() {
 
   const applyKlinesToChart = (klines: Kline[], replace = false) => {
     const candleSeries = candleSeriesRef.current;
+    const volumeSeries = volumeSeriesRef.current;
     const nextCandles = klines.map(toCandleData);
+    const nextVolumes = klines.map(toVolumeData);
 
     if (replace) {
       candleDataByTimeRef.current = new Map();
+      volumeDataByTimeRef.current = new Map();
     }
 
     for (const candle of nextCandles) {
       candleDataByTimeRef.current.set(candle.time, candle);
     }
 
-    if (!replace && candleSeries) {
+    for (const volume of nextVolumes) {
+      volumeDataByTimeRef.current.set(volume.time, volume);
+    }
+
+    if (!replace && candleSeries && volumeSeries) {
       preserveVisibleLogicalRange(
         () => {
           for (const candle of nextCandles) {
             candleSeries.update(candle);
+          }
+          for (const volume of nextVolumes) {
+            volumeSeries.update(volume);
           }
           syncPriceSeriesColor();
         },
@@ -528,15 +560,18 @@ export function StrategyPage() {
       );
     }
 
-    if (!replace && !candleSeries) {
+    if (!replace && (!candleSeries || !volumeSeries)) {
       return;
     }
 
-    if (replace && candleSeries) {
+    if (replace && candleSeries && volumeSeries) {
       preserveVisibleLogicalRange(
         () => {
           candleSeries.setData(
             sortByTime([...candleDataByTimeRef.current.values()])
+          );
+          volumeSeries.setData(
+            sortByTime([...volumeDataByTimeRef.current.values()])
           );
           syncPriceSeriesColor();
         },
@@ -636,16 +671,24 @@ export function StrategyPage() {
 
   const resetChartData = () => {
     candleDataByTimeRef.current = new Map();
+    volumeDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
     hasAppliedInitialVisibleKlineRangeRef.current = false;
     hasUserInteractedWithChartRef.current = false;
-    chartSeriesVisibilityRef.current = { [PRICE_SERIES_KEY]: true };
+    chartSeriesVisibilityRef.current = {
+      [PRICE_SERIES_KEY]: true,
+      [VOLUME_SERIES_KEY]: true,
+    };
     setShowChart(false);
     setIndicatorSeriesKeys([]);
-    setChartSeriesVisibility({ [PRICE_SERIES_KEY]: true });
+    setChartSeriesVisibility({
+      [PRICE_SERIES_KEY]: true,
+      [VOLUME_SERIES_KEY]: true,
+    });
     setChartSeriesLabelPositions([]);
     candleSeriesRef.current?.setData([]);
+    volumeSeriesRef.current?.setData([]);
     signalMarkersRef.current?.setMarkers([]);
     clearIndicatorSeries();
   };
@@ -665,6 +708,13 @@ export function StrategyPage() {
     if (key === PRICE_SERIES_KEY) {
       candleSeriesRef.current?.applyOptions({
         visible: nextVisibility[PRICE_SERIES_KEY],
+      });
+      return;
+    }
+
+    if (key === VOLUME_SERIES_KEY) {
+      volumeSeriesRef.current?.applyOptions({
+        visible: nextVisibility[VOLUME_SERIES_KEY],
       });
       return;
     }
@@ -978,6 +1028,10 @@ export function StrategyPage() {
       },
       rightPriceScale: {
         borderColor: "#cbd5e1",
+        scaleMargins: {
+          top: 0.05,
+          bottom: 0.26,
+        },
       },
       leftPriceScale: {
         borderColor: "#cbd5e1",
@@ -1004,10 +1058,31 @@ export function StrategyPage() {
       visible: isChartSeriesVisible(PRICE_SERIES_KEY),
     });
 
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      color: VOLUME_SERIES_COLOR,
+      priceFormat: {
+        type: "volume",
+      },
+      priceLineVisible: false,
+      lastValueVisible: false,
+      priceScaleId: VOLUME_SERIES_KEY,
+      visible: isChartSeriesVisible(VOLUME_SERIES_KEY),
+    });
+
+    chart.priceScale(VOLUME_SERIES_KEY).applyOptions({
+      scaleMargins: {
+        top: 0.78,
+        bottom: 0,
+      },
+      borderVisible: false,
+    });
+
     chartApiRef.current = chart;
     candleSeriesRef.current = candleSeries;
+    volumeSeriesRef.current = volumeSeries;
 
     candleSeries.setData(sortByTime([...candleDataByTimeRef.current.values()]));
+    volumeSeries.setData(sortByTime([...volumeDataByTimeRef.current.values()]));
     syncPriceSeriesColor();
     applySignalMarkersToChart();
     addIndicatorSeriesToChart();
@@ -1050,6 +1125,7 @@ export function StrategyPage() {
       signalMarkersRef.current?.detach();
       chartApiRef.current = null;
       candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
       signalMarkersRef.current = null;
       indicatorSeriesByKeyRef.current = new Map();
       setChartSeriesLabelPositions([]);
@@ -1179,6 +1255,11 @@ export function StrategyPage() {
       key: PRICE_SERIES_KEY,
       label: hasSymbol ? (symbolName ?? "Price") : "Price",
       color: PRICE_SERIES_COLOR,
+    },
+    {
+      key: VOLUME_SERIES_KEY,
+      label: "Volume",
+      color: VOLUME_SERIES_COLOR,
     },
     ...indicatorSeriesKeys.map((key, index) => ({
       key,
