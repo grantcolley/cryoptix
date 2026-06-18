@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Cryoptix.Strategy.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Order
 {
@@ -14,8 +15,8 @@ namespace Cryoptix.Strategy.Order
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            _logger.LogInformation(
-                "Execution requested for {Symbol}. Side:{Side} Quantity:{Quantity} LimitPrice:{LimitPrice} QuoteNotional:{QuoteNotional}",
+            LogInformation.ExecutionRequested(
+                _logger,
                 request.Symbol,
                 request.Side,
                 request.Quantity,

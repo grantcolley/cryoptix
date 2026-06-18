@@ -3,6 +3,7 @@ using Cryoptix.Market.Data;
 using Cryoptix.Market.Extensions;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Logging;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
@@ -48,8 +49,8 @@ namespace Cryoptix.Strategy.Seeding
             DateTime endTime = _clock.UtcNow;
             DateTime startTime = GetSeedStartTime(strategy, endTime);
 
-            _logger.LogInformation(
-                "Fetching historical klines for {Symbol} {Interval} from {Start:u} to {End:u}",
+            LogInformation.FetchHistoricalKlines(
+                _logger,
                 strategy.Symbol,
                 strategy.KlineInterval,
                 startTime,
@@ -70,11 +71,7 @@ namespace Cryoptix.Strategy.Seeding
                     cancellationToken);
             }
 
-            _logger.LogInformation(
-                "Seeded {Count} klines for {Symbol} {Interval}",
-                historicalKlines.Count,
-                strategy.Symbol,
-                strategy.KlineInterval);
+            LogInformation.SeededKlines(_logger, historicalKlines.Count, strategy.Symbol, strategy.KlineInterval);
         }
 
         private static DateTime GetSeedStartTime(Strategies.Strategy strategy, DateTime endTimeUtc)

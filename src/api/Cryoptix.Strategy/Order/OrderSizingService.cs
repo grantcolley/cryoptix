@@ -2,6 +2,7 @@
 using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Order
@@ -120,10 +121,12 @@ namespace Cryoptix.Strategy.Order
                     }
 
                 default:
-                    _logger.LogDebug(
-                        "Sizing skipped for {Symbol}: signal {Signal} is not executable.",
-                        context.Strategy.Symbol,
-                        signalEvaluationResult.Signal);
+                    LogDebug.SizingSkipped(
+                        _logger,
+                        context.Strategy.Symbol!,
+                        signalEvaluationResult.Signal.TimestampUtc,
+                        signalEvaluationResult.Signal.SignalType,
+                        signalEvaluationResult.Signal.Reason);
 
                     return null;
             }

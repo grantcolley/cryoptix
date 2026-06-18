@@ -1,8 +1,8 @@
 ﻿using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
-using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Logging;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Signal;
 using Microsoft.Extensions.Logging;
@@ -73,9 +73,7 @@ namespace Cryoptix.Strategy.Dispatcher
 
                 if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
                 {
-                    _logger.LogDebug(
-                        "Dropped indicators broadcast for {Symbol} due to channel pressure.",
-                        context.Strategy.Symbol);
+                    LogDebug.IndicatorsDropped(_logger, context.Strategy.Symbol!);
                 }
             }
 
@@ -89,16 +87,12 @@ namespace Cryoptix.Strategy.Dispatcher
                 // Broadcast signal
                 if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
                 {
-                    _logger.LogDebug(
-                        "Dropped signal broadcast for {Symbol} due to channel pressure.",
-                        context.Strategy.Symbol);
+                    LogDebug.SignalDropped(_logger, context.Strategy.Symbol!);
                 }
             }
 
-            _logger.LogInformation(
-                "KLINE {Source} {Symbol} {Interval} OpenTime:{OpenTime:u} CloseTime:{CloseTime:u} Open:{Open} Close:{Close}",
-                marketEvent.Source,
-                marketEvent.Kline.Symbol,
+            LogInformation.KlineProcessed(_logger, marketEvent.Source,
+                marketEvent.Kline.Symbol!,
                 marketEvent.Kline.Interval,
                 marketEvent.Kline.OpenTime,
                 marketEvent.Kline.CloseTime,
@@ -117,11 +111,7 @@ namespace Cryoptix.Strategy.Dispatcher
             bool added = session.Cache.AddTrade(marketEvent.Trade);
             if (!added)
             {
-                _logger.LogDebug(
-                    "Ignored duplicate trade {TradeId} for {Symbol}",
-                    marketEvent.Trade.Id,
-                    marketEvent.Trade.Symbol);
-
+                LogInformation.TradeIgnored(_logger, marketEvent.Trade.Symbol!, marketEvent.Trade.Id);
                 return;
             }
 
@@ -141,9 +131,7 @@ namespace Cryoptix.Strategy.Dispatcher
 
                 if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
                 {
-                    _logger.LogDebug(
-                        "Dropped indicators broadcast for {Symbol} due to channel pressure.",
-                        context.Strategy.Symbol);
+                    LogDebug.IndicatorsDropped(_logger, context.Strategy.Symbol!);
                 }
             }
 
@@ -156,15 +144,12 @@ namespace Cryoptix.Strategy.Dispatcher
 
                 if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
                 {
-                    _logger.LogDebug(
-                        "Dropped signal broadcast for {Symbol} due to channel pressure.",
-                        context.Strategy.Symbol);
+                    LogDebug.SignalDropped(_logger, context.Strategy.Symbol!);
                 }
             }
 
-            _logger.LogInformation(
-                "TRADE {Symbol} TradeId:{TradeId} Time:{Time:u} Price:{Price} BaseQuantity:{BaseQuantity} QuoteQuantity:{QuoteQuantity}",
-                marketEvent.Trade.Symbol,
+            LogInformation.TradeProcessed(_logger,
+                marketEvent.Trade.Symbol!,
                 marketEvent.Trade.Id,
                 marketEvent.Trade.Time,
                 marketEvent.Trade.Price,

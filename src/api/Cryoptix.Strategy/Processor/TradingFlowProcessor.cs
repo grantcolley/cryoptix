@@ -5,6 +5,7 @@ using Cryoptix.Strategy.Cache;
 using Cryoptix.Strategy.Channel;
 using Cryoptix.Strategy.Dispatcher;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Logging;
 using Cryoptix.Strategy.Notification;
 using Cryoptix.Strategy.Seeding;
 using Cryoptix.Strategy.Snapshot;
@@ -148,9 +149,7 @@ namespace Cryoptix.Strategy.Processor
 
                     strategyProcessorSession.Strategy = updatedStrategy;
 
-                    _logger.LogInformation(
-                        "Applied strategy update for {Symbol}. Subscriptions unchanged.",
-                        strategyProcessorSession.Strategy.Symbol);
+                    LogInformation.ApplyStrategyUpdate(_logger, strategyProcessorSession.Strategy.Symbol!);
 
                     await _strategyStatusNotifier.NotifyUpdatedAsync(
                         strategyProcessorSession.Strategy,
@@ -201,10 +200,7 @@ namespace Cryoptix.Strategy.Processor
 
                     if (!klineBroadcastWriter.TryWrite(klineEvent.Kline))
                     {
-                        _logger.LogDebug(
-                            "Dropped kline broadcast event for {Symbol} {Interval} due to broadcast channel pressure.",
-                            klineEvent.Kline.Symbol,
-                            klineEvent.Kline.Interval);
+                        LogDebug.KlineDropped(_logger, klineEvent.Kline.Symbol!, klineEvent.Kline.Interval);
 
                         _notificationMetrics.RecordBroadcastDropKline(
                             klineEvent.Kline.Symbol,
@@ -227,10 +223,7 @@ namespace Cryoptix.Strategy.Processor
 
                     if (!tradeBroadcastWriter.TryWrite(tradeEvent.Trade))
                     {
-                        _logger.LogDebug(
-                            "Dropped trade broadcast event for {Symbol} TradeId:{TradeId} due to broadcast channel pressure.",
-                            tradeEvent.Trade.Symbol,
-                            tradeEvent.Trade.Id);
+                        LogDebug.TradeDropped(_logger, tradeEvent.Trade.Symbol!, tradeEvent.Trade.Id);
 
                         _notificationMetrics.RecordBroadcastDropTrade(tradeEvent.Trade.Symbol);
                     }

@@ -44,11 +44,14 @@ namespace Cryoptix.Web.API.Notification
 
             await subscriptionManager.RegisterAsync(subscriber, Context.ConnectionAborted);
 
-            logger.LogInformation(
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
                 "Registered subscriber after market data snapshot. ConnectionId={ConnectionId}, UserId={UserId}, TenantId={TenantId}",
                 subscriber.ConnectionId,
                 subscriber.UserId,
                 subscriber.TenantId);
+            }
 
             await base.OnConnectedAsync();
         }
@@ -57,9 +60,12 @@ namespace Cryoptix.Web.API.Notification
         {
             await subscriptionManager.UnregisterAsync(Context.ConnectionId);
 
-            logger.LogInformation(
-                "Unregistered subscriber. ConnectionId={ConnectionId}",
-                Context.ConnectionId);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Unregistered subscriber. ConnectionId={ConnectionId}",
+                    Context.ConnectionId);
+            }
 
             await base.OnDisconnectedAsync(exception);
         }

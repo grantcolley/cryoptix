@@ -14,7 +14,10 @@ namespace Cryoptix.Strategy.State
         {
             Volatile.Write(ref _status, status);
 
-            _logger.LogInformation("Strategy status updated: {@Status}", status);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Strategy status updated: {@Status}", status);
+            }
         }
     }
 }

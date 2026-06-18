@@ -1,6 +1,7 @@
 ﻿using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Logging;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 
@@ -51,10 +52,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 }
             }
 
-            _logger.LogDebug(
-                "Computed indicators for {Symbol}. Values:{Values}",
-                context.Strategy.Symbol,
-                values);
+            LogDebug.IndicatorsComputed(_logger, context.Strategy.Symbol!, values);
 
             return Task.FromResult(new IndicatorComputationResult
             {
