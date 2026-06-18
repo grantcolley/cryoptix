@@ -2,6 +2,10 @@
   <Folder Name="/Exchanges/">
     <Project Path="Exchanges/Cryoptix.Exchange.Binance/Cryoptix.Exchange.Binance.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Cryoptix.Strategy.Tests/Cryoptix.Strategy.Tests.csproj" Id="2a40a6ac-fd1e-40b0-a98b-c1793da4ba56" />
+    <Project Path="Tests/Cryoptix.Web.API.Tests/Cryoptix.Web.API.Tests.csproj" Id="8fe8e6a8-4161-4f7c-818f-0746dfac699b" />
+  </Folder>
   <Project Path="Cryoptix.Exchange/Cryoptix.Exchange.csproj" />
   <Project Path="Cryoptix.Market/Cryoptix.Market.csproj" Id="05d95008-cc17-4c3e-80b1-1d6c9092358a" />
   <Project Path="Cryoptix.Observer/Cryoptix.Observer.csproj" Id="29b39763-0343-478b-a864-8a442e0d7013" />
