@@ -1,5 +1,7 @@
 ﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Processor;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Logging
@@ -82,5 +84,34 @@ namespace Cryoptix.Strategy.Logging
             int count,
             string symbol,
             KlineInterval interval);
+
+        [LoggerMessage(
+            EventId = 1007,
+            Level = LogLevel.Information,
+            Message = "Signal approved for execution for {Symbol} [{StrategyProcessorType}]: [{signalTimestampUtc}, {SignalType}, {signalReason}]. Side:{Side} Quantity:{Quantity} LimitPrice:{LimitPrice} QuoteNotional:{QuoteNotional} Reason:{Reason}")]
+        public static partial void SignalApproved(
+            ILogger logger,
+            string symbol,
+            StrategyProcessorType StrategyProcessorType,
+            DateTime signalTimestampUtc,
+            SignalType SignalType,
+            string? signalReason,
+            OrderSide side,
+            decimal quantity,
+            decimal? limitPrice,
+            decimal? quoteNotional,
+            string? reason);
+
+        [LoggerMessage(
+            EventId = 1008,
+            Level = LogLevel.Information,
+            Message = "Execution submitted for {Symbol}. Side:{Side} ExchangeOrderId:{ExchangeOrderId} Quantity:{Quantity} Price:{Price}")]
+        public static partial void ExecutionSubmitted(
+            ILogger logger,
+            string symbol,
+            OrderSide side,
+            string? exchangeOrderId,
+            decimal? quantity,
+            decimal? Price);
     }
 }
