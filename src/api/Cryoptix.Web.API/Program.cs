@@ -34,6 +34,7 @@ using Cryoptix.Web.API.Notification;
 using Cryoptix.Web.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Threading.Channels;
@@ -218,11 +219,26 @@ builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
         new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.TradingFlow, () => sp.GetRequiredService<TradingFlowProcessor>())
     ]));
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+});
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
 app.UseApiExceptionHandling();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseForwardedHeaders();
+app.UseHttpsRedirection();
 
 if (!string.IsNullOrWhiteSpace(corsPolicy))
 {
