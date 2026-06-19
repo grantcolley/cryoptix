@@ -151,7 +151,7 @@ builder.Services.AddSingleton<Credentials>(
     builder.Configuration.GetRequiredSection("Credentials").Get<Credentials>()
     ?? throw new NullReferenceException("BinanceApi credentials not found in configuration"));
 
-builder.Services.AddHostedService<StrategyBackgroundService>();
+//builder.Services.AddHostedService<StrategyBackgroundService>();
 
 Channel<StrategyCommand> strategyCommandChannel = Channel.CreateBounded<StrategyCommand>(
     new BoundedChannelOptions(100)
