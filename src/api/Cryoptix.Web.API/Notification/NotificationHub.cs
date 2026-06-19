@@ -2,12 +2,13 @@
 using Cryoptix.Observer.Notification;
 using Cryoptix.Observer.Subscription;
 using Cryoptix.Strategy.Cache;
+using Cryoptix.Web.API.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Cryoptix.Web.API.Notification
 {
-    [Authorize]
+    [Authorize(Policy = Claims.CRYOPTIX_USER_CLAIM)]
     public sealed class NotificationHub(
         ISubscriptionManager subscriptionManager,
         IUserContextAccessor userContextAccessor,
