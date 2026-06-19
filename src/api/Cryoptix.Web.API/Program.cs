@@ -47,14 +47,14 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-if (!builder.Environment.IsDevelopment())
-{
-    int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
-    builder.WebHost.ConfigureKestrel(options =>
-    {
-        options.ListenAnyIP(port);
-    });
-}
+//if (!builder.Environment.IsDevelopment())
+//{
+//    int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
+//    builder.WebHost.ConfigureKestrel(options =>
+//    {
+//        options.ListenAnyIP(port);
+//    });
+//}
 
 string klineCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY);
 string tradeCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_TRADE_CAPACITY);
