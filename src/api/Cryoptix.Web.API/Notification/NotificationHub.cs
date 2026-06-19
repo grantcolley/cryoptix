@@ -47,10 +47,8 @@ namespace Cryoptix.Web.API.Notification
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation(
-                "Registered subscriber after market data snapshot. ConnectionId={ConnectionId}, UserId={UserId}, TenantId={TenantId}",
-                subscriber.ConnectionId,
-                subscriber.UserId,
-                subscriber.TenantId);
+                "Registered subscriber after market data snapshot. ConnectionId={ConnectionId}.",
+                subscriber.ConnectionId);
             }
 
             await base.OnConnectedAsync();
