@@ -1,5 +1,6 @@
 ﻿using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
+using Cryoptix.Web.API.Constants;
 using Cryoptix.Web.API.Notification;
 
 namespace Cryoptix.Web.API.Endpoints
@@ -16,7 +17,8 @@ namespace Cryoptix.Web.API.Endpoints
             appGroup.MapPost("/update", UpdateStrategy);
             appGroup.MapPost("/stop", StopStrategy);
 
-            appGroup.MapHub<NotificationHub>("/subscribe");
+            appGroup.MapHub<NotificationHub>("/subscribe")
+                .RequireAuthorization(Claims.CRYOPTIX_CLIENT_ID, Claims.CRYOPTIX_USER_CLAIM);
 
             return app;
         }
