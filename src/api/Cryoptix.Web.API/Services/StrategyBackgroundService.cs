@@ -14,6 +14,8 @@ namespace Cryoptix.Web.API.Services
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
+            await Task.Yield();
+
             _logger.LogInformation("Strategy background service started.");
 
             await foreach (StrategyCommand strategyCommand in _strategyCommandQueue.ReadAllAsync(cancellationToken))
