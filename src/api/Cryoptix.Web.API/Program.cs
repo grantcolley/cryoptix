@@ -49,8 +49,11 @@ builder.Configuration
 
 if (!builder.Environment.IsDevelopment())
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+    int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.ListenAnyIP(8080);
+    });
 }
 
 string klineCapacity = builder.Configuration[ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY] ?? throw new NullReferenceException(ConfigKeys.STRATEGY_CHANNEL_OPTIONS_KLINE_CAPACITY);
@@ -151,7 +154,7 @@ builder.Services.AddSingleton<Credentials>(
     builder.Configuration.GetRequiredSection("Credentials").Get<Credentials>()
     ?? throw new NullReferenceException("BinanceApi credentials not found in configuration"));
 
-//builder.Services.AddHostedService<StrategyBackgroundService>();
+builder.Services.AddHostedService<StrategyBackgroundService>();
 
 Channel<StrategyCommand> strategyCommandChannel = Channel.CreateBounded<StrategyCommand>(
     new BoundedChannelOptions(100)
