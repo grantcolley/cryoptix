@@ -52,7 +52,7 @@ if (!builder.Environment.IsDevelopment())
     int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.ListenAnyIP(8080);
+        options.ListenAnyIP(port);
     });
 }
 
@@ -235,13 +235,13 @@ WebApplication app = builder.Build();
 
 app.UseApiExceptionHandling();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-}
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseHsts();
+//}
 
-app.UseForwardedHeaders();
-app.UseHttpsRedirection();
+//app.UseForwardedHeaders();
+//app.UseHttpsRedirection();
 
 if (!string.IsNullOrWhiteSpace(corsPolicy))
 {
