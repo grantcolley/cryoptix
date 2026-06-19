@@ -3,6 +3,7 @@ using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Engine;
+using Cryoptix.Strategy.Logging;
 using Cryoptix.Strategy.Order;
 using Microsoft.Extensions.Logging;
 
@@ -118,11 +119,13 @@ namespace Cryoptix.Strategy.Signal
                 Reason = orderSizingResult.Reason
             };
 
-            _logger.LogInformation(
-                "Signal approved for execution for {Symbol} [{StrategyType}]: {Signal}. Side:{Side} Quantity:{Quantity} LimitPrice:{LimitPrice} QuoteNotional:{QuoteNotional} Reason:{Reason}",
-                context.Strategy.Symbol,
+            LogInformation.SignalApproved(
+                _logger,
+                context.Strategy.Symbol!,
                 context.Strategy.StrategyProcessorType,
-                signalEvaluationResult.Signal,
+                signalEvaluationResult.Signal.TimestampUtc,
+                signalEvaluationResult.Signal.SignalType,
+                signalEvaluationResult.Signal.Reason,
                 orderSizingResult.Side,
                 orderSizingResult.Quantity,
                 orderSizingResult.LimitPrice,
@@ -137,6 +140,14 @@ namespace Cryoptix.Strategy.Signal
             {
                 _logger.LogInformation(
                     "Execution submitted for {Symbol}. Side:{Side} ExchangeOrderId:{ExchangeOrderId} Quantity:{Quantity} Price:{Price}",
+                    request.Symbol,
+                    request.Side,
+                    executionResult.ExchangeOrderId,
+                    executionResult.SubmittedQuantity,
+                    executionResult.SubmittedPrice);
+
+                LogInformation.ExecutionSubmitted(
+                    _logger,
                     request.Symbol,
                     request.Side,
                     executionResult.ExchangeOrderId,
