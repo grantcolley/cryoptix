@@ -289,7 +289,11 @@ try
     }
 
     app.UseForwardedHeaders();
-    app.UseHttpsRedirection();
+
+    if(app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     if (!string.IsNullOrWhiteSpace(corsPolicy))
     {
