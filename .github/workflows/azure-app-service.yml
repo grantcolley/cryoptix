@@ -86,7 +86,7 @@ jobs:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
         run: |
-          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/api.zip" --type zip --track-status false
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${{ github.workspace }}/api.zip" --type zip
 
       - name: Logout of Azure
         run: az logout || true
