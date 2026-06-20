@@ -27,8 +27,15 @@ jobs:
         run: dotnet build src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release -o "${{ github.workspace }}/publish" --no-build
-        
+        run: |
+          rm -rf "${{ github.workspace }}/publish" "${{ github.workspace }}/api.zip"
+          dotnet publish src/api/Cryoptix.Web.API/Cryoptix.Web.API.csproj --configuration Release --output "${{ github.workspace }}/publish"
+
+      - name: Verify published output
+        run: |
+          ls -la "${{ github.workspace }}/publish"
+          strings "${{ github.workspace }}/publish/Cryoptix.Web.API.dll" | grep "STARTUP:" || true          
+          
       - name: Zip publish output
         run: |
           cd "${{ github.workspace }}/publish"
