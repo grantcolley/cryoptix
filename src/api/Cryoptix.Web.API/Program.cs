@@ -79,11 +79,7 @@ try
 
     if (!builder.Environment.IsDevelopment())
     {
-        int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            options.ListenAnyIP(port);
-        });
+        builder.WebHost.UseUrls("http://0.0.0.0:8080");
     }
 
     Console.WriteLine("STARTUP: configuration validation");
@@ -305,9 +301,12 @@ try
 
     app.MapCryoptixApi();
 
-    app.Run();
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        Console.WriteLine("STARTUP: application started");
+    });
 
-    Console.WriteLine("STARTUP: application running");
+    app.Run();
 }
 catch (Exception ex)
 {
