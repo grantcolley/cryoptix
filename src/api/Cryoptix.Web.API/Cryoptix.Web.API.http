@@ -1,6 +1,3 @@
 @Cryoptix.Web.API_HostAddress = http://localhost:5178
 
-GET {{Cryoptix.Web.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
 ###
