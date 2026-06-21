@@ -138,14 +138,6 @@ namespace Cryoptix.Strategy.Signal
 
             if (executionResult.Success)
             {
-                _logger.LogInformation(
-                    "Execution submitted for {Symbol}. Side:{Side} ExchangeOrderId:{ExchangeOrderId} Quantity:{Quantity} Price:{Price}",
-                    request.Symbol,
-                    request.Side,
-                    executionResult.ExchangeOrderId,
-                    executionResult.SubmittedQuantity,
-                    executionResult.SubmittedPrice);
-
                 LogInformation.ExecutionSubmitted(
                     _logger,
                     request.Symbol,
