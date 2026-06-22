@@ -67,7 +67,7 @@ public sealed class GlobalExceptionHandlerTests
 
         // Assert
         Assert.AreSame(services, returned);
-        Assert.IsTrue(services.Any(d => d.ServiceType.FullName?.Contains("IExceptionHandler") == true));
+        Assert.Contains(d => d.ServiceType.FullName?.Contains("IExceptionHandler") == true, services);
     }
 
     private static DefaultHttpContext NewHttpContext()
@@ -76,7 +76,7 @@ public sealed class GlobalExceptionHandlerTests
         services.AddProblemDetails();
         services.AddLogging();
 
-        DefaultHttpContext context = new DefaultHttpContext
+        DefaultHttpContext context = new()
         {
             RequestServices = services.BuildServiceProvider()
         };
