@@ -1,7 +1,10 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Exchange.Api
 {
+    /// <summary>
+    /// Defines the i exchange rest api contract.
+    /// </summary>
     public interface IExchangeRestApi : IDisposable
     {
         /// <summary>

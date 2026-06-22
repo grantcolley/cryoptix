@@ -1,8 +1,11 @@
-﻿using Cryoptix.Market.Args;
+using Cryoptix.Market.Args;
 using Cryoptix.Market.Data;
 
 namespace Cryoptix.Exchange.Api
 {
+    /// <summary>
+    /// Defines the i exchange subscription api contract.
+    /// </summary>
     public interface IExchangeSubscriptionApi
     {
         /// <summary>
