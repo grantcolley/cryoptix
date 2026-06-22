@@ -6,7 +6,7 @@ using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Agent
 {
-    public class StrategyAgent(
+    public sealed class StrategyAgent(
         StrategyStateStore state,
         IStrategyProcessorCatalog strategyProcessorCatalog,
         IExchangeApiFactory exchangeApiFactory)

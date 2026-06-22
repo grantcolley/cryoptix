@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Web.API.Config
 {
-    public static class ConfigKeys
+    internal static class ConfigKeys
     {
         public const string AUTH_DOMAIN = "Auth:Domain";
         public const string AUTH_AUDIENCE = "Auth:Audience";

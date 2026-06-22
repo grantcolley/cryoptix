@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Web.API.ExceptionHandling
 {
-    public static class ExceptionHandlingExtensions
+    internal static class ExceptionHandlingExtensions
     {
         public static IServiceCollection AddApiExceptionHandling(this IServiceCollection services)
         {

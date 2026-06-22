@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Strategy.Command
 {
-    public class StrategyCommandResult
+    public sealed class StrategyCommandResult
     {
         public bool Success { get; set; }
         public int StatusCode { get; set; }

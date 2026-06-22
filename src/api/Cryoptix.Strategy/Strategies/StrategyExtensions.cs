@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Strategy.Strategies
 {
-    public static class StrategyExtensions
+    internal static class StrategyExtensions
     {
         public static bool CanUpdate(this Strategy activeStrategy, Strategy? strategy, out string? message)
         {

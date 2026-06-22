@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Web.API.Endpoints
 {
-    public static class MapCryoptixEndpoints
+    internal static class MapCryoptixEndpoints
     {
         public static IEndpointRouteBuilder MapCryoptixApi(this IEndpointRouteBuilder app)
         {

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 
 namespace Cryoptix.Web.API.Authorization
 {
-    public sealed class AllowedClientHandler(IOptions<AuthOptions> options) : AuthorizationHandler<AllowedClientRequirement>
+    internal sealed class AllowedClientHandler(IOptions<AuthOptions> options) : AuthorizationHandler<AllowedClientRequirement>
     {
         private readonly AuthOptions _authOptions = options.Value;
 

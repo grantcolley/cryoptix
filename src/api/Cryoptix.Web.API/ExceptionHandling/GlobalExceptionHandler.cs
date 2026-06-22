@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Cryoptix.Web.API.ExceptionHandling
 {
-    public sealed class GlobalExceptionHandler(
+    internal sealed class GlobalExceptionHandler(
         ILogger<GlobalExceptionHandler> logger,
         IHostEnvironment env) : IExceptionHandler
     {

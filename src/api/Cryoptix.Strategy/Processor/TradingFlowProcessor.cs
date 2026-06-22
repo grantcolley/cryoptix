@@ -15,7 +15,7 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Processor
 {
-    public class TradingFlowProcessor(
+    public sealed class TradingFlowProcessor(
         ILogger<TradingFlowProcessor> logger,
         IStrategyMarketSeeder strategyMarketSeeder,
         IStrategyMarketEventSubscriber strategyMarketEventSubscriber,

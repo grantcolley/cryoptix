@@ -5,7 +5,7 @@ using Cryoptix.Web.API.Notification;
 
 namespace Cryoptix.Web.API.Endpoints
 {
-    public static class MapStrategyEndpoints
+    internal static class MapStrategyEndpoints
     {
         public static IEndpointRouteBuilder MapStrategyApi(this IEndpointRouteBuilder app)
         {

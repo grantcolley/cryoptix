@@ -3,7 +3,7 @@ using Cryoptix.Strategy.Command;
 
 namespace Cryoptix.Web.API.Services
 {
-    public class StrategyBackgroundService(
+    internal class StrategyBackgroundService(
         IStrategyCommandQueue strategyCommandQueue,
         IStrategyAgent strategyAgent,
         ILogger<StrategyBackgroundService> logger) : BackgroundService

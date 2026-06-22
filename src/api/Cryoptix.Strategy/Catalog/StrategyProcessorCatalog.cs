@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Strategy.Catalog
 {
-    public class StrategyProcessorCatalog(IEnumerable<KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>> strategyProcessors) : IStrategyProcessorCatalog
+    public sealed class StrategyProcessorCatalog(IEnumerable<KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>> strategyProcessors) : IStrategyProcessorCatalog
     {
         private readonly Dictionary<StrategyProcessorType, Func<IStrategyProcessor>> _strategyProcessorMap = strategyProcessors.ToDictionary(e => e.Key, e => e.Value);
 

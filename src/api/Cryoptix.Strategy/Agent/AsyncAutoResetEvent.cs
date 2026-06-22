@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Strategy.Agent
 {
-    public sealed class AsyncAutoResetEvent
+    internal sealed class AsyncAutoResetEvent
     {
         private static readonly Task Completed = Task.FromResult(true);
         private readonly Queue<TaskCompletionSource<bool>> _waits = new();

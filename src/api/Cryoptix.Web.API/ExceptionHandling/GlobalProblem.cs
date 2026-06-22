@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Web.API.ExceptionHandling
 {
-    public class GlobalProblem
+    internal sealed class GlobalProblem
     {
         public int Status { get; set; }
         public string? Title { get; set; }

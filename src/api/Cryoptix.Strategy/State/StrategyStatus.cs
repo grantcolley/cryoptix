@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Strategy.State
 {
-    public class StrategyStatus
+    public sealed class StrategyStatus
     {
         public StrategyState StrategyState { get; set; }
         public StrategyProcessorType StrategyProcessorType { get; set; }

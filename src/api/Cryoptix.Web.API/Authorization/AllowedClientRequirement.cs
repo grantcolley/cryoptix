@@ -2,5 +2,5 @@
 
 namespace Cryoptix.Web.API.Authorization
 {
-    public sealed class AllowedClientRequirement : IAuthorizationRequirement { }
+    internal sealed class AllowedClientRequirement : IAuthorizationRequirement { }
 }

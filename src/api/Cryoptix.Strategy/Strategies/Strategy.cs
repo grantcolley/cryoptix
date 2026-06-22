@@ -6,7 +6,7 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Strategies
 {
-    public class Strategy
+    public sealed class Strategy
     {
         // Basic strategy info
         public int StrategyId { get; set; } = 1;

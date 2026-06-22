@@ -1,6 +1,6 @@
 ﻿namespace Cryoptix.Web.API.Authorization
 {
-    public class AuthOptions
+    internal sealed class AuthOptions
     {
         public List<string> ClientIds { get; init; } = [];
     }

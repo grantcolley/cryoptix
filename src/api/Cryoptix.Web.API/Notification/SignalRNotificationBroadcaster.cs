@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Cryoptix.Web.API.Notification
 {
-    public sealed class SignalRNotificationBroadcaster(
+    internal sealed class SignalRNotificationBroadcaster(
         ISubscriptionManager subscriptionManager,
         IHubContext<NotificationHub> hubContext,
         ILogger<SignalRNotificationBroadcaster> logger) : INotificationBroadcaster

@@ -2,7 +2,7 @@
 
 namespace Cryoptix.Strategy.State
 {
-    public class StrategyStateStore(ILogger<StrategyStateStore> logger)
+    public sealed class StrategyStateStore(ILogger<StrategyStateStore> logger)
     {
         private readonly ILogger<StrategyStateStore> _logger = logger;
 

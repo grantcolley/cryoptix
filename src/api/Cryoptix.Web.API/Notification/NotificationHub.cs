@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace Cryoptix.Web.API.Notification
 {
     [Authorize(Policy = Claims.CRYOPTIX_USER_CLAIM)]
-    public sealed class NotificationHub(
+    internal sealed class NotificationHub(
         ISubscriptionManager subscriptionManager,
         IUserContextAccessor userContextAccessor,
         IMarketDataSnapshotProvider marketDataSnapshotProvider,
