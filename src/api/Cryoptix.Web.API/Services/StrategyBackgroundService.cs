@@ -1,4 +1,4 @@
-﻿using Cryoptix.Strategy.Agent;
+using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Command;
 
 namespace Cryoptix.Web.API.Services
@@ -12,6 +12,11 @@ namespace Cryoptix.Web.API.Services
         private readonly IStrategyAgent _strategyAgent = strategyAgent;
         private readonly ILogger<StrategyBackgroundService> _logger = logger;
 
+        /// <summary>
+        /// Executes the execute async operation.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The execute async result.</returns>
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Yield();
@@ -71,6 +76,11 @@ namespace Cryoptix.Web.API.Services
             }
         }
 
+        /// <summary>
+        /// Executes the stop async operation.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The stop async result.</returns>
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             try

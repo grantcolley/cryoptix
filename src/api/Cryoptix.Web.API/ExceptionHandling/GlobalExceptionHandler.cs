@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 
 namespace Cryoptix.Web.API.ExceptionHandling
@@ -10,6 +10,13 @@ namespace Cryoptix.Web.API.ExceptionHandling
         private readonly ILogger<GlobalExceptionHandler> _logger = logger;
         private readonly IHostEnvironment _env = env;
 
+        /// <summary>
+        /// Executes the try handle async operation.
+        /// </summary>
+        /// <param name="httpContext">The http context value.</param>
+        /// <param name="exception">The exception value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The try handle async result.</returns>
         public async ValueTask<bool> TryHandleAsync(
             HttpContext httpContext,
             Exception exception,

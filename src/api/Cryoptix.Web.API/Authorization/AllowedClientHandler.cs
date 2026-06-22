@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
 namespace Cryoptix.Web.API.Authorization
@@ -7,6 +7,12 @@ namespace Cryoptix.Web.API.Authorization
     {
         private readonly AuthOptions _authOptions = options.Value;
 
+        /// <summary>
+        /// Executes the handle requirement async operation.
+        /// </summary>
+        /// <param name="context">The context value.</param>
+        /// <param name="requirement">The requirement value.</param>
+        /// <returns>The handle requirement async result.</returns>
         protected override Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             AllowedClientRequirement requirement)

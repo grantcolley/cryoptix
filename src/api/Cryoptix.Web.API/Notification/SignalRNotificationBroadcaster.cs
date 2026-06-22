@@ -1,4 +1,4 @@
-﻿using Cryoptix.Observer.Notification;
+using Cryoptix.Observer.Notification;
 using Cryoptix.Observer.Subscription;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,6 +13,13 @@ namespace Cryoptix.Web.API.Notification
         private readonly IHubContext<NotificationHub> _hubContext = hubContext;
         private readonly ILogger<SignalRNotificationBroadcaster> _logger = logger;
 
+        /// <summary>
+        /// Executes the t payload operation.
+        /// </summary>
+        /// <param name="messageType">The message type value.</param>
+        /// <param name="payload">The payload value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The t payload result.</returns>
         public async Task BroadcastAsync<TPayload>(
             MessageType messageType,
             TPayload payload,

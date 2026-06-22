@@ -1,4 +1,4 @@
-﻿using Cryoptix.Strategy.Command;
+using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Controller;
 using Cryoptix.Web.API.Constants;
 using Cryoptix.Web.API.Notification;
@@ -7,6 +7,11 @@ namespace Cryoptix.Web.API.Endpoints
 {
     internal static class MapStrategyEndpoints
     {
+        /// <summary>
+        /// Executes the map strategy api operation.
+        /// </summary>
+        /// <param name="app">The app value.</param>
+        /// <returns>The map strategy api result.</returns>
         public static IEndpointRouteBuilder MapStrategyApi(this IEndpointRouteBuilder app)
         {
             var appGroup = app.MapGroup("/strategy");

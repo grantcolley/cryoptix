@@ -1,4 +1,4 @@
-﻿using Cryoptix.Observer.Authorization;
+using Cryoptix.Observer.Authorization;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Observer.Subscription;
 using Cryoptix.Strategy.Cache;
@@ -15,6 +15,10 @@ namespace Cryoptix.Web.API.Notification
         IMarketDataSnapshotProvider marketDataSnapshotProvider,
         ILogger<NotificationHub> logger) : Hub
     {
+        /// <summary>
+        /// Executes the on connected async operation.
+        /// </summary>
+        /// <returns>The on connected async result.</returns>
         public override async Task OnConnectedAsync()
         {
             var user = Context.User
@@ -55,6 +59,11 @@ namespace Cryoptix.Web.API.Notification
             await base.OnConnectedAsync();
         }
 
+        /// <summary>
+        /// Executes the on disconnected async operation.
+        /// </summary>
+        /// <param name="exception">The exception value.</param>
+        /// <returns>The on disconnected async result.</returns>
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             await subscriptionManager.UnregisterAsync(Context.ConnectionId);
