@@ -777,7 +777,6 @@ See the [LICENSE](https://github.com/grantcolley/cryoptix/blob/main/LICENSE) fil
 
 ## Roadmap
 
-- Azure deployment
 - Support multiple exchanges
 - Update strategy parameters in realtime
 - Trading analytics
