@@ -1,9 +1,17 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Market.Extensions
 {
+    /// <summary>
+    /// Represents the kline interval extension.
+    /// </summary>
     public static class KlineIntervalExtension
     {
+        /// <summary>
+        /// Executes the kline interval to minutes operation.
+        /// </summary>
+        /// <param name="interval">The interval value.</param>
+        /// <returns>The kline interval to minutes result.</returns>
         public static int KlineIntervalToMinutes(this KlineInterval interval)
         {
             return interval switch
