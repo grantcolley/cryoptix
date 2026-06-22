@@ -1,7 +1,10 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Observer.Metrics
 {
+    /// <summary>
+    /// Defines the i notification metrics contract.
+    /// </summary>
     public interface INotificationMetrics
     {
         void RecordBroadcastDropKline(string? symbol, KlineInterval interval);

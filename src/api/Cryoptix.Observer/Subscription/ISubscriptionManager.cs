@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Observer.Subscription
+namespace Cryoptix.Observer.Subscription
 {
+    /// <summary>
+    /// Defines the i subscription manager contract.
+    /// </summary>
     public interface ISubscriptionManager
     {
         Task RegisterAsync(SubscriberConnection subscriber, CancellationToken cancellationToken = default);

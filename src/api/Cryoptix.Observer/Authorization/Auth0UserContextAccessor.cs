@@ -1,13 +1,19 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
 namespace Cryoptix.Observer.Authorization
 {
+    /// <summary>
+    /// Represents the auth0 user context accessor.
+    /// </summary>
     public sealed class Auth0UserContextAccessor : IUserContextAccessor
     {
-        // Example Auth0 custom claim name. Adjust to match your token.
-        // Auth0 recommends namespaced custom claims.
         private const string TenantIdClaim = "https://your-company.example/tenant_id";
 
+        /// <summary>
+        /// Executes the get user id operation.
+        /// </summary>
+        /// <param name="user">The user value.</param>
+        /// <returns>The get user id result.</returns>
         public string GetUserId(ClaimsPrincipal user)
         {
             ArgumentNullException.ThrowIfNull(user);
@@ -30,6 +36,11 @@ namespace Cryoptix.Observer.Authorization
             return userId;
         }
 
+        /// <summary>
+        /// Executes the get tenant id operation.
+        /// </summary>
+        /// <param name="user">The user value.</param>
+        /// <returns>The get tenant id result.</returns>
         public string? GetTenantId(ClaimsPrincipal user)
         {
             ArgumentNullException.ThrowIfNull(user);

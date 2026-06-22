@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Observer.Notification
+namespace Cryoptix.Observer.Notification
 {
+    /// <summary>
+    /// Defines the i notification broadcaster contract.
+    /// </summary>
     public interface INotificationBroadcaster
     {
         Task BroadcastAsync<TPayload>(
