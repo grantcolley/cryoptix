@@ -83,18 +83,20 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             if (period <= 0 || klines.Count < period)
                 return null;
 
-            // Use simple EMA initialization: start with SMA of first period, then apply smoothing
-            int start = klines.Count - period;
-            decimal sma = 0m;
-            for (int i = start; i < start + period; i++)
-                sma += klines[i].Close;
+            // TODO: #11 Don't calculate EMA from the beginning of the cached klines every time a new candle arrives
 
-            sma /= period;
+            // EMA formula: EMA_today = (Price_today - EMA_yesterday) * multiplier + EMA_yesterday
 
             decimal multiplier = 2m / (period + 1);
-            decimal ema = sma;
 
-            for (int i = start + period; i < klines.Count; i++)
+            // Seed EMA using first period prices
+            decimal ema = klines
+                .Take(period)
+                .Select(k => k.Close)
+                .Average();
+
+            // Compute EMA for the remaining prices
+            for (int i = period; i < klines.Count; i++)
             {
                 ema = ((klines[i].Close - ema) * multiplier) + ema;
             }
