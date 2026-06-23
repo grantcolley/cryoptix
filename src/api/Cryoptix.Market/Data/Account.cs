@@ -34,7 +34,7 @@ namespace Cryoptix.Market.Data
         /// </summary>
         public decimal SellerFee { get; set; }
         /// <summary>
-        /// Gets or sets the balances.
+        /// Gets the balances.
         /// </summary>
         public List<Balance> Balances { get; private set; }
     }
