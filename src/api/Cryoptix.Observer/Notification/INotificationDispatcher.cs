@@ -3,7 +3,7 @@ using Cryoptix.Market.Data;
 namespace Cryoptix.Observer.Notification
 {
     /// <summary>
-    /// Defines the i notification dispatcher contract.
+    /// Defines the notification dispatcher contract.
     /// </summary>
     public interface INotificationDispatcher
     {

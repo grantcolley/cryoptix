@@ -18,7 +18,7 @@ namespace Cryoptix.Observer.Metrics
         private readonly Histogram<double> _publishDurationMs;
 
         /// <summary>
-        /// Initializes a new instance of the &lt;see cref="NotificationMetrics"/&gt; class.
+        /// Initializes a new instance of the <see cref="NotificationMetrics"/> class.
         /// </summary>
         public NotificationMetrics()
         {
