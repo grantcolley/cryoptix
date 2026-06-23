@@ -1,12 +1,21 @@
-﻿using Cryoptix.Strategy.Logging;
+using Cryoptix.Strategy.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Order
 {
+    /// <summary>
+    /// Represents the order execution service.
+    /// </summary>
     public sealed class OrderExecutionService(ILogger<OrderExecutionService> logger) : IOrderExecutionService
     {
         private readonly ILogger<OrderExecutionService> _logger = logger;
 
+        /// <summary>
+        /// Executes the execute async operation.
+        /// </summary>
+        /// <param name="request">The request value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The execute async result.</returns>
         public Task<OrderExecutionResult> ExecuteAsync(
             OrderExecutionRequest request,
             CancellationToken cancellationToken)

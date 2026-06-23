@@ -1,4 +1,4 @@
-﻿namespace Cryoptix.Strategy.Agent
+namespace Cryoptix.Strategy.Agent
 {
     internal sealed class AsyncAutoResetEvent
     {
@@ -6,6 +6,11 @@
         private readonly Queue<TaskCompletionSource<bool>> _waits = new();
         private bool _signaled;
 
+        /// <summary>
+        /// Executes the wait async operation.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The wait async result.</returns>
         public Task WaitAsync(CancellationToken cancellationToken = default)
         {
             lock (_waits)
@@ -28,6 +33,9 @@
             }
         }
 
+        /// <summary>
+        /// Executes the set operation.
+        /// </summary>
         public void Set()
         {
             TaskCompletionSource<bool>? toRelease = null;

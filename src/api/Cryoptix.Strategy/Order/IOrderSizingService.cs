@@ -1,9 +1,12 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 
 namespace Cryoptix.Strategy.Order
 {
+    /// <summary>
+    /// Defines the i order sizing service contract.
+    /// </summary>
     public interface IOrderSizingService
     {
         OrderSizingResult? Size(

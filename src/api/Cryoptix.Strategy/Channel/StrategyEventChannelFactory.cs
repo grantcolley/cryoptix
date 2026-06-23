@@ -1,19 +1,31 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Event;
 
 namespace Cryoptix.Strategy.Channel
 {
+    /// <summary>
+    /// Represents the strategy event channel factory.
+    /// </summary>
     public sealed class StrategyEventChannelFactory(
         StrategyChannelOptions options) : IStrategyEventChannelFactory
     {
         private readonly StrategyChannelOptions _options = options;
 
+        /// <summary>
+        /// Executes the create operation.
+        /// </summary>
+        /// <returns>The create result.</returns>
         public StrategyEventChannels Create()
         {
             return Create(_options.KlineCapacity, _options.KlineFullMode, _options.TradeCapacity, _options.TradeFullMode, _options.KlineBroadcastCapacity, _options.KlineBroadcastFullMode, _options.TradeBroadcastCapacity, _options.TradeBroadcastFullMode, _options.IndicatorsBroadcastCapacity, _options.IndicatorsBroadcastFullMode, _options.SignalBroadcastCapacity, _options.SignalBroadcastFullMode);
         }
 
+        /// <summary>
+        /// Executes the create operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <returns>The create result.</returns>
         public StrategyEventChannels Create(Strategies.Strategy strategy)
         {
             int klineCapacity = strategy.SubscriptionChannelKlineCapacity > 0 ? strategy.SubscriptionChannelKlineCapacity : _options.KlineCapacity;
@@ -34,6 +46,22 @@ namespace Cryoptix.Strategy.Channel
             return Create(klineCapacity, klineFullMode, tradeCapacity, tradeFullMode, klineBroadcastCapacity, klineBroadcastFullMode, tradeBroadcastCapacity, tradeBroadcastFullMode, indicatorsBroadcastCapacity, indicatorsBroadcastFullMode, signalBroadcastCapacity, signalBroadcastFullMode);
         }
 
+        /// <summary>
+        /// Executes the create operation.
+        /// </summary>
+        /// <param name="klineCapacity">The kline capacity value.</param>
+        /// <param name="klineFullMode">The kline full mode value.</param>
+        /// <param name="tradeCapacity">The trade capacity value.</param>
+        /// <param name="tradeFullMode">The trade full mode value.</param>
+        /// <param name="klineBroadcastCapacity">The kline broadcast capacity value.</param>
+        /// <param name="klineBroadcastFullMode">The kline broadcast full mode value.</param>
+        /// <param name="tradeBroadcastCapacity">The trade broadcast capacity value.</param>
+        /// <param name="tradeBroadcastFullMode">The trade broadcast full mode value.</param>
+        /// <param name="indicatorsBroadcastCapacity">The indicators broadcast capacity value.</param>
+        /// <param name="indicatorsBroadcastFullMode">The indicators broadcast full mode value.</param>
+        /// <param name="signalBroadcastCapacity">The signal broadcast capacity value.</param>
+        /// <param name="signalBroadcastFullMode">The signal broadcast full mode value.</param>
+        /// <returns>The create result.</returns>
         public StrategyEventChannels Create(int klineCapacity, System.Threading.Channels.BoundedChannelFullMode klineFullMode, int tradeCapacity, System.Threading.Channels.BoundedChannelFullMode tradeFullMode, int klineBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, int tradeBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, int indicatorsBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, int signalBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode)
         {
             System.Threading.Channels.Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(

@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
 using Cryoptix.Market.Extensions;
 using Cryoptix.Strategy.Clock;
@@ -9,6 +9,9 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Seeding
 {
+    /// <summary>
+    /// Represents the strategy market seeder.
+    /// </summary>
     public sealed class StrategyMarketSeeder(
         ILogger<StrategyMarketSeeder> logger,
         IStrategyClock clock) : IStrategyMarketSeeder
@@ -16,6 +19,15 @@ namespace Cryoptix.Strategy.Seeding
         private readonly ILogger<StrategyMarketSeeder> _logger = logger;
         private readonly IStrategyClock _clock = clock;
 
+        /// <summary>
+        /// Executes the seed async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="restApi">The rest api value.</param>
+        /// <param name="klineWriter">The kline writer value.</param>
+        /// <param name="cache">The cache value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The seed async result.</returns>
         public async Task SeedAsync(
             Strategies.Strategy strategy,
             IExchangeRestApi restApi,

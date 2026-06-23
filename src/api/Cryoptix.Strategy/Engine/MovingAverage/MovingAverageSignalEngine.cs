@@ -1,13 +1,23 @@
-﻿using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Analysis;
 using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Engine.MovingAverage
 {
+    /// <summary>
+    /// Represents the moving average signal engine.
+    /// </summary>
     public sealed class MovingAverageSignalEngine(
         ILogger<MovingAverageSignalEngine> logger) : IStrategySignalEngine
     {
         private readonly ILogger<MovingAverageSignalEngine> _logger = logger;
 
+        /// <summary>
+        /// Executes the evaluate async operation.
+        /// </summary>
+        /// <param name="context">The context value.</param>
+        /// <param name="indicatorsResult">The indicators result value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The evaluate async result.</returns>
         /// <summary>
         /// Evaluates moving average crossover signals based on provided indicators.
         /// </summary>

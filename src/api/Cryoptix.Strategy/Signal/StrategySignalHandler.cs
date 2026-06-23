@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Clock;
@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Signal
 {
+    /// <summary>
+    /// Represents the strategy signal handler.
+    /// </summary>
     public sealed class StrategySignalHandler(
         ILogger<StrategySignalHandler> logger,
         IStrategyClock clock,
@@ -20,6 +23,13 @@ namespace Cryoptix.Strategy.Signal
         private readonly IOrderSizingService _orderSizingService = orderSizingService;
         private readonly IOrderExecutionService _orderExecutionService = orderExecutionService;
 
+        /// <summary>
+        /// Executes the handle async operation.
+        /// </summary>
+        /// <param name="context">The context value.</param>
+        /// <param name="signalEvaluationResult">The signal evaluation result value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The handle async result.</returns>
         public async Task HandleAsync(
             StrategyAnalysisContext context,
             SignalEvaluationResult signalEvaluationResult,

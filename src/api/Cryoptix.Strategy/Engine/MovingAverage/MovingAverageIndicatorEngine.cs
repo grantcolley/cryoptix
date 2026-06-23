@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Logging;
@@ -7,10 +7,19 @@ using System.Collections.Immutable;
 
 namespace Cryoptix.Strategy.Engine.MovingAverage
 {
+    /// <summary>
+    /// Represents the moving average indicator engine.
+    /// </summary>
     public sealed class MovingAverageIndicatorEngine(ILogger<MovingAverageIndicatorEngine> logger) : IStrategyIndicatorEngine
     {
         private readonly ILogger<MovingAverageIndicatorEngine> _logger = logger;
 
+        /// <summary>
+        /// Executes the compute async operation.
+        /// </summary>
+        /// <param name="context">The context value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The compute async result.</returns>
         public Task<IndicatorComputationResult> ComputeAsync(
             StrategyAnalysisContext context,
             CancellationToken cancellationToken)

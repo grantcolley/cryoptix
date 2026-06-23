@@ -1,7 +1,10 @@
-﻿using Cryoptix.Strategy.Channel;
+using Cryoptix.Strategy.Channel;
 
 namespace Cryoptix.Strategy.Notification
 {
+    /// <summary>
+    /// Defines the i notification pump contract.
+    /// </summary>
     public interface INotificationPump
     {
         /// <summary>

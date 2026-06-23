@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Strategy.Notification
+namespace Cryoptix.Strategy.Notification
 {
+    /// <summary>
+    /// Defines the i strategy status notifier contract.
+    /// </summary>
     public interface IStrategyStatusNotifier
     {
         Task NotifyStartedAsync(Strategies.Strategy strategy, CancellationToken cancellationToken);

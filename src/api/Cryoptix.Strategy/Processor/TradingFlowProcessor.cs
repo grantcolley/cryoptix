@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Observer.Metrics;
 using Cryoptix.Strategy.Agent;
 using Cryoptix.Strategy.Cache;
@@ -15,6 +15,9 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Processor
 {
+    /// <summary>
+    /// Represents the trading flow processor.
+    /// </summary>
     public sealed class TradingFlowProcessor(
         ILogger<TradingFlowProcessor> logger,
         IStrategyMarketSeeder strategyMarketSeeder,
@@ -26,6 +29,9 @@ namespace Cryoptix.Strategy.Processor
         INotificationMetrics notificationMetrics,
         INotificationPump notificationPump) : IStrategyProcessor
     {
+        /// <summary>
+        /// Gets or sets the trading flow.
+        /// </summary>
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 
         private readonly ILogger<TradingFlowProcessor> _logger = logger;
@@ -38,6 +44,12 @@ namespace Cryoptix.Strategy.Processor
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationPump _notificationPump = notificationPump;
 
+        /// <summary>
+        /// Executes the execute async operation.
+        /// </summary>
+        /// <param name="strategyAgentSession">The strategy agent session value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The execute async result.</returns>
         public async Task ExecuteAsync(StrategyAgentSession strategyAgentSession, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(strategyAgentSession);

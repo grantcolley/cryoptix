@@ -1,7 +1,10 @@
-﻿using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Analysis;
 
 namespace Cryoptix.Strategy.Engine
 {
+    /// <summary>
+    /// Defines the i strategy signal engine contract.
+    /// </summary>
     public interface IStrategySignalEngine
     {
         /// <summary>

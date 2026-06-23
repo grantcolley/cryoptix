@@ -1,12 +1,19 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Strategy.Snapshot
 {
+    /// <summary>
+    /// Represents the order book realtime state.
+    /// </summary>
     public sealed class OrderBookRealtimeState
     {
         private readonly Lock _gate = new();
         private OrderBook? _orderBook;
 
+        /// <summary>
+        /// Executes the update operation.
+        /// </summary>
+        /// <param name="orderBook">The order book value.</param>
         public void Update(OrderBook orderBook)
         {
             ArgumentNullException.ThrowIfNull(orderBook);
@@ -17,6 +24,11 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the try get operation.
+        /// </summary>
+        /// <param name="orderBook">The order book value.</param>
+        /// <returns>The try get result.</returns>
         public bool TryGet(out OrderBook? orderBook)
         {
             lock (_gate)

@@ -1,7 +1,10 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Strategy.Cache
 {
+    /// <summary>
+    /// Represents the market data cache.
+    /// </summary>
     public sealed class MarketDataCache
     {
         private readonly int _maxTradesPerSymbol;
@@ -22,6 +25,13 @@ namespace Cryoptix.Strategy.Cache
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Signal>> _signals = [];
         private readonly HashSet<Symbol> _symbols = new(SymbolComparer.Instance);
 
+        /// <summary>
+        /// Initializes a new instance of the &lt;see cref="MarketDataCache"/&gt; class.
+        /// </summary>
+        /// <param name="maxTradesPerSymbol">The max trades per symbol value.</param>
+        /// <param name="maxKlinesPerSeries">The max klines per series value.</param>
+        /// <param name="maxIndicatorsPerSeries">The max indicators per series value.</param>
+        /// <param name="maxSignalsPerSeries">The max signals per series value.</param>
         public MarketDataCache(int maxTradesPerSymbol, int maxKlinesPerSeries, int maxIndicatorsPerSeries, int maxSignalsPerSeries)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTradesPerSymbol);
@@ -35,6 +45,10 @@ namespace Cryoptix.Strategy.Cache
             _maxSignalsPerSeries = maxSignalsPerSeries;
         }
 
+        /// <summary>
+        /// Executes the set symbols operation.
+        /// </summary>
+        /// <param name="symbols">The symbols value.</param>
         public void SetSymbols(IEnumerable<Symbol> symbols)
         {
             ArgumentNullException.ThrowIfNull(symbols);
@@ -66,6 +80,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the get symbol for strategy operation.
+        /// </summary>
+        /// <param name="strategySymbol">The strategy symbol value.</param>
+        /// <returns>The get symbol for strategy result.</returns>
         public Symbol? GetSymbolForStrategy(string strategySymbol)
         {
             if (string.IsNullOrWhiteSpace(strategySymbol))
@@ -80,6 +99,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the upsert indicators operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="indicators">The indicators value.</param>
         public void UpsertIndicators(string symbol, Market.Strategy.Indicators indicators)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
@@ -105,6 +129,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the get indicators operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get indicators result.</returns>
         public IReadOnlyList<Market.Strategy.Indicators> GetIndicators(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
@@ -120,6 +149,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the upsert signal operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="signal">The signal value.</param>
         public void UpsertSignal(string symbol, Market.Strategy.Signal signal)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
@@ -145,6 +179,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the get signals operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get signals result.</returns>
         public IReadOnlyList<Market.Strategy.Signal> GetSignals(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
@@ -160,6 +199,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the upsert kline operation.
+        /// </summary>
+        /// <param name="kline">The kline value.</param>
+        /// <returns>The upsert kline result.</returns>
         public KlineUpsertResult UpsertKline(Kline kline)
         {
             ArgumentNullException.ThrowIfNull(kline);
@@ -204,6 +248,12 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the get klines operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="interval">The interval value.</param>
+        /// <returns>The get klines result.</returns>
         public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
@@ -219,6 +269,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the add trade operation.
+        /// </summary>
+        /// <param name="trade">The trade value.</param>
+        /// <returns>The add trade result.</returns>
         public bool AddTrade(Trade trade)
         {
             ArgumentNullException.ThrowIfNull(trade);
@@ -259,6 +314,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the get trades operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get trades result.</returns>
         public IReadOnlyList<Trade> GetTrades(string symbol)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
@@ -278,6 +338,12 @@ namespace Cryoptix.Strategy.Cache
         {
             public static readonly SymbolComparer Instance = new();
 
+            /// <summary>
+            /// Executes the equals operation.
+            /// </summary>
+            /// <param name="x">The x value.</param>
+            /// <param name="y">The y value.</param>
+            /// <returns>The equals result.</returns>
             public bool Equals(Symbol? x, Symbol? y)
             {
                 if (ReferenceEquals(x, y)) return true;
@@ -286,6 +352,11 @@ namespace Cryoptix.Strategy.Cache
                 return string.Equals(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
             }
 
+            /// <summary>
+            /// Executes the get hash code operation.
+            /// </summary>
+            /// <param name="obj">The obj value.</param>
+            /// <returns>The get hash code result.</returns>
             public int GetHashCode(Symbol obj)
             {
                 return obj.Name?.ToUpperInvariant().GetHashCode() ?? 0;

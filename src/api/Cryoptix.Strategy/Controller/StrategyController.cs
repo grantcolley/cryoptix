@@ -1,10 +1,13 @@
-﻿using Cryoptix.Strategy.Catalog;
+using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Command;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.State;
 
 namespace Cryoptix.Strategy.Controller
 {
+    /// <summary>
+    /// Represents the strategy controller.
+    /// </summary>
     public sealed class StrategyController(
         StrategyStateStore stateStore,
         IStrategyCommandQueue queue,
@@ -16,8 +19,18 @@ namespace Cryoptix.Strategy.Controller
 
         public StrategyStatus GetStatus() => _strategyStateStore.Get();
 
+        /// <summary>
+        /// Executes the get available strategies operation.
+        /// </summary>
+        /// <returns>The get available strategies result.</returns>
         public IReadOnlyCollection<StrategyProcessorType> GetAvailableStrategies() => _strategyProcessorCatalog.Keys;
 
+        /// <summary>
+        /// Executes the start async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="ct">The ct value.</param>
+        /// <returns>The start async result.</returns>
         public async Task<StrategyCommandResult> StartAsync(Strategies.Strategy strategy, CancellationToken ct)
         {
             if (!_strategyProcessorCatalog.TryCreate(strategy.StrategyProcessorType, out _))
@@ -46,6 +59,12 @@ namespace Cryoptix.Strategy.Controller
             };
         }
 
+        /// <summary>
+        /// Executes the update async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="ct">The ct value.</param>
+        /// <returns>The update async result.</returns>
         public async Task<StrategyCommandResult> UpdateAsync(Strategies.Strategy strategy, CancellationToken ct)
         {
 
@@ -64,6 +83,11 @@ namespace Cryoptix.Strategy.Controller
             };
         }
 
+        /// <summary>
+        /// Executes the stop async operation.
+        /// </summary>
+        /// <param name="ct">The ct value.</param>
+        /// <returns>The stop async result.</returns>
         public async Task<StrategyCommandResult> StopAsync(CancellationToken ct)
         {
             await _strategyCommandQueue.EnqueueAsync(new StrategyCommand

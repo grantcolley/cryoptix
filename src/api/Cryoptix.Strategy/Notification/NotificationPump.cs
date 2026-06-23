@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Strategy.Channel;
@@ -7,6 +7,9 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Notification
 {
+    /// <summary>
+    /// Represents the notification pump.
+    /// </summary>
     /// <summary>
     /// Pumps notifications from strategy event channels to the notification dispatcher.
     /// </summary>
@@ -22,6 +25,13 @@ namespace Cryoptix.Strategy.Notification
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationDispatcher _notificationDispatcher = notificationDispatcher;
 
+        /// <summary>
+        /// Executes the run async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="channels">The channels value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The run async result.</returns>
         /// <summary>
         /// Runs the notification pump, reading broadcasted klines and trades from the provided channels
         /// and publishing them via the configured <see cref="INotificationDispatcher"/> until cancellation.

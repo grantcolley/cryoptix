@@ -1,12 +1,19 @@
-﻿using Cryoptix.Strategy.Processor;
+using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Cache
 {
+    /// <summary>
+    /// Represents the trading flow session accessor.
+    /// </summary>
     public sealed class TradingFlowSessionAccessor : ITradingFlowSessionAccessor
     {
         private readonly Lock _gate = new();
         private StrategyProcessorSession? _current;
 
+        /// <summary>
+        /// Executes the set current operation.
+        /// </summary>
+        /// <param name="session">The session value.</param>
         public void SetCurrent(StrategyProcessorSession session)
         {
             ArgumentNullException.ThrowIfNull(session);
@@ -17,6 +24,9 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the clear current operation.
+        /// </summary>
         public void ClearCurrent()
         {
             lock (_gate)
@@ -25,6 +35,11 @@ namespace Cryoptix.Strategy.Cache
             }
         }
 
+        /// <summary>
+        /// Executes the try get current operation.
+        /// </summary>
+        /// <param name="session">The session value.</param>
+        /// <returns>The try get current result.</returns>
         public bool TryGetCurrent(out StrategyProcessorSession? session)
         {
             lock (_gate)

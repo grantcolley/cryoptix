@@ -1,9 +1,12 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Clock;
 using Cryoptix.Strategy.Processor;
 
 namespace Cryoptix.Strategy.Cache
 {
+    /// <summary>
+    /// Represents the market data snapshot provider.
+    /// </summary>
     public sealed class MarketDataSnapshotProvider(
         ITradingFlowSessionAccessor tradingFlowSessionAccessor,
         IStrategyClock strategyClock) : IMarketDataSnapshotProvider
@@ -11,6 +14,11 @@ namespace Cryoptix.Strategy.Cache
         private readonly ITradingFlowSessionAccessor _tradingFlowSessionAccessor = tradingFlowSessionAccessor;
         private readonly IStrategyClock _strategyClock = strategyClock;
 
+        /// <summary>
+        /// Executes the get snapshot async operation.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The get snapshot async result.</returns>
         public Task<MarketDataSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();

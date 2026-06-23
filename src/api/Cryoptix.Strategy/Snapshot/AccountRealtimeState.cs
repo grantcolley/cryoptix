@@ -1,7 +1,10 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 
 namespace Cryoptix.Strategy.Snapshot
 {
+    /// <summary>
+    /// Represents the account realtime state.
+    /// </summary>
     public sealed class AccountRealtimeState
     {
         private readonly Lock _gate = new();
@@ -12,6 +15,10 @@ namespace Cryoptix.Strategy.Snapshot
 
         private static string NormalizeAsset(string asset) => asset.Trim().ToUpperInvariant();
 
+        /// <summary>
+        /// Executes the update operation.
+        /// </summary>
+        /// <param name="account">The account value.</param>
         public void Update(Account account)
         {
             ArgumentNullException.ThrowIfNull(account);
@@ -37,6 +44,11 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the try get operation.
+        /// </summary>
+        /// <param name="account">The account value.</param>
+        /// <returns>The try get result.</returns>
         public bool TryGet(out Account? account)
         {
             lock (_gate)
@@ -46,6 +58,11 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the get free balance operation.
+        /// </summary>
+        /// <param name="asset">The asset value.</param>
+        /// <returns>The get free balance result.</returns>
         public decimal GetFreeBalance(string asset)
         {
             ArgumentNullException.ThrowIfNull(asset);
@@ -63,11 +80,22 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the has free balance operation.
+        /// </summary>
+        /// <param name="asset">The asset value.</param>
+        /// <param name="minimumFreeBalance">The minimum free balance value.</param>
+        /// <returns>The has free balance result.</returns>
         public bool HasFreeBalance(string asset, decimal minimumFreeBalance)
         {
             return GetFreeBalance(asset) >= minimumFreeBalance;
         }
 
+        /// <summary>
+        /// Executes the get locked balance operation.
+        /// </summary>
+        /// <param name="asset">The asset value.</param>
+        /// <returns>The get locked balance result.</returns>
         public decimal GetLockedBalance(string asset)
         {
             ArgumentNullException.ThrowIfNull(asset);
@@ -85,6 +113,11 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the get total balance operation.
+        /// </summary>
+        /// <param name="asset">The asset value.</param>
+        /// <returns>The get total balance result.</returns>
         public decimal GetTotalBalance(string asset)
         {
             ArgumentNullException.ThrowIfNull(asset);
@@ -102,6 +135,10 @@ namespace Cryoptix.Strategy.Snapshot
             }
         }
 
+        /// <summary>
+        /// Executes the get portfolio value operation.
+        /// </summary>
+        /// <returns>The get portfolio value result.</returns>
         public decimal GetPortfolioValue()
         {
             // Subscribe to symbol statistics to compute total portfolio value.

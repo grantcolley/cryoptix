@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Strategy.Controller
+namespace Cryoptix.Strategy.Controller
 {
+    /// <summary>
+    /// Represents the strategy controller status codes.
+    /// </summary>
     public static class StrategyControllerStatusCodes
     {
         /// <summary>

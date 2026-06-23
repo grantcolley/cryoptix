@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Strategy;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Event;
@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Dispatcher
 {
+    /// <summary>
+    /// Represents the strategy market event dispatcher.
+    /// </summary>
     public sealed class StrategyMarketEventDispatcher(
         ILogger<StrategyMarketEventDispatcher> logger,
         IStrategyAnalysisContextFactory strategyAnalysisContextFactory,
@@ -20,6 +23,14 @@ namespace Cryoptix.Strategy.Dispatcher
         private readonly IStrategyEnginePairFactory _strategyEnginePairFactory = strategyEnginePairFactory;
         private readonly IStrategySignalHandler _strategySignalHandler = strategySignalHandler;
 
+        /// <summary>
+        /// Executes the dispatch async operation.
+        /// </summary>
+        /// <param name="session">The session value.</param>
+        /// <param name="marketEvent">The market event value.</param>
+        /// <param name="channels">The channels value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The dispatch async result.</returns>
         public async Task DispatchAsync(
             StrategyProcessorSession session,
             MarketEvent marketEvent,

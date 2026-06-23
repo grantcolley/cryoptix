@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Strategy.Agent
+namespace Cryoptix.Strategy.Agent
 {
+    /// <summary>
+    /// Defines the i strategy agent contract.
+    /// </summary>
     public interface IStrategyAgent : IAsyncDisposable
     {
         Task StartAsync(Strategies.Strategy strategy, CancellationToken cancellationToken);

@@ -1,7 +1,14 @@
-﻿namespace Cryoptix.Strategy.Strategies
+namespace Cryoptix.Strategy.Strategies
 {
     internal static class StrategyExtensions
     {
+        /// <summary>
+        /// Executes the can update operation.
+        /// </summary>
+        /// <param name="activeStrategy">The active strategy value.</param>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="message">The message value.</param>
+        /// <returns>The can update result.</returns>
         public static bool CanUpdate(this Strategy activeStrategy, Strategy? strategy, out string? message)
         {
             message = null;

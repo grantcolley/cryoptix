@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Args;
 using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Channel;
@@ -10,11 +10,25 @@ using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Subscription
 {
+    /// <summary>
+    /// Represents the strategy market event subscriber.
+    /// </summary>
     public sealed class StrategyMarketEventSubscriber(
         ILogger<StrategyMarketEventSubscriber> logger) : IStrategyMarketEventSubscriber
     {
         private readonly ILogger<StrategyMarketEventSubscriber> _logger = logger;
 
+        /// <summary>
+        /// Executes the subscribe async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="credentials">The credentials value.</param>
+        /// <param name="subscriptionsApi">The subscriptions api value.</param>
+        /// <param name="channels">The channels value.</param>
+        /// <param name="orderBookRealtimeState">The order book realtime state value.</param>
+        /// <param name="accountRealtimeState">The account realtime state value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The subscribe async result.</returns>
         public async Task<StrategyMarketEventSubscriptions> SubscribeAsync(
             Strategies.Strategy strategy,
             Credentials? credentials,

@@ -1,5 +1,8 @@
-﻿namespace Cryoptix.Strategy.Channel
+namespace Cryoptix.Strategy.Channel
 {
+    /// <summary>
+    /// Defines the i strategy event channel factory contract.
+    /// </summary>
     public interface IStrategyEventChannelFactory
     {
         StrategyEventChannels Create();

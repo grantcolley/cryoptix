@@ -1,4 +1,4 @@
-﻿using Cryoptix.Exchange.Api;
+using Cryoptix.Exchange.Api;
 using Cryoptix.Strategy.Catalog;
 using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.State;
@@ -6,6 +6,9 @@ using Cryoptix.Strategy.Strategies;
 
 namespace Cryoptix.Strategy.Agent
 {
+    /// <summary>
+    /// Represents the strategy agent.
+    /// </summary>
     public sealed class StrategyAgent(
         StrategyStateStore state,
         IStrategyProcessorCatalog strategyProcessorCatalog,
@@ -27,6 +30,12 @@ namespace Cryoptix.Strategy.Agent
         // Only call while holding _semaphoreSlim.
         private bool HasRunningActiveTask() => _activeTask != null && !_activeTask.IsCompleted;
 
+        /// <summary>
+        /// Executes the start async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The start async result.</returns>
         public async Task StartAsync(Strategies.Strategy strategy, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -101,6 +110,11 @@ namespace Cryoptix.Strategy.Agent
             }
         }
 
+        /// <summary>
+        /// Executes the update async operation.
+        /// </summary>
+        /// <param name="strategy">The strategy value.</param>
+        /// <returns>The update async result.</returns>
         public async Task UpdateAsync(Strategies.Strategy strategy)
         {
             ThrowIfDisposed();
@@ -161,6 +175,10 @@ namespace Cryoptix.Strategy.Agent
             signalToSet?.Set();
         }
 
+        /// <summary>
+        /// Executes the stop async operation.
+        /// </summary>
+        /// <returns>The stop async result.</returns>
         public Task StopAsync()
         {
             return StopInternalAsync(throwIfDisposed: true);
@@ -251,6 +269,10 @@ namespace Cryoptix.Strategy.Agent
             }
         }
 
+        /// <summary>
+        /// Executes the dispose async operation.
+        /// </summary>
+        /// <returns>The dispose async result.</returns>
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _disposeStarted, 1) != 0)

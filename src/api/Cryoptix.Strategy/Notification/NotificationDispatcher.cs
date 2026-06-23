@@ -1,13 +1,22 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Observer.Notification;
 
 namespace Cryoptix.Strategy.Notification
 {
+    /// <summary>
+    /// Represents the notification dispatcher.
+    /// </summary>
     public sealed class NotificationDispatcher(
         INotificationBroadcaster notificationBroadcaster) : INotificationDispatcher
     {
         private readonly INotificationBroadcaster _notificationBroadcaster = notificationBroadcaster;
 
+        /// <summary>
+        /// Executes the publish async operation.
+        /// </summary>
+        /// <param name="kline">The kline value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The publish async result.</returns>
         /// <summary>
         /// Publishes a kline notification using the configured broadcaster.
         /// </summary>
@@ -25,6 +34,12 @@ namespace Cryoptix.Strategy.Notification
         }
 
         /// <summary>
+        /// Executes the publish async operation.
+        /// </summary>
+        /// <param name="trade">The trade value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The publish async result.</returns>
+        /// <summary>
         /// Publishes a trade notification using the configured broadcaster.
         /// </summary>
         /// <param name="trade">The trade data to publish.</param>
@@ -41,6 +56,12 @@ namespace Cryoptix.Strategy.Notification
         }
 
         /// <summary>
+        /// Executes the publish async operation.
+        /// </summary>
+        /// <param name="indicators">The indicators value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The publish async result.</returns>
+        /// <summary>
         /// Publishes an indicator notification to configured listeners.
         /// </summary>
         /// <param name="indicators">The indicator to publish.</param>
@@ -56,6 +77,12 @@ namespace Cryoptix.Strategy.Notification
                 cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the publish async operation.
+        /// </summary>
+        /// <param name="signal">The signal value.</param>
+        /// <param name="cancellationToken">The cancellation token value.</param>
+        /// <returns>The publish async result.</returns>
         /// <summary>
         /// Publishes a signal notification to configured listeners.
         /// </summary>

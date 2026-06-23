@@ -1,4 +1,4 @@
-﻿using Cryoptix.Market.Data;
+using Cryoptix.Market.Data;
 using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
@@ -7,10 +7,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Cryoptix.Strategy.Order
 {
+    /// <summary>
+    /// Represents the order sizing service.
+    /// </summary>
     public sealed class OrderSizingService(ILogger<OrderSizingService> logger) : IOrderSizingService
     {
         private readonly ILogger<OrderSizingService> _logger = logger;
 
+        /// <summary>
+        /// Executes the size operation.
+        /// </summary>
+        /// <param name="context">The context value.</param>
+        /// <param name="signalEvaluationResult">The signal evaluation result value.</param>
+        /// <param name="orderBook">The order book value.</param>
+        /// <param name="account">The account value.</param>
+        /// <returns>The size result.</returns>
         public OrderSizingResult? Size(
             StrategyAnalysisContext context,
             SignalEvaluationResult signalEvaluationResult,
@@ -158,7 +169,13 @@ namespace Cryoptix.Strategy.Order
 
         private readonly struct SymbolParts(string baseAsset, string quoteAsset)
         {
+            /// <summary>
+            /// Gets or sets the base asset.
+            /// </summary>
             public string BaseAsset { get; } = baseAsset;
+            /// <summary>
+            /// Gets or sets the quote asset.
+            /// </summary>
             public string QuoteAsset { get; } = quoteAsset;
         }
     }
