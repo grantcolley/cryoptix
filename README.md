@@ -5,6 +5,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+[![Build status](https://ci.appveyor.com/api/projects/status/xf4iwciuemxh4m5p?svg=true)](https://ci.appveyor.com/project/grantcolley/cryoptix)
+
 > A cryptocurrency trading platform built with ASP.NET Core and React for running, monitoring, and visualizing automated trading strategies in real time, with deployment support for Azure App Service and Azure Static Web Apps.
 
 ## Features
