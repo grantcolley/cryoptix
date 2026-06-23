@@ -24,6 +24,7 @@ using Cryoptix.Strategy.Processor;
 using Cryoptix.Strategy.Seeding;
 using Cryoptix.Strategy.Signal;
 using Cryoptix.Strategy.State;
+using Cryoptix.Strategy.Strategies;
 using Cryoptix.Strategy.Subscription;
 using Cryoptix.Web.API.Authorization;
 using Cryoptix.Web.API.Config;
@@ -37,7 +38,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text.Json;
 using System.Threading.Channels;
+
+string json = JsonSerializer.Serialize(new Strategy
+{
+    StrategyId = 1,
+    Name = "Moving Average Crossover",
+    Description = "A simple moving average crossover strategy.",
+    Symbol = "BTCUSDT"
+}, new JsonSerializerOptions
+{
+     WriteIndented = true
+});
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

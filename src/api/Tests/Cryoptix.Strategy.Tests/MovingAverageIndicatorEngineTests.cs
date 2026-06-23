@@ -5,6 +5,7 @@ using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Snapshot;
+using Cryoptix.Strategy.Strategies;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cryoptix.Strategy.Tests;
@@ -36,15 +37,14 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Periods = new Dictionary<string, int>
+            Periods = new Dictionary<string, Period>
             {
-                ["3 SMA"] = 3,
-                ["5 SMA"] = 5,
-                ["9 SMA"] = 9,
-                ["too-long"] = 20,
-                ["bad"] = 0
-            },
-            SmoothingType = MovingAverageSmoothingType.Sma
+                ["3 SMA"] = new Period { Name = "3 SMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Sma },
+                ["5 SMA"] = new Period { Name = "5 SMA", Value = 5, SmoothingType = MovingAverageSmoothingType.Sma },
+                ["9 SMA"] = new Period { Name = "9 SMA", Value = 9, SmoothingType = MovingAverageSmoothingType.Sma },
+                ["too-long"] = new Period { Name = "too-long", Value = 20, SmoothingType = MovingAverageSmoothingType.Sma },
+                ["bad"] = new Period { Name = "bad", Value = 0, SmoothingType = MovingAverageSmoothingType.Sma }
+            }
         });
 
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);

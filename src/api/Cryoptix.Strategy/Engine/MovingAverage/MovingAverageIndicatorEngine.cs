@@ -33,8 +33,6 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 return Task.FromResult(IndicatorComputationResult.Empty(DateTime.MinValue));
             }
 
-            MovingAverageSmoothingType smoothingType = context.Strategy.SmoothingType;
-
             Dictionary<string, decimal> values = [];
 
             if (context.Strategy.Periods != null)
@@ -42,16 +40,17 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 foreach (var kvp in context.Strategy.Periods)
                 {
                     string name = kvp.Key ?? string.Empty;
-                    int period = kvp.Value;
+                    Strategies.Period period = kvp.Value;
 
                     decimal? computed = null;
-                    if (smoothingType == MovingAverageSmoothingType.Sma)
+
+                    if (period.SmoothingType == MovingAverageSmoothingType.Sma)
                     {
-                        computed = TryCalculateSmaRolling(klines, period);
+                        computed = TryCalculateSmaRolling(klines, period.Value);
                     }
-                    else if (smoothingType == MovingAverageSmoothingType.Ema)
+                    else if (period.SmoothingType == MovingAverageSmoothingType.Ema)
                     {
-                        computed = TryCalculateEma(klines, period);
+                        computed = TryCalculateEma(klines, period.Value);
                     }
 
                     if (computed.HasValue)

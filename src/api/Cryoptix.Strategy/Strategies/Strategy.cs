@@ -14,19 +14,19 @@ namespace Cryoptix.Strategy.Strategies
         /// <summary>
         /// Gets or sets the strategy id.
         /// </summary>
-        public int StrategyId { get; set; } = 1;
+        public int StrategyId { get; set; }
         /// <summary>
         /// Gets or sets the name.
         /// </summary>
-        public string? Name { get; set; } = "Moving Average Crossover";
+        public string? Name { get; set; }
         /// <summary>
         /// Gets or sets the description.
         /// </summary>
-        public string? Description { get; set; } = "A simple moving average crossover strategy.";
+        public string? Description { get; set; }
         /// <summary>
         /// Gets or sets the symbol.
         /// </summary>
-        public string? Symbol { get; set; } = "BTCUSDT";
+        public string? Symbol { get; set; }
         /// <summary>
         /// Gets or sets the strategy processor type.
         /// </summary>
@@ -39,6 +39,7 @@ namespace Cryoptix.Strategy.Strategies
         /// Gets or sets the exchange.
         /// </summary>
         public Market.Data.Exchange Exchange { get; set; } = Market.Data.Exchange.Binance;
+        /// <summary>
         /// Gets or sets the kline interval.
         /// </summary>
         public KlineInterval KlineInterval { get; set; } = KlineInterval.Minute;
@@ -133,10 +134,6 @@ namespace Cryoptix.Strategy.Strategies
         /// <summary>
         /// Gets or sets the periods.
         /// </summary>
-        public Dictionary<string, int> Periods { get; init; } = new Dictionary<string, int>() { { "9 SMA", 9 }, { "21 SMA", 21 }, { "50 SMA", 50 } };
-        /// <summary>
-        /// Gets or sets the smoothing type.
-        /// </summary>
-        public MovingAverageSmoothingType SmoothingType { get; init; } = MovingAverageSmoothingType.Sma;
+        public Dictionary<string, Period> Periods { get; init; } = new Dictionary<string, Period>() { { "9 SMA", new Period { Name = "9 SMA", Value = 9, SmoothingType = MovingAverageSmoothingType.Sma } }, { "21 SMA", new Period { Name = "21 SMA", Value = 21, SmoothingType = MovingAverageSmoothingType.Sma } }, { "50 SMA", new Period { Name = "50 SMA", Value = 50, SmoothingType = MovingAverageSmoothingType.Sma } } };
     }
 }
