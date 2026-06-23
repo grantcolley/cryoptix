@@ -3,7 +3,7 @@ using Cryoptix.Market.Data;
 namespace Cryoptix.Exchange.Api
 {
     /// <summary>
-    /// Defines the i exchange rest api contract.
+    /// Defines the exchange rest api contract.
     /// </summary>
     public interface IExchangeRestApi : IDisposable
     {
@@ -25,7 +25,21 @@ namespace Cryoptix.Exchange.Api
         /// <param name="cancellationToken">Cancellation token for the request.</param>
         /// <returns>The placed <see cref="Order"/>.</returns>
         Task<Order> PlaceOrderAsync(ClientOrder clientOrder, int? recWindow, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Gets the open orders.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="recWindow">The rec window.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         Task<List<Order>> GetOpenOrdersAsync(string symbol, int? recWindow, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Cancels the order.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="orderId">The order ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         Task<string> CancelOrderAsync(string symbol, string orderId, CancellationToken cancellationToken = default);
         /// <summary>
         /// Retrieves historical klines (candles) for the requested symbol and interval in the given time range.
@@ -39,8 +53,27 @@ namespace Cryoptix.Exchange.Api
         /// <param name="cancellationToken">Cancellation token for the request.</param>
         /// <returns>List of <see cref="Kline"/> objects covering the requested range.</returns>
         Task<List<Kline>> GetKlinesAsync(string symbol, KlineInterval interval, DateTime startTime, DateTime endTime, int? limit, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Gets the order book.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="limit">The limit.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         Task<OrderBook> GetOrderBookAsync(string symbol, int? limit, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Gets the symbols.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         Task<List<Symbol>> GetSymbolsAsync(CancellationToken cancellationToken);
+        /// <summary>
+        /// Gets the trades.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="limit">The limit.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         Task<List<Trade>> GetTradesAsync(string symbol, int? limit, CancellationToken cancellationToken);
     }
 }
