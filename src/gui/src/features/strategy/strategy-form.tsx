@@ -42,10 +42,7 @@ import {
   StrategyEngineType,
   StrategyEngineTypeLabels,
 } from "@/features/api/schema/strategy-engine-type";
-import {
-  MovingAverageSmoothingType,
-  MovingAverageSmoothingTypeLabels,
-} from "@/features/api/schema/moving-average-smothing-type";
+import { MovingAverageSmoothingType } from "@/features/api/schema/moving-average-smothing-type";
 import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
@@ -84,7 +81,6 @@ type StrategyEnumFieldName = Extract<
   keyof Strategy,
   | "strategyProcessorType"
   | "strategyEngineType"
-  | "smoothingType"
   | "exchange"
   | "klineInterval"
   | "subscriptionChannelTradeFullMode"
@@ -122,10 +118,6 @@ const strategyEngineTypeOptions = enumToOptions(
   StrategyEngineType,
   StrategyEngineTypeLabels
 );
-const movingAverageSmoothingTypeOptions = enumToOptions(
-  MovingAverageSmoothingType,
-  MovingAverageSmoothingTypeLabels
-);
 const exchangeOptions = enumToOptions(Exchange, ExchangeLabels);
 const klineIntervalOptions = enumToOptions(KlineInterval, KlineIntervalLabels);
 const boundedChannelFullModeOptions = enumToOptions(
@@ -141,11 +133,22 @@ const fallbackDefaultValues: Strategy = {
   strategyProcessorType: StrategyProcessorType.None,
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
-  smoothingType: MovingAverageSmoothingType.Sma,
   periods: {
-    "9 SMA": 9,
-    "21 SMA": 21,
-    "50 SMA": 50,
+    "9 SMA": {
+      name: "9 SMA",
+      value: 9,
+      smoothingType: MovingAverageSmoothingType.Sma,
+    },
+    "21 SMA": {
+      name: "21 SMA",
+      value: 21,
+      smoothingType: MovingAverageSmoothingType.Sma,
+    },
+    "50 SMA": {
+      name: "50 SMA",
+      value: 50,
+      smoothingType: MovingAverageSmoothingType.Sma,
+    },
   },
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 1440,
@@ -548,18 +551,7 @@ export function StrategyForm({
     await onSubmit?.(normalizedValues);
   }
 
-  const renderParameterFields = (isHorizontal = false) => (
-    <>
-      <EnumSelectField
-        control={form.control}
-        name="smoothingType"
-        label="Smoothing type"
-        options={movingAverageSmoothingTypeOptions}
-        isReadOnly={isReadOnly}
-        isHorizontal={isHorizontal}
-      />
-    </>
-  );
+  const renderParameterFields = () => null;
 
   return (
     <form
@@ -591,7 +583,7 @@ export function StrategyForm({
                 isCompact ? "gap-3" : "gap-4"
               )}
             >
-              {renderParameterFields(true)}
+              {renderParameterFields()}
             </FieldGroup>
           </FieldSet>
         ) : (
