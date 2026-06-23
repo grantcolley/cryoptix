@@ -8,11 +8,11 @@ namespace Cryoptix.Strategy.Event
     public sealed class KlineMarketEvent(Kline kline, MarketEventSource source) : MarketEvent
     {
         /// <summary>
-        /// Gets or sets the kline.
+        /// Gets the kline.
         /// </summary>
         public Kline Kline { get; } = kline ?? throw new ArgumentNullException(nameof(kline));
         /// <summary>
-        /// Gets or sets the source.
+        /// Gets the source.
         /// </summary>
         public MarketEventSource Source { get; } = source;
     }

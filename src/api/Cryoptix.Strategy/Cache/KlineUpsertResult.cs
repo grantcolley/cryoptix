@@ -12,19 +12,19 @@ namespace Cryoptix.Strategy.Cache
         Kline current)
     {
         /// <summary>
-        /// Gets or sets the inserted.
+        /// Gets the inserted.
         /// </summary>
         public bool Inserted { get; } = inserted;
         /// <summary>
-        /// Gets or sets the updated.
+        /// Gets the updated.
         /// </summary>
         public bool Updated { get; } = updated;
         /// <summary>
-        /// Gets or sets the previous.
+        /// Gets the previous.
         /// </summary>
         public Kline? Previous { get; } = previous;
         /// <summary>
-        /// Gets or sets the current.
+        /// Gets the current.
         /// </summary>
         public Kline Current { get; } = current ?? throw new ArgumentNullException(nameof(current));
     }

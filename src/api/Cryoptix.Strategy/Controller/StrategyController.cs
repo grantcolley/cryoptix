@@ -17,6 +17,10 @@ namespace Cryoptix.Strategy.Controller
         private readonly IStrategyCommandQueue _strategyCommandQueue = queue;
         private readonly IStrategyProcessorCatalog _strategyProcessorCatalog = strategyProcessorCatalog;
 
+        /// <summary>
+        /// Gets the status.
+        /// </summary>
+        /// <returns>The get status result.</returns>
         public StrategyStatus GetStatus() => _strategyStateStore.Get();
 
         /// <summary>

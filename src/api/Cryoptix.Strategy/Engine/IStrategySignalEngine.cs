@@ -3,7 +3,7 @@ using Cryoptix.Strategy.Analysis;
 namespace Cryoptix.Strategy.Engine
 {
     /// <summary>
-    /// Defines the i strategy signal engine contract.
+    /// Defines the strategy signal engine contract.
     /// </summary>
     public interface IStrategySignalEngine
     {
@@ -15,8 +15,17 @@ namespace Cryoptix.Strategy.Engine
         /// <param name="cancellationToken">A token to observe for cancellation.</param>
         /// <returns>A <see cref="SignalEvaluationResult"/> representing the evaluated signal and reason.</returns>
         Task<SignalEvaluationResult> EvaluateAsync(
+            /// <summary>
+            /// Gets the value.
+            /// </summary>
             StrategyAnalysisContext context,
+            /// <summary>
+            /// Gets the value.
+            /// </summary>
             IndicatorComputationResult indicators,
+            /// <summary>
+            /// Gets the value.
+            /// </summary>
             CancellationToken cancellationToken);
     }
 }

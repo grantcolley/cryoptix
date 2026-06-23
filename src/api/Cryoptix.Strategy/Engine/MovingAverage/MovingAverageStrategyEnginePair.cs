@@ -13,12 +13,12 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
         public StrategyEngineType StrategyEngineType => StrategyEngineType.MovingAverage;
 
         /// <summary>
-        /// Gets or sets the indicator engine.
+        /// Gets the indicator engine.
         /// </summary>
         public IStrategyIndicatorEngine IndicatorEngine { get; } = indicatorEngine;
 
         /// <summary>
-        /// Gets or sets the signal engine.
+        /// Gets the signal engine.
         /// </summary>
         public IStrategySignalEngine SignalEngine { get; } = signalEngine;
     }

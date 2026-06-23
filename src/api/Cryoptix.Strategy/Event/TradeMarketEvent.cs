@@ -8,7 +8,7 @@ namespace Cryoptix.Strategy.Event
     public sealed class TradeMarketEvent(Trade trade) : MarketEvent
     {
         /// <summary>
-        /// Gets or sets the trade.
+        /// Gets the trade.
         /// </summary>
         public Trade Trade { get; } = trade ?? throw new ArgumentNullException(nameof(trade));
     }

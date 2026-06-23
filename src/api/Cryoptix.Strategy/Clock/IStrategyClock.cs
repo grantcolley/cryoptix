@@ -1,10 +1,13 @@
 namespace Cryoptix.Strategy.Clock
 {
     /// <summary>
-    /// Defines the i strategy clock contract.
+    /// Defines the strategy clock contract.
     /// </summary>
     public interface IStrategyClock
     {
+        /// <summary>
+        /// Gets the UTC now.
+        /// </summary>
         DateTime UtcNow { get; }
     }
 }

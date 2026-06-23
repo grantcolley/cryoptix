@@ -30,7 +30,7 @@ namespace Cryoptix.Strategy.Processor
         INotificationPump notificationPump) : IStrategyProcessor
     {
         /// <summary>
-        /// Gets or sets the trading flow.
+        /// Gets the trading flow.
         /// </summary>
         public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
 

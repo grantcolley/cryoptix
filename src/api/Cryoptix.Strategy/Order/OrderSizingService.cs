@@ -170,11 +170,11 @@ namespace Cryoptix.Strategy.Order
         private readonly struct SymbolParts(string baseAsset, string quoteAsset)
         {
             /// <summary>
-            /// Gets or sets the base asset.
+            /// Gets the base asset.
             /// </summary>
             public string BaseAsset { get; } = baseAsset;
             /// <summary>
-            /// Gets or sets the quote asset.
+            /// Gets the quote asset.
             /// </summary>
             public string QuoteAsset { get; } = quoteAsset;
         }

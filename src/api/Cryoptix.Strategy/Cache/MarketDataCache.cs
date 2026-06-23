@@ -336,6 +336,10 @@ namespace Cryoptix.Strategy.Cache
 
         private sealed class SymbolComparer : IEqualityComparer<Symbol>
         {
+            /// <summary>
+            /// Executes the = operation.
+            /// </summary>
+            /// <returns>The = result.</returns>
             public static readonly SymbolComparer Instance = new();
 
             /// <summary>
