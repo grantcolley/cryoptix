@@ -67,13 +67,18 @@ export function TextField<TFieldValues extends FieldValues>({
   name,
   label,
   isReadOnly,
+  isHorizontal = false,
 }: BaseFieldProps<TFieldValues>) {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
+        <Field
+          orientation={isHorizontal ? "horizontal" : "vertical"}
+          data-invalid={fieldState.invalid}
+          className={horizontalFieldClassName(isHorizontal)}
+        >
           <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
           <Input
             id={field.name}
@@ -99,13 +104,18 @@ export function TextAreaField<TFieldValues extends FieldValues>({
   name,
   label,
   isReadOnly,
+  isHorizontal = false,
 }: BaseFieldProps<TFieldValues>) {
   return (
     <Controller
       control={control}
       name={name}
       render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
+        <Field
+          orientation={isHorizontal ? "horizontal" : "vertical"}
+          data-invalid={fieldState.invalid}
+          className={horizontalFieldClassName(isHorizontal)}
+        >
           <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
           <Textarea
             id={field.name}
@@ -174,6 +184,7 @@ export function NullableIntegerField<TFieldValues extends FieldValues>({
   label,
   description,
   isReadOnly,
+  isHorizontal = false,
 }: BaseFieldProps<TFieldValues> & {
   description?: string;
 }) {
@@ -182,7 +193,11 @@ export function NullableIntegerField<TFieldValues extends FieldValues>({
       control={control}
       name={name}
       render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
+        <Field
+          orientation={isHorizontal ? "horizontal" : "vertical"}
+          data-invalid={fieldState.invalid}
+          className={horizontalFieldClassName(isHorizontal)}
+        >
           <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
           <Input
             id={field.name}
@@ -237,7 +252,9 @@ export function EnumSelectField<
           <FieldLabel>{label}</FieldLabel>
           <Select
             value={numberToSelectValue(field.value)}
-            onValueChange={(value) => field.onChange(selectValueToNumber(value))}
+            onValueChange={(value) =>
+              field.onChange(selectValueToNumber(value))
+            }
             disabled={isReadOnly}
           >
             <SelectTrigger

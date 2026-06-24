@@ -12,6 +12,7 @@ import {
   Folder, // missing category icon
   LogIn,
   LogOut,
+  Maximize2,
   Minimize2,
   Minus,
   Moon,
@@ -43,6 +44,7 @@ export const icons = {
   folder: Folder,
   logIn: LogIn,
   logOut: LogOut,
+  maximize2: Maximize2,
   minimize2: Minimize2,
   minus: Minus,
   moon: Moon,

@@ -248,18 +248,14 @@ export function StrategyForm({
     const periodEntries = Object.entries(periods ?? {});
 
     return (
-      <div
-        className={cn(
-          "grid grid-cols-1 gap-3",
-          isHorizontal && "lg:col-span-3 lg:grid-cols-3"
-        )}
-      >
+      <div className={cn("flex gap-3", isHorizontal ? "flex-row" : "flex-col")}>
         {periodEntries.map(([key]) => (
           <MovingAveragePeriod
             key={key}
             control={form.control}
             name={`periods.${key}`}
             isReadOnly={isReadOnly}
+            isHorizontal={isHorizontal}
           />
         ))}
       </div>
@@ -277,12 +273,7 @@ export function StrategyForm({
       }
       className={cn(showSubmitButton && "space-y-6")}
     >
-      <div
-        className={cn(
-          "grid grid-cols-1 lg:grid-cols-4",
-          isCompact ? "gap-1.5" : "gap-2"
-        )}
-      >
+      <div className={cn("flex flex-col", isCompact ? "gap-1.5" : "gap-2")}>
         {showParametersOnly ? (
           <FieldSet
             className={cn(
@@ -291,19 +282,16 @@ export function StrategyForm({
             )}
           >
             <FieldGroup
-              className={cn(
-                "grid grid-cols-1 lg:grid-cols-3",
-                isCompact ? "gap-3" : "gap-4"
-              )}
+              className={cn("flex flex-col", isCompact ? "gap-3" : "gap-4")}
             >
               {renderParameterFields(true)}
             </FieldGroup>
           </FieldSet>
         ) : (
-          <>
+          <div className="flex flex-col gap-4">
             <FieldSet
               className={cn(
-                "space-y-4 rounded-2xl shadow-sm",
+                "w-full min-w-0 space-y-4 rounded-2xl shadow-sm md:w-1/2 lg:w-1/4",
                 isCompact ? "p-3" : "p-4"
               )}
             >
@@ -328,12 +316,16 @@ export function StrategyForm({
                         aria-label="Toggle details"
                         className="ml-auto p-0"
                       >
-                        <Icon icon={strategyOpen ? icons.minus : icons.plus} />
+                        <Icon
+                          icon={
+                            strategyOpen ? icons.minimize2 : icons.maximize2
+                          }
+                        />
                       </Button>
                     </CollapsibleTrigger>
                   </div>
 
-                  <CollapsibleContent className="space-y-6">
+                  <CollapsibleContent className="flex flex-col gap-4 pt-4">
                     <IntegerField
                       control={form.control}
                       name="strategyId"
@@ -389,7 +381,7 @@ export function StrategyForm({
 
             <FieldSet
               className={cn(
-                "space-y-4 rounded-2xl shadow-sm",
+                "w-full min-w-0 space-y-4 rounded-2xl shadow-sm md:w-1/2 lg:w-1/4",
                 isCompact ? "p-3" : "p-4"
               )}
             >
@@ -415,13 +407,15 @@ export function StrategyForm({
                         className="ml-auto p-0"
                       >
                         <Icon
-                          icon={parametersOpen ? icons.minus : icons.plus}
+                          icon={
+                            parametersOpen ? icons.minimize2 : icons.maximize2
+                          }
                         />
                       </Button>
                     </CollapsibleTrigger>
                   </div>
 
-                  <CollapsibleContent className="space-y-6">
+                  <CollapsibleContent className="flex flex-col gap-4 pt-4">
                     {renderParameterFields()}
                   </CollapsibleContent>
                 </Collapsible>
@@ -430,7 +424,7 @@ export function StrategyForm({
 
             <FieldSet
               className={cn(
-                "space-y-4 rounded-2xl shadow-sm",
+                "w-full min-w-0 space-y-4 rounded-2xl shadow-sm md:w-1/2 lg:w-1/4",
                 isCompact ? "p-3" : "p-4"
               )}
             >
@@ -456,13 +450,15 @@ export function StrategyForm({
                         className="ml-auto p-0"
                       >
                         <Icon
-                          icon={subscriptionOpen ? icons.minus : icons.plus}
+                          icon={
+                            subscriptionOpen ? icons.minimize2 : icons.maximize2
+                          }
                         />
                       </Button>
                     </CollapsibleTrigger>
                   </div>
 
-                  <CollapsibleContent className="space-y-6">
+                  <CollapsibleContent className="flex flex-col gap-4 pt-4">
                     <EnumSelectField
                       control={form.control}
                       name="klineInterval"
@@ -578,7 +574,7 @@ export function StrategyForm({
 
             <FieldSet
               className={cn(
-                "space-y-4 rounded-2xl shadow-sm",
+                "w-full min-w-0 space-y-4 rounded-2xl shadow-sm md:w-1/2 lg:w-1/4",
                 isCompact ? "p-3" : "p-4"
               )}
             >
@@ -603,12 +599,16 @@ export function StrategyForm({
                         aria-label="Toggle details"
                         className="ml-auto p-0"
                       >
-                        <Icon icon={broadcastOpen ? icons.minus : icons.plus} />
+                        <Icon
+                          icon={
+                            broadcastOpen ? icons.minimize2 : icons.maximize2
+                          }
+                        />
                       </Button>
                     </CollapsibleTrigger>
                   </div>
 
-                  <CollapsibleContent className="space-y-6">
+                  <CollapsibleContent className="flex flex-col gap-4 pt-4">
                     <IntegerField
                       control={form.control}
                       name="klineBroadcastCapacity"
@@ -672,7 +672,7 @@ export function StrategyForm({
                 </Collapsible>
               </FieldGroup>
             </FieldSet>
-          </>
+          </div>
         )}
       </div>
 

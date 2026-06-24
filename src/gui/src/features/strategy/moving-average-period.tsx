@@ -19,26 +19,30 @@ type MovingAveragePeriodProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
   isReadOnly: boolean;
+  isHorizontal?: boolean;
 };
 
 export function MovingAveragePeriod<TFieldValues extends FieldValues>({
   control,
   name,
   isReadOnly,
+  isHorizontal = false,
 }: MovingAveragePeriodProps<TFieldValues>) {
   return (
-    <div className="grid grid-cols-1 gap-3 rounded-lg border p-3 lg:grid-cols-3">
+    <div className="flex flex-col gap-3 rounded-lg border p-3">
       <TextField
         control={control}
         name={`${name}.name` as Path<TFieldValues>}
         label="Name"
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
       <IntegerField
         control={control}
         name={`${name}.value` as Path<TFieldValues>}
         label="Value"
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
       <EnumSelectField
         control={control}
@@ -46,6 +50,7 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
         label="Type"
         options={movingAverageSmoothingTypeOptions}
         isReadOnly={isReadOnly}
+        isHorizontal={isHorizontal}
       />
     </div>
   );
