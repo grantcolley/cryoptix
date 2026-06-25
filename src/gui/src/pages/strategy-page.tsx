@@ -34,6 +34,7 @@ import type { Trade } from "@/features/api/schema/trade-schema";
 import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
 import { MessageType } from "@/features/api/messages/message-type";
+import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
 import { MovingAverageSmoothingTypeLabels } from "@/features/api/schema/moving-average-smothing-type";
 import {
   StrategyStatusSchema,
@@ -230,6 +231,17 @@ export function StrategyPage() {
     100,
     Math.max(0, symbol?.baseAssetPrecision ?? 0)
   );
+  const priceClassName =
+    priceDirection === "down"
+      ? "text-destructive"
+      : priceDirection === "up"
+        ? "text-green-600 dark:text-green-400"
+        : "text-foreground";
+  const valueWidthCh = Math.max(14, valuePrecision + 10);
+  const exchangeLabel =
+    symbolExchange === null || symbolExchange === Exchange.None
+      ? null
+      : ExchangeLabels[symbolExchange];
 
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
     setSymbol(nextSymbol);
@@ -1360,12 +1372,6 @@ export function StrategyPage() {
           notificationMessage={notificationMessage}
           showStrategyRunning={showStrategyRunning}
           strategy={strategy}
-          hasSymbol={hasSymbol}
-          symbolExchange={symbolExchange}
-          symbolName={symbolName}
-          price={price}
-          priceDirection={priceDirection}
-          valuePrecision={valuePrecision}
           isStrategyParametersActive={isStrategyParametersActive}
           isStrategyConfigActive={isStrategyConfigActive}
           onToggleStrategyParameters={handleToggleStrategyParameters}
@@ -1388,7 +1394,28 @@ export function StrategyPage() {
           <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
             <Card className="flex min-h-0 flex-1 flex-col">
               <CardHeader>
-                <CardTitle></CardTitle>
+                <CardTitle className="flex min-h-5 items-baseline gap-1">
+                  {hasSymbol ? (
+                    <>
+                      {exchangeLabel ? (
+                        <h4 className="text-sm text-foreground-semimuted mr-2">
+                          {exchangeLabel}
+                        </h4>
+                      ) : null}
+                      <h4 className="text-sm text-foreground-semimuted">
+                        {symbolName}
+                      </h4>
+                    </>
+                  ) : null}
+                  {price ? (
+                    <p
+                      className={`px-4 text-left text-sm tabular-nums ${priceClassName}`}
+                      style={{ width: `${valueWidthCh}ch` }}
+                    >
+                      {price}
+                    </p>
+                  ) : null}
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col">
                 {showChart ? (
