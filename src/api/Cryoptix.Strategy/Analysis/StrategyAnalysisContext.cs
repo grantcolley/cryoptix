@@ -1,5 +1,6 @@
 using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Snapshot;
 
@@ -26,6 +27,10 @@ namespace Cryoptix.Strategy.Analysis
         /// Gets or sets the klines.
         /// </summary>
         public required IReadOnlyList<Kline> Klines { get; init; }
+        /// <summary>
+        /// Gets or sets the indicators.
+        /// </summary>
+        public required IReadOnlyList<Indicators> Indicators { get; init; }
         /// <summary>
         /// Gets or sets the trades.
         /// </summary>

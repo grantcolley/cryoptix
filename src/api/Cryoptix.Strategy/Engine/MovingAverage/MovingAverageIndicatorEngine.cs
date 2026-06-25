@@ -1,4 +1,5 @@
 using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Logging;
@@ -27,7 +28,10 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             cancellationToken.ThrowIfCancellationRequested();
 
             IReadOnlyList<Kline> klines = context.Klines;
+            Kline? kline = context.CurrentEvent.Kline;
+
             if (context.CurrentEvent.Kind != MarketEventKind.Kline
+                || kline == null
                 || klines.Count == 0)
             {
                 return Task.FromResult(IndicatorComputationResult.Empty(DateTime.MinValue));
@@ -37,6 +41,13 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             if (context.Strategy.Periods != null)
             {
+                DateTime currentCloseTime = kline.CloseTime;
+
+                Indicators? previousIndicators = context.Indicators
+                    .Where(i => i.TimestampUtc < currentCloseTime)
+                    .OrderByDescending(i => i.TimestampUtc)
+                    .FirstOrDefault();
+
                 foreach (var kvp in context.Strategy.Periods)
                 {
                     string name = kvp.Key ?? string.Empty;
@@ -46,11 +57,19 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                     if (period.SmoothingType == MovingAverageSmoothingType.Sma)
                     {
-                        computed = TryCalculateSmaRolling(klines, period.Value);
+                        computed = CalculateSma(klines, period.Value);
                     }
                     else if (period.SmoothingType == MovingAverageSmoothingType.Ema)
                     {
-                        computed = TryCalculateEma(klines, period.Value);
+                         if (previousIndicators?.Values.TryGetValue(name, out decimal previousEma) == true)
+                        {
+                            computed = CalculateEma(klines, period.Value, previousEma);
+                        }
+                        else
+                        {
+                            // initialize EMA with SMA if no previous EMA exists
+                            computed = CalculateSma(klines, period.Value);
+                        }
                     }
 
                     if (computed.HasValue)
@@ -64,20 +83,21 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             return Task.FromResult(new IndicatorComputationResult
             {
-                Indicators = new Market.Strategy.Indicators
+                Indicators = new Indicators
                 {
-                    TimestampUtc = context.CurrentEvent.Kline!.CloseTime,
+                    TimestampUtc = kline.CloseTime,
                     Values = values.ToImmutableDictionary()
                 },
             });
         }
 
-        private static decimal? TryCalculateSmaRolling(IReadOnlyList<Kline> klines, int period)
+        private static decimal? CalculateSma(IReadOnlyList<Kline> klines, int period)
         {
             if (period <= 0 || klines.Count < period)
                 return null;
 
-            // Compute first window sum
+            // SMA formula: SMA = SUM(close[1] + close[2] + ... + close[period]) / period
+
             decimal sum = 0m;
             int start = klines.Count - period;
             for (int i = start; i < klines.Count; i++)
@@ -86,30 +106,18 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             return sum / period;
         }
 
-        private static decimal? TryCalculateEma(IReadOnlyList<Kline> klines, int period)
+        private static decimal? CalculateEma(IReadOnlyList<Kline> klines, int period, decimal previousEma)
         {
             if (period <= 0 || klines.Count < period)
                 return null;
 
-            // TODO: #11 Don't calculate EMA from the beginning of the cached klines every time a new candle arrives
-
-            // EMA formula: EMA_today = (Price_today - EMA_yesterday) * multiplier + EMA_yesterday
+            // EMA formula: newEMA = ((latestClose - previousEma) * multiplier) + previousEma
 
             decimal multiplier = 2m / (period + 1);
 
-            // Seed EMA using first period prices
-            decimal ema = klines
-                .Take(period)
-                .Select(k => k.Close)
-                .Average();
+            decimal latestClose = klines[^1].Close;
 
-            // Compute EMA for the remaining prices
-            for (int i = period; i < klines.Count; i++)
-            {
-                ema = ((klines[i].Close - ema) * multiplier) + ema;
-            }
-
-            return ema;
+            return (latestClose - previousEma) * multiplier + previousEma;
         }
     }
 }

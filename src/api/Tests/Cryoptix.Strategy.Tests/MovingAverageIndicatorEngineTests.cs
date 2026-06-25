@@ -1,5 +1,6 @@
 using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
+using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Engine.MovingAverage;
@@ -7,6 +8,7 @@ using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Snapshot;
 using Cryoptix.Strategy.Strategies;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Collections.Immutable;
 
 namespace Cryoptix.Strategy.Tests;
 
@@ -30,11 +32,12 @@ public sealed class MovingAverageIndicatorEngineTests
     [TestMethod]
     public async Task ComputesSmaForConfiguredPeriods()
     {
-        var engine = new MovingAverageIndicatorEngine(NullLogger<MovingAverageIndicatorEngine>.Instance);
+        // Arrange
+        MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
         DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         List<Kline> klines = RealisticKlines(start);
 
-        StrategyAnalysisContext context = StrategyAnalysisContext(klines, klines[^1], new Strategies.Strategy
+        StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
             Periods = new Dictionary<string, Period>
@@ -47,8 +50,10 @@ public sealed class MovingAverageIndicatorEngineTests
             }
         });
 
+        // Act
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
+        // Assert
         Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
 
         Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Values["3 SMA"]);
@@ -60,10 +65,73 @@ public sealed class MovingAverageIndicatorEngineTests
     }
 
     [TestMethod]
+    public async Task ComputesEmaInitializedWithSmaWhenNoPreviousIndicator()
+    {
+        // Arrange
+        MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = RealisticKlines(start);
+
+        StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
+        {
+            Symbol = "BTCUSDT",
+            Periods = new Dictionary<string, Period>
+            {
+                ["3 EMA"] = new Period { Name = "3 EMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Ema }
+            }
+        });
+
+        // Act
+        IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        // No previous EMA exists, so EMA should be initialized with SMA for the period
+        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Values["3 EMA"]);
+        Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
+    }
+
+    [TestMethod]
+    public async Task ComputesEmaUsingPreviousEmaWhenPreviousIndicatorExists()
+    {
+        // Arrange
+        MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = RealisticKlines(start);
+
+        Strategies.Strategy strategy = new()
+        {
+            Symbol = "BTCUSDT",
+            Periods = new Dictionary<string, Period>
+            {
+                ["3 EMA"] = new Period { Name = "3 EMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Ema }
+            }
+        };
+
+        // Provide a previous EMA value that occurred before the current close time
+        decimal previousEma = 108m;
+        List<Indicators> previousIndicators =
+        [
+            new() {
+                TimestampUtc = klines[^1].CloseTime.AddMinutes(-1),
+                Values = new Dictionary<string, decimal> { ["3 EMA"] = previousEma }.ToImmutableDictionary()
+            }
+        ];
+
+        StrategyAnalysisContext context = StrategyAnalysisContext(klines, previousIndicators, klines[^1], strategy);
+
+        // Act
+        IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        // multiplier = 2/(3+1) = 0.5, latestClose = 110m => newEma = ((110 - 108) * 0.5) + 108 = 109m
+        Assert.AreEqual(109m, result.Indicators.Values["3 EMA"]);
+    }
+
+    [TestMethod]
     public async Task ReturnsEmptyForNonKlineEvent()
     {
         var engine = new MovingAverageIndicatorEngine(NullLogger<MovingAverageIndicatorEngine>.Instance);
-        StrategyAnalysisContext context = StrategyAnalysisContext([], null, new Strategies.Strategy { Symbol = "BTCUSDT" }, MarketEventKind.Trade);
+        StrategyAnalysisContext context = StrategyAnalysisContext([], [], null, new Strategies.Strategy { Symbol = "BTCUSDT" }, MarketEventKind.Trade);
 
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
@@ -73,6 +141,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
     private static StrategyAnalysisContext StrategyAnalysisContext(
         IReadOnlyList<Kline> klines,
+        IReadOnlyList<Indicators> indicators,
         Kline? currentKline,
         Strategies.Strategy strategy,
         MarketEventKind kind = MarketEventKind.Kline)
@@ -83,6 +152,7 @@ public sealed class MovingAverageIndicatorEngineTests
             Strategy = strategy,
             Klines = klines,
             Trades = [],
+            Indicators = indicators,
             CurrentEvent = new MarketEventEnvelope
             {
                 Kind = kind,
