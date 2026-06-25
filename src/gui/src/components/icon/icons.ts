@@ -23,6 +23,7 @@ import {
   Square,
   Sun,
   Unplug,
+  X,
   type LucideProps,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -55,6 +56,7 @@ export const icons = {
   square: Square,
   sun: Sun,
   unplug: Unplug,
+  x: X,
 };
 
 /**
