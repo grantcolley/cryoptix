@@ -4,6 +4,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
+import type { ReactNode } from "react";
 import {
   Field,
   FieldDescription,
@@ -54,6 +55,7 @@ type BaseFieldProps<TFieldValues extends FieldValues> = {
   label: string;
   isReadOnly: boolean;
   isHorizontal?: boolean;
+  labelAction?: ReactNode;
 };
 
 function horizontalFieldClassName(isHorizontal: boolean) {
@@ -68,6 +70,7 @@ export function TextField<TFieldValues extends FieldValues>({
   label,
   isReadOnly,
   isHorizontal = false,
+  labelAction,
 }: BaseFieldProps<TFieldValues>) {
   return (
     <Controller
@@ -79,7 +82,17 @@ export function TextField<TFieldValues extends FieldValues>({
           data-invalid={fieldState.invalid}
           className={horizontalFieldClassName(isHorizontal)}
         >
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          {labelAction ? (
+            <div
+              data-slot={isHorizontal ? "field-label" : undefined}
+              className="flex items-center justify-between gap-2"
+            >
+              <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+              {labelAction}
+            </div>
+          ) : (
+            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          )}
           <Input
             id={field.name}
             name={field.name}

@@ -1,4 +1,12 @@
 import type { Control, FieldPath, FieldValues, Path } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Icon } from "@/components/icon/icon";
+import { icons } from "@/components/icon/icons";
 import {
   MovingAverageSmoothingType,
   MovingAverageSmoothingTypeLabels,
@@ -20,6 +28,7 @@ type MovingAveragePeriodProps<TFieldValues extends FieldValues> = {
   name: FieldPath<TFieldValues>;
   isReadOnly: boolean;
   isHorizontal?: boolean;
+  onRemove?: () => void;
 };
 
 export function MovingAveragePeriod<TFieldValues extends FieldValues>({
@@ -27,7 +36,30 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
   name,
   isReadOnly,
   isHorizontal = false,
+  onRemove,
 }: MovingAveragePeriodProps<TFieldValues>) {
+  const handleRemove = () => {
+    onRemove?.();
+  };
+
+  const removeButton = !isReadOnly ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleRemove}
+          aria-label="Remove moving average"
+          className="size-7 p-0"
+        >
+          <Icon icon={icons.x} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Remove moving average</TooltipContent>
+    </Tooltip>
+  ) : null;
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-3">
       <TextField
@@ -36,6 +68,7 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
         label="Name"
         isReadOnly={isReadOnly}
         isHorizontal={isHorizontal}
+        labelAction={removeButton}
       />
       <IntegerField
         control={control}

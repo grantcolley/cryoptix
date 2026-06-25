@@ -47,6 +47,11 @@ import {
   TextAreaField,
   TextField,
 } from "@/features/strategy/strategy-form-fields";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { enumToOptions } from "@/lib/enum-helper";
 import { cn } from "@/lib/utils";
@@ -96,20 +101,20 @@ const fallbackDefaultValues: Strategy = {
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
   periods: {
-    "9 SMA": {
-      name: "9 SMA",
+    "9 EMA": {
+      name: "9 EMA",
       value: 9,
-      smoothingType: MovingAverageSmoothingType.Sma,
+      smoothingType: MovingAverageSmoothingType.Ema,
     },
-    "21 SMA": {
-      name: "21 SMA",
+    "21 EMA": {
+      name: "21 EMA",
       value: 21,
-      smoothingType: MovingAverageSmoothingType.Sma,
+      smoothingType: MovingAverageSmoothingType.Ema,
     },
-    "50 SMA": {
-      name: "50 SMA",
+    "50 EMA": {
+      name: "50 EMA",
       value: 50,
-      smoothingType: MovingAverageSmoothingType.Sma,
+      smoothingType: MovingAverageSmoothingType.Ema,
     },
   },
   klineInterval: KlineInterval.Minute,
@@ -217,6 +222,26 @@ export function StrategyForm({
     onBroadcastOpenChange?.(open);
   };
 
+  const handleAddPeriod = () => {
+    const current = form.getValues("periods") ?? {};
+
+    const base = "New Period";
+    let index = 1;
+    let key = `${base} ${index}`;
+    while (current[key]) {
+      index += 1;
+      key = `${base} ${index}`;
+    }
+
+    const period = {
+      name: key,
+      value: 9,
+      smoothingType: MovingAverageSmoothingType.Sma,
+    } as const;
+
+    form.setValue("periods", { ...current, [key]: period });
+  };
+
   React.useEffect(() => {
     if (!onChange) return;
 
@@ -249,6 +274,26 @@ export function StrategyForm({
 
     return (
       <div className={cn("flex gap-3", isHorizontal ? "flex-row" : "flex-col")}>
+        {!isReadOnly ? (
+          <div className="flex justify-start">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleAddPeriod}
+                  aria-label="Add moving average"
+                  className="p-0"
+                >
+                  <Icon icon={icons.plus} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add moving average</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
+
         {periodEntries.map(([key]) => (
           <MovingAveragePeriod
             key={key}
@@ -256,6 +301,12 @@ export function StrategyForm({
             name={`periods.${key}`}
             isReadOnly={isReadOnly}
             isHorizontal={isHorizontal}
+            onRemove={() => {
+              const current = form.getValues("periods") ?? {};
+              const nextPeriods = { ...current };
+              delete nextPeriods[key];
+              form.setValue("periods", nextPeriods);
+            }}
           />
         ))}
       </div>

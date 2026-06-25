@@ -33,20 +33,20 @@ export const STRATEGY_CONFIG: Strategy[] = [
     signalBroadcastFullMode: 2,
     indicatorsBroadcastFullMode: 2,
     periods: {
-      "9 SMA": {
-        name: "9 SMA",
+      "9 EMA": {
+        name: "9 EMA",
         value: 9,
-        smoothingType: 1,
+        smoothingType: 2,
       },
-      "21 SMA": {
-        name: "21 SMA",
+      "21 EMA": {
+        name: "21 EMA",
         value: 21,
-        smoothingType: 1,
+        smoothingType: 2,
       },
-      "50 SMA": {
-        name: "50 SMA",
+      "50 EMA": {
+        name: "50 EMA",
         value: 50,
-        smoothingType: 1,
+        smoothingType: 2,
       },
     },
   },
