@@ -34,6 +34,7 @@ import type { Trade } from "@/features/api/schema/trade-schema";
 import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
 import { MessageType } from "@/features/api/messages/message-type";
+import { MovingAverageSmoothingTypeLabels } from "@/features/api/schema/moving-average-smothing-type";
 import {
   StrategyStatusSchema,
   type StrategyStatus,
@@ -69,6 +70,7 @@ const INITIAL_VISIBLE_KLINE_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
 const MANUAL_SCROLL_THRESHOLD = 0.5;
+const MOVING_AVERAGE_LABEL_PATTERN = /^\d+\s+[a-z]+$/i;
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -81,6 +83,23 @@ const INDICATOR_SERIES_COLORS = [
 
 const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
+
+const formatMovingAveragePeriodLabel = (
+  period: Strategy["periods"][string]
+) => {
+  const generatedLabel = `${period.value} ${MovingAverageSmoothingTypeLabels[period.smoothingType]}`;
+  const configuredName = period.name?.trim();
+
+  if (
+    configuredName &&
+    configuredName !== generatedLabel &&
+    !MOVING_AVERAGE_LABEL_PATTERN.test(configuredName)
+  ) {
+    return configuredName;
+  }
+
+  return generatedLabel;
+};
 
 const chartTimeAxisFormatter = new Intl.DateTimeFormat(undefined, {
   hour: "2-digit",
@@ -217,6 +236,30 @@ export function StrategyPage() {
     setSymbolName(nextSymbol?.name ?? nextSymbol?.exchangeSymbol ?? null);
     setSymbolExchange(nextSymbol?.exchange ?? null);
   };
+
+  const getIndicatorSeriesLabel = React.useCallback(
+    (key: string) => {
+      const periods = strategy?.periods;
+
+      if (!periods) {
+        return key;
+      }
+
+      const period =
+        periods[key] ??
+        Object.values(periods).find((period) => {
+          const configuredName = period.name?.trim();
+
+          return (
+            configuredName === key ||
+            formatMovingAveragePeriodLabel(period) === key
+          );
+        });
+
+      return period ? formatMovingAveragePeriodLabel(period) : key;
+    },
+    [strategy?.periods]
+  );
 
   const resetPriceComparison = () => {
     previousPriceRef.current = null;
@@ -422,7 +465,7 @@ export function StrategyPage() {
         return [
           {
             key,
-            label: key,
+            label: getIndicatorSeriesLabel(key),
             color: getIndicatorSeriesColor(index),
             x: Math.min(maxX, Math.max(8, x + 8)),
             y: Math.min(maxY, Math.max(6, y - 10)),
@@ -432,7 +475,7 @@ export function StrategyPage() {
     );
 
     setChartSeriesLabelPositions(nextLabelPositions);
-  }, []);
+  }, [getIndicatorSeriesLabel]);
 
   const preserveVisibleLogicalRange = React.useCallback(
     (applyChartChanges: () => void, afterChartChanges?: () => void) => {
@@ -488,38 +531,35 @@ export function StrategyPage() {
       return;
     }
 
-    preserveVisibleLogicalRange(
-      () => {
-        clearIndicatorSeries();
+    preserveVisibleLogicalRange(() => {
+      clearIndicatorSeries();
 
-        const indicatorSeriesByKey = new Map<string, ISeriesApi<"Line">>();
+      const indicatorSeriesByKey = new Map<string, ISeriesApi<"Line">>();
 
-        for (const [
-          index,
-          { key, data },
-        ] of indicatorSeriesDataRef.current.entries()) {
-          if (!isChartSeriesVisible(key)) {
-            continue;
-          }
-
-          const color = getIndicatorSeriesColor(index);
-          const indicatorSeries = chart.addSeries(LineSeries, {
-            color,
-            lineWidth: 2,
-            priceLineColor: color,
-            priceLineVisible: true,
-            lastValueVisible: true,
-            priceScaleId: "right",
-          });
-
-          indicatorSeries.setData(data);
-          indicatorSeriesByKey.set(key, indicatorSeries);
+      for (const [
+        index,
+        { key, data },
+      ] of indicatorSeriesDataRef.current.entries()) {
+        if (!isChartSeriesVisible(key)) {
+          continue;
         }
 
-        indicatorSeriesByKeyRef.current = indicatorSeriesByKey;
-      },
-      updateChartSeriesLabelPositions
-    );
+        const color = getIndicatorSeriesColor(index);
+        const indicatorSeries = chart.addSeries(LineSeries, {
+          color,
+          lineWidth: 2,
+          priceLineColor: color,
+          priceLineVisible: true,
+          lastValueVisible: true,
+          priceScaleId: "right",
+        });
+
+        indicatorSeries.setData(data);
+        indicatorSeriesByKey.set(key, indicatorSeries);
+      }
+
+      indicatorSeriesByKeyRef.current = indicatorSeriesByKey;
+    }, updateChartSeriesLabelPositions);
   }, [
     clearIndicatorSeries,
     preserveVisibleLogicalRange,
@@ -546,18 +586,15 @@ export function StrategyPage() {
     }
 
     if (!replace && candleSeries && volumeSeries) {
-      preserveVisibleLogicalRange(
-        () => {
-          for (const candle of nextCandles) {
-            candleSeries.update(candle);
-          }
-          for (const volume of nextVolumes) {
-            volumeSeries.update(volume);
-          }
-          syncPriceSeriesColor();
-        },
-        updateChartSeriesLabelPositions
-      );
+      preserveVisibleLogicalRange(() => {
+        for (const candle of nextCandles) {
+          candleSeries.update(candle);
+        }
+        for (const volume of nextVolumes) {
+          volumeSeries.update(volume);
+        }
+        syncPriceSeriesColor();
+      }, updateChartSeriesLabelPositions);
     }
 
     if (!replace && (!candleSeries || !volumeSeries)) {
@@ -565,18 +602,15 @@ export function StrategyPage() {
     }
 
     if (replace && candleSeries && volumeSeries) {
-      preserveVisibleLogicalRange(
-        () => {
-          candleSeries.setData(
-            sortByTime([...candleDataByTimeRef.current.values()])
-          );
-          volumeSeries.setData(
-            sortByTime([...volumeDataByTimeRef.current.values()])
-          );
-          syncPriceSeriesColor();
-        },
-        updateChartSeriesLabelPositions
-      );
+      preserveVisibleLogicalRange(() => {
+        candleSeries.setData(
+          sortByTime([...candleDataByTimeRef.current.values()])
+        );
+        volumeSeries.setData(
+          sortByTime([...volumeDataByTimeRef.current.values()])
+        );
+        syncPriceSeriesColor();
+      }, updateChartSeriesLabelPositions);
       applyInitialVisibleKlineRange();
     }
   };
@@ -1246,6 +1280,7 @@ export function StrategyPage() {
   const handleStrategyFormChange = React.useCallback(
     (nextStrategy: Strategy) => {
       latestStrategyRef.current = nextStrategy;
+      setEditedStrategy(nextStrategy);
     },
     []
   );
@@ -1263,7 +1298,7 @@ export function StrategyPage() {
     },
     ...indicatorSeriesKeys.map((key, index) => ({
       key,
-      label: key,
+      label: getIndicatorSeriesLabel(key),
       color: getIndicatorSeriesColor(index),
     })),
   ];
