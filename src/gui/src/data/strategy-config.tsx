@@ -4,7 +4,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
   {
     strategyId: 1,
     name: "Moving Average Crossover",
-    description: "A simple moving average crossover strategy.",
+    description:
+      "A moving average crossover strategy using 9-EMA, 21-EMA, and 50-EMA.",
     symbol: "BTCUSDT",
     strategyProcessorType: 1,
     strategyEngineType: 1,
