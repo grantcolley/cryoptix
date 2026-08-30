@@ -18,11 +18,11 @@ public sealed class StrategyControllerTests
         var queue = new Mock<IStrategyCommandQueue>(MockBehavior.Strict);
         var catalog = new Mock<IStrategyProcessorCatalog>(MockBehavior.Strict);
         var stateStore = new StrategyStateStore(NullLogger<StrategyStateStore>.Instance);
-        var strategy = new Strategy.Strategies.Strategy { Name = "Demo", StrategyProcessorType = StrategyProcessorType.TradingFlow };
+        var strategy = new Strategy.Strategies.Strategy { Name = "Demo", StrategyProcessorType = StrategyProcessorType.MarketEvent };
         Func<IStrategyProcessor> factory = () => Mock.Of<IStrategyProcessor>();
 
-        catalog.SetupGet(c => c.Keys).Returns([StrategyProcessorType.TradingFlow]);
-        catalog.Setup(c => c.TryCreate(StrategyProcessorType.TradingFlow, out factory)).Returns(true);
+        catalog.SetupGet(c => c.Keys).Returns([StrategyProcessorType.MarketEvent]);
+        catalog.Setup(c => c.TryCreate(StrategyProcessorType.MarketEvent, out factory)).Returns(true);
         queue.Setup(q => q.EnqueueAsync(It.Is<StrategyCommand>(c => c.StrategyCommandType == StrategyCommandType.Start && c.Strategy == strategy), It.IsAny<CancellationToken>()))
             .Returns(ValueTask.CompletedTask);
         var controller = new StrategyController(stateStore, queue.Object, catalog.Object);
@@ -33,7 +33,7 @@ public sealed class StrategyControllerTests
         // Assert / Verify
         Assert.IsTrue(result.Success);
         Assert.AreEqual(StrategyControllerStatusCodes.Status202Accepted, result.StatusCode);
-        CollectionAssert.AreEqual(new[] { StrategyProcessorType.TradingFlow }, controller.GetAvailableStrategies().ToArray());
+        CollectionAssert.AreEqual(new[] { StrategyProcessorType.MarketEvent }, controller.GetAvailableStrategies().ToArray());
         queue.VerifyAll();
     }
 
@@ -44,9 +44,9 @@ public sealed class StrategyControllerTests
         var queue = new Mock<IStrategyCommandQueue>(MockBehavior.Strict);
         var catalog = new Mock<IStrategyProcessorCatalog>(MockBehavior.Strict);
         var stateStore = new StrategyStateStore(NullLogger<StrategyStateStore>.Instance);
-        var strategy = new Strategy.Strategies.Strategy { Name = "Demo", StrategyProcessorType = StrategyProcessorType.TradingFlow };
+        var strategy = new Strategy.Strategies.Strategy { Name = "Demo", StrategyProcessorType = StrategyProcessorType.MarketEvent };
         Func<IStrategyProcessor> factory = null!;
-        catalog.Setup(c => c.TryCreate(StrategyProcessorType.TradingFlow, out factory)).Returns(false);
+        catalog.Setup(c => c.TryCreate(StrategyProcessorType.MarketEvent, out factory)).Returns(false);
         var controller = new StrategyController(stateStore, queue.Object, catalog.Object);
 
         // Act

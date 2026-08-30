@@ -6,13 +6,13 @@ using Cryoptix.Strategy.Snapshot;
 namespace Cryoptix.Strategy.Tests;
 
 [TestClass]
-public sealed class TradingFlowSessionAccessorTests
+public sealed class MarketEventSessionAccessorTests
 {
     [TestMethod]
     public void SetTryGetAndClear()
     {
         // Arrange
-        TradingFlowSessionAccessor accessor = new();
+        MarketEventSessionAccessor accessor = new();
         StrategyProcessorSession session = new()
         {
             ExchangeApi = new ExchangeApi(),

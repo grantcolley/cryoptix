@@ -1,7 +1,7 @@
 namespace Cryoptix.Strategy.Engine
 {
     /// <summary>
-    /// Defines the strategy engine pair contract.
+    /// Defines the strategy indicator and signal engine pair contract.
     /// </summary>
     public interface IStrategyEnginePair
     {

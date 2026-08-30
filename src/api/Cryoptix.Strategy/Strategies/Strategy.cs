@@ -30,7 +30,7 @@ namespace Cryoptix.Strategy.Strategies
         /// <summary>
         /// Gets or sets the strategy processor type.
         /// </summary>
-        public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.TradingFlow;
+        public StrategyProcessorType StrategyProcessorType { get; set; } = StrategyProcessorType.MarketEvent;
         /// <summary>
         /// Gets or sets the strategy engine type.
         /// </summary>

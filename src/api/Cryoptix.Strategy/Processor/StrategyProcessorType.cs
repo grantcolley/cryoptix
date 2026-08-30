@@ -10,8 +10,8 @@ namespace Cryoptix.Strategy.Processor
         /// </summary>
         None = 0,
         /// <summary>
-        /// Specifies the trading flow value.
+        /// Specifies the market event value.
         /// </summary>
-        TradingFlow = 1,
+        MarketEvent = 1,
     }
 }

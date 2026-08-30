@@ -16,30 +16,30 @@ using System.Threading.Channels;
 namespace Cryoptix.Strategy.Processor
 {
     /// <summary>
-    /// Represents the trading flow processor.
+    /// Represents the market event processor.
     /// </summary>
-    public sealed class TradingFlowProcessor(
-        ILogger<TradingFlowProcessor> logger,
+    public sealed class MarketEventProcessor(
+        ILogger<MarketEventProcessor> logger,
         IStrategyMarketSeeder strategyMarketSeeder,
         IStrategyMarketEventSubscriber strategyMarketEventSubscriber,
         IStrategyMarketEventDispatcher strategyMarketEventDispatcher,
         IStrategyEventChannelFactory strategyEventChannelFactory,
-        ITradingFlowSessionAccessor tradingFlowSessionAccessor,
+        IMarketEventSessionAccessor marketEventSessionAccessor,
         IStrategyStatusNotifier strategyStatusNotifier,
         INotificationMetrics notificationMetrics,
         INotificationPump notificationPump) : IStrategyProcessor
     {
         /// <summary>
-        /// Gets the trading flow.
+        /// Gets the market event processor type.
         /// </summary>
-        public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.TradingFlow;
+        public readonly StrategyProcessorType StrategyProcessorType = StrategyProcessorType.MarketEvent;
 
-        private readonly ILogger<TradingFlowProcessor> _logger = logger;
+        private readonly ILogger<MarketEventProcessor> _logger = logger;
         private readonly IStrategyMarketSeeder _strategyMarketSeeder = strategyMarketSeeder;
         private readonly IStrategyMarketEventSubscriber _strategyMarketEventSubscriber = strategyMarketEventSubscriber;
         private readonly IStrategyMarketEventDispatcher _strategyMarketEventDispatcher = strategyMarketEventDispatcher;
         private readonly IStrategyEventChannelFactory _strategyEventChannelFactory = strategyEventChannelFactory;
-        private readonly ITradingFlowSessionAccessor _tradingFlowSessionAccessor = tradingFlowSessionAccessor;
+        private readonly IMarketEventSessionAccessor _marketEventSessionAccessor = marketEventSessionAccessor;
         private readonly IStrategyStatusNotifier _strategyStatusNotifier = strategyStatusNotifier;
         private readonly INotificationMetrics _notificationMetrics = notificationMetrics;
         private readonly INotificationPump _notificationPump = notificationPump;
@@ -79,7 +79,7 @@ namespace Cryoptix.Strategy.Processor
                     maxSignalsPerSeries: initialStrategy.CacheMaxSignalsPerSeries)
             };
 
-            _tradingFlowSessionAccessor.SetCurrent(strategyProcessorSession);
+            _marketEventSessionAccessor.SetCurrent(strategyProcessorSession);
 
             StrategyEventChannels channels = _strategyEventChannelFactory.Create(initialStrategy);
 
@@ -170,7 +170,7 @@ namespace Cryoptix.Strategy.Processor
             }
             finally
             {
-                _tradingFlowSessionAccessor.ClearCurrent();
+                _marketEventSessionAccessor.ClearCurrent();
 
                 if (strategyMarketEventSubscriptions != null)
                 {

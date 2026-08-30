@@ -22,7 +22,7 @@ namespace Cryoptix.Observer.Metrics
         /// </summary>
         public NotificationMetrics()
         {
-            _meter = new Meter("TradingFlow.Notifications", "1.0.0");
+            _meter = new Meter("MarketEvent.Notifications", "1.0.0");
 
             _broadcastDropCounter = _meter.CreateCounter<long>(
                 name: "notification.broadcast.dropped",

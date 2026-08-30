@@ -8,10 +8,10 @@ namespace Cryoptix.Strategy.Cache
     /// Represents the market data snapshot provider.
     /// </summary>
     public sealed class MarketDataSnapshotProvider(
-        ITradingFlowSessionAccessor tradingFlowSessionAccessor,
+        IMarketEventSessionAccessor marketEventSessionAccessor,
         IStrategyClock strategyClock) : IMarketDataSnapshotProvider
     {
-        private readonly ITradingFlowSessionAccessor _tradingFlowSessionAccessor = tradingFlowSessionAccessor;
+        private readonly IMarketEventSessionAccessor _marketEventSessionAccessor = marketEventSessionAccessor;
         private readonly IStrategyClock _strategyClock = strategyClock;
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace Cryoptix.Strategy.Cache
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!_tradingFlowSessionAccessor.TryGetCurrent(out StrategyProcessorSession? session) || session == null)
+            if (!_marketEventSessionAccessor.TryGetCurrent(out StrategyProcessorSession? session) || session == null)
             {
                 return Task.FromResult(new MarketDataSnapshot
                 {

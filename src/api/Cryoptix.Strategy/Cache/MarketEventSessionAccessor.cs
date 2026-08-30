@@ -3,9 +3,9 @@ using Cryoptix.Strategy.Processor;
 namespace Cryoptix.Strategy.Cache
 {
     /// <summary>
-    /// Represents the trading flow session accessor.
+    /// Represents the market event session accessor.
     /// </summary>
-    public sealed class TradingFlowSessionAccessor : ITradingFlowSessionAccessor
+    public sealed class MarketEventSessionAccessor : IMarketEventSessionAccessor
     {
         private readonly Lock _gate = new();
         private StrategyProcessorSession? _current;

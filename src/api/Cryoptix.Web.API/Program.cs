@@ -195,7 +195,7 @@ builder.Services.AddSingleton<IStrategyController, StrategyController>();
 builder.Services.AddSingleton<IStrategyAgent, StrategyAgent>();
 builder.Services.AddSingleton<IStrategyClock, SystemStrategyClock>();
 builder.Services.AddSingleton<IStrategyMarketSeeder, StrategyMarketSeeder>();
-builder.Services.AddSingleton<ITradingFlowSessionAccessor, TradingFlowSessionAccessor>();
+builder.Services.AddSingleton<IMarketEventSessionAccessor, MarketEventSessionAccessor>();
 builder.Services.AddSingleton<IMarketDataSnapshotProvider, MarketDataSnapshotProvider>();
 builder.Services.AddSingleton<IStrategyStatusNotifier, StrategyStatusNotifier>();
 builder.Services.AddSingleton<IStrategyMarketEventSubscriber, StrategyMarketEventSubscriber>();
@@ -209,11 +209,11 @@ builder.Services.AddSingleton<MovingAverageIndicatorEngine>();
 builder.Services.AddSingleton<MovingAverageSignalEngine>();
 builder.Services.AddSingleton<IStrategyEnginePair, MovingAverageStrategyEnginePair>();
 builder.Services.AddSingleton<IStrategyEnginePairFactory, StrategyEnginePairFactory>();
-builder.Services.AddTransient<TradingFlowProcessor>();
+builder.Services.AddTransient<MarketEventProcessor>();
 builder.Services.AddSingleton<IStrategyProcessorCatalog>(sp =>
     new StrategyProcessorCatalog(
     [
-        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.TradingFlow, () => sp.GetRequiredService<TradingFlowProcessor>())
+        new KeyValuePair<StrategyProcessorType, Func<IStrategyProcessor>>(StrategyProcessorType.MarketEvent, () => sp.GetRequiredService<MarketEventProcessor>())
     ]));
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

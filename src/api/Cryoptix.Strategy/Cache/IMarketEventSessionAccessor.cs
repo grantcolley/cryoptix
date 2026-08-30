@@ -3,9 +3,9 @@ using Cryoptix.Strategy.Processor;
 namespace Cryoptix.Strategy.Cache
 {
     /// <summary>
-    /// Defines the trading flow session accessor contract.
+    /// Defines the market event session accessor contract.
     /// </summary>
-    public interface ITradingFlowSessionAccessor
+    public interface IMarketEventSessionAccessor
     {
         /// <summary>
         /// Sets the current.
