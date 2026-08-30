@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const StrategyProcessorType = {
   None: 0,
-  TradingFlow: 1,
+  MarketEvent: 1,
 } as const;
 
 export const StrategyProcessorTypeSchema = z.enum(StrategyProcessorType);
@@ -14,5 +14,5 @@ export const StrategyProcessorTypeLabels: Record<
   string
 > = {
   [StrategyProcessorType.None]: "None",
-  [StrategyProcessorType.TradingFlow]: "Trading Flow",
+  [StrategyProcessorType.MarketEvent]: "Market Event",
 };
