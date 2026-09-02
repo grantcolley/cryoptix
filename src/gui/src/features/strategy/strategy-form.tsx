@@ -129,16 +129,18 @@ const fallbackDefaultValues: Strategy = {
   cacheMaxSignalsPerSeries: 5000,
   strategyProcessorMaxTradesPerPass: 256,
   subscriptionChannelKlineCapacity: 10000,
+  subscriptionChannelKlineFullMode: BoundedChannelFullMode.DropOldest,
   subscriptionChannelTradeCapacity: 10000,
   subscriptionChannelTradeFullMode: BoundedChannelFullMode.DropOldest,
-  subscriptionChannelKlineFullMode: BoundedChannelFullMode.DropOldest,
+  marketEventDispatcherCapacity: 20000,
+  marketEventDispatcherFullMode: BoundedChannelFullMode.DropOldest,
   klineBroadcastCapacity: 500,
-  tradeBroadcastCapacity: 10000,
   klineBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  tradeBroadcastCapacity: 10000,
   tradeBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   indicatorsBroadcastCapacity: 5000,
-  signalBroadcastCapacity: 5000,
   indicatorsBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  signalBroadcastCapacity: 5000,
   signalBroadcastFullMode: BoundedChannelFullMode.DropOldest,
 };
 
@@ -615,6 +617,21 @@ export function StrategyForm({
                       control={form.control}
                       name="subscriptionChannelTradeFullMode"
                       label="Subscription channel trade full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="marketEventDispatcherCapacity"
+                      label="Market event dispatcher capacity"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <EnumSelectField
+                      control={form.control}
+                      name="marketEventDispatcherFullMode"
+                      label="Market event dispatcher full mode"
                       options={boundedChannelFullModeOptions}
                       isReadOnly={isReadOnly}
                     />

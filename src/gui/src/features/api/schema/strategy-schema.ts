@@ -36,28 +36,34 @@ export const StrategySchema = z.object({
   cacheMaxSignalsPerSeries: z.number().int().default(5000),
   strategyProcessorMaxTradesPerPass: z.number().int().default(256),
   subscriptionChannelKlineCapacity: z.number().int().default(500),
+  subscriptionChannelKlineFullMode: z
+    .enum(BoundedChannelFullMode)
+    .default(BoundedChannelFullMode.DropOldest),
   subscriptionChannelTradeCapacity: z.number().int().default(10000),
   subscriptionChannelTradeFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
-  subscriptionChannelKlineFullMode: z
+
+  // Processing fields
+  marketEventDispatcherCapacity: z.number().int().default(500),
+  marketEventDispatcherFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
 
   // Broadcast fields
   klineBroadcastCapacity: z.number().int().default(500),
-  tradeBroadcastCapacity: z.number().int().default(10000),
-  indicatorsBroadcastCapacity: z.number().int().default(5000),
-  signalBroadcastCapacity: z.number().int().default(5000),
   klineBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
+  tradeBroadcastCapacity: z.number().int().default(10000),
   tradeBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
+  indicatorsBroadcastCapacity: z.number().int().default(5000),
   indicatorsBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
+  signalBroadcastCapacity: z.number().int().default(5000),
   signalBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
