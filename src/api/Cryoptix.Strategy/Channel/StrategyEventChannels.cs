@@ -19,6 +19,10 @@ namespace Cryoptix.Strategy.Channel
         /// </summary>
         public required Channel<TradeMarketEvent> Trades { get; init; }
         /// <summary>
+        /// Gets or sets the MarketEventDispatcher.
+        /// </summary>
+        public required Channel<MarketEvent> MarketEventDispatcher { get; init; }
+        /// <summary>
         /// Gets or sets the kline broadcasts.
         /// </summary>
         public required Channel<Kline> KlineBroadcasts { get; init; }
@@ -43,6 +47,7 @@ namespace Cryoptix.Strategy.Channel
         {
             Klines.Writer.TryComplete(error);
             Trades.Writer.TryComplete(error);
+            MarketEventDispatcher.Writer.TryComplete(error);
             KlineBroadcasts.Writer.TryComplete(error);
             TradeBroadcasts.Writer.TryComplete(error);
             IndicatorsBroadcasts.Writer.TryComplete(error);

@@ -18,7 +18,21 @@ namespace Cryoptix.Strategy.Channel
         /// <returns>The create result.</returns>
         public StrategyEventChannels Create()
         {
-            return Create(_options.KlineCapacity, _options.KlineFullMode, _options.TradeCapacity, _options.TradeFullMode, _options.KlineBroadcastCapacity, _options.KlineBroadcastFullMode, _options.TradeBroadcastCapacity, _options.TradeBroadcastFullMode, _options.IndicatorsBroadcastCapacity, _options.IndicatorsBroadcastFullMode, _options.SignalBroadcastCapacity, _options.SignalBroadcastFullMode);
+            return Create(
+                _options.KlineCapacity, 
+                _options.KlineFullMode, 
+                _options.TradeCapacity, 
+                _options.TradeFullMode,
+                _options.MarketEventDispatcherCapacity,
+                _options.MarketEventDispatcherFullMode,
+                _options.KlineBroadcastCapacity, 
+                _options.KlineBroadcastFullMode, 
+                _options.TradeBroadcastCapacity,
+                _options.TradeBroadcastFullMode,
+                _options.IndicatorsBroadcastCapacity,
+                _options.IndicatorsBroadcastFullMode, 
+                _options.SignalBroadcastCapacity, 
+                _options.SignalBroadcastFullMode);
         }
 
         /// <summary>
@@ -30,10 +44,16 @@ namespace Cryoptix.Strategy.Channel
         {
             int klineCapacity = strategy.SubscriptionChannelKlineCapacity > 0 ? strategy.SubscriptionChannelKlineCapacity : _options.KlineCapacity;
             System.Threading.Channels.BoundedChannelFullMode klineFullMode = strategy.SubscriptionChannelKlineFullMode;
+
             int tradeCapacity = strategy.SubscriptionChannelTradeCapacity > 0 ? strategy.SubscriptionChannelTradeCapacity : _options.TradeCapacity;
             System.Threading.Channels.BoundedChannelFullMode tradeFullMode = strategy.SubscriptionChannelTradeFullMode;
+
+            int marketEventDispatcherCapacity = strategy.MarketEventDispatcherCapacity > 0 ? strategy.MarketEventDispatcherCapacity : _options.MarketEventDispatcherCapacity;
+            System.Threading.Channels.BoundedChannelFullMode marketEventDispatcherFullMode = strategy.MarketEventDispatcherFullMode;
+
             int klineBroadcastCapacity = strategy.KlineBroadcastCapacity > 0 ? strategy.KlineBroadcastCapacity : _options.KlineBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode = strategy.KlineBroadcastFullMode;
+
             int tradeBroadcastCapacity = strategy.TradeBroadcastCapacity > 0 ? strategy.TradeBroadcastCapacity : _options.TradeBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode = strategy.TradeBroadcastFullMode;
 
@@ -43,7 +63,21 @@ namespace Cryoptix.Strategy.Channel
             int signalBroadcastCapacity = strategy.SignalBroadcastCapacity > 0 ? strategy.SignalBroadcastCapacity : _options.SignalBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode = strategy.SignalBroadcastFullMode;
 
-            return Create(klineCapacity, klineFullMode, tradeCapacity, tradeFullMode, klineBroadcastCapacity, klineBroadcastFullMode, tradeBroadcastCapacity, tradeBroadcastFullMode, indicatorsBroadcastCapacity, indicatorsBroadcastFullMode, signalBroadcastCapacity, signalBroadcastFullMode);
+            return Create(
+                klineCapacity, 
+                klineFullMode, 
+                tradeCapacity, 
+                tradeFullMode,
+                marketEventDispatcherCapacity,
+                marketEventDispatcherFullMode,
+                klineBroadcastCapacity, 
+                klineBroadcastFullMode, 
+                tradeBroadcastCapacity, 
+                tradeBroadcastFullMode,
+                indicatorsBroadcastCapacity, 
+                indicatorsBroadcastFullMode, 
+                signalBroadcastCapacity, 
+                signalBroadcastFullMode);
         }
 
         /// <summary>
@@ -53,6 +87,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="klineFullMode">The kline full mode value.</param>
         /// <param name="tradeCapacity">The trade capacity value.</param>
         /// <param name="tradeFullMode">The trade full mode value.</param>
+        /// <param name="marketEventDispatcherCapacity">The market event dispatcher capacity value.</param>
+        /// <param name="marketEventDispatcherFullMode">The market event dispatcher full mode value.</param>
         /// <param name="klineBroadcastCapacity">The kline broadcast capacity value.</param>
         /// <param name="klineBroadcastFullMode">The kline broadcast full mode value.</param>
         /// <param name="tradeBroadcastCapacity">The trade broadcast capacity value.</param>
@@ -62,7 +98,21 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity value.</param>
         /// <param name="signalBroadcastFullMode">The signal broadcast full mode value.</param>
         /// <returns>The create result.</returns>
-        public StrategyEventChannels Create(int klineCapacity, System.Threading.Channels.BoundedChannelFullMode klineFullMode, int tradeCapacity, System.Threading.Channels.BoundedChannelFullMode tradeFullMode, int klineBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, int tradeBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, int indicatorsBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, int signalBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode)
+        public StrategyEventChannels Create(
+            int klineCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode klineFullMode, 
+            int tradeCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode tradeFullMode,
+            int marketEventDispatcherCapacity,
+            System.Threading.Channels.BoundedChannelFullMode marketEventDispatcherFullMode,
+            int klineBroadcastCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, 
+            int tradeBroadcastCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, 
+            int indicatorsBroadcastCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, 
+            int signalBroadcastCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode)
         {
             System.Threading.Channels.Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(
                 new System.Threading.Channels.BoundedChannelOptions(klineCapacity)
@@ -80,6 +130,15 @@ namespace Cryoptix.Strategy.Channel
                     SingleWriter = false,
                     AllowSynchronousContinuations = false,
                     FullMode = tradeFullMode
+                });
+
+            System.Threading.Channels.Channel<MarketEvent> marketEventDispatcherChannel = System.Threading.Channels.Channel.CreateBounded<MarketEvent>(
+                new System.Threading.Channels.BoundedChannelOptions(marketEventDispatcherCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = false,
+                    AllowSynchronousContinuations = false,
+                    FullMode = marketEventDispatcherFullMode
                 });
 
             System.Threading.Channels.Channel<Kline> klineBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Kline>(
@@ -122,6 +181,7 @@ namespace Cryoptix.Strategy.Channel
             {
                 Klines = klineChannel,
                 Trades = tradeChannel,
+                MarketEventDispatcher = marketEventDispatcherChannel,
                 KlineBroadcasts = klineBroadcastChannel,
                 TradeBroadcasts = tradeBroadcastChannel,
                 IndicatorsBroadcasts = indicatorsBroadcastChannel,

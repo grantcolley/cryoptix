@@ -88,6 +88,10 @@ namespace Cryoptix.Strategy.Strategies
         /// </summary>
         public int SubscriptionChannelKlineCapacity { get; set; } = 10000;
         /// <summary>
+        /// Gets or sets the subscription channel kline full mode.
+        /// </summary>
+        public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
         /// Gets or sets the subscription channel trade capacity.
         /// </summary>
         public int SubscriptionChannelTradeCapacity { get; set; } = 10000;
@@ -96,41 +100,45 @@ namespace Cryoptix.Strategy.Strategies
         /// </summary>
         public BoundedChannelFullMode SubscriptionChannelTradeFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
-        /// Gets or sets the subscription channel kline full mode.
+        /// Gets or sets the market event dispatcher capacity.
         /// </summary>
-        public BoundedChannelFullMode SubscriptionChannelKlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public int MarketEventDispatcherCapacity { get; init; } = 20000;
+        /// <summary>
+        /// Gets or sets the market event dispatcher full mode.
+        /// </summary>
+        public BoundedChannelFullMode MarketEventDispatcherFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
         /// Gets or sets the kline broadcast capacity.
         /// </summary>
         public int KlineBroadcastCapacity { get; init; } = 500;
         /// <summary>
-        /// Gets or sets the trade broadcast capacity.
-        /// </summary>
-        public int TradeBroadcastCapacity { get; init; } = 10000;
-        /// <summary>
-        /// Gets or sets the signal broadcast capacity.
-        /// </summary>
-        public int SignalBroadcastCapacity { get; set; } = 5000;
-        /// <summary>
-        /// Gets or sets the indicators broadcast capacity.
-        /// </summary>
-        public int IndicatorsBroadcastCapacity { get; set; } = 5000;
-        /// <summary>
         /// Gets or sets the kline broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the trade broadcast capacity.
+        /// </summary>
+        public int TradeBroadcastCapacity { get; init; } = 10000;
         /// <summary>
         /// Gets or sets the trade broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
-        /// Gets or sets the signal broadcast full mode.
+        /// Gets or sets the indicators broadcast capacity.
         /// </summary>
-        public BoundedChannelFullMode SignalBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public int IndicatorsBroadcastCapacity { get; set; } = 5000;
         /// <summary>
         /// Gets or sets the indicators broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode IndicatorsBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the signal broadcast capacity.
+        /// </summary>
+        public int SignalBroadcastCapacity { get; set; } = 5000;
+        /// <summary>
+        /// Gets or sets the signal broadcast full mode.
+        /// </summary>
+        public BoundedChannelFullMode SignalBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
         /// Gets or sets the periods.
         /// </summary>

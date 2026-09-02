@@ -23,6 +23,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="klineFullMode">The kline full mode.</param>
         /// <param name="tradeCapacity">The trade capacity.</param>
         /// <param name="tradeFullMode">The trade full mode.</param>
+        /// <param name="marketEventDispatcherCapacity">The market event dispatcher capacity.</param>
+        /// <param name="marketEventDispatcherFullMode">The market event dispatcher full mode.</param>
         /// <param name="klineBroadcastCapacity">The kline broadcast capacity.</param>
         /// <param name="klineBroadcastFullMode">The kline broadcast full mode.</param>
         /// <param name="tradeBroadcastCapacity">The trade broadcast capacity.</param>
@@ -32,6 +34,20 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity.</param>
         /// <param name="signalBroadcastFullMode">The signal broadcast full mode.</param>
         /// <returns>The create result.</returns>
-        StrategyEventChannels Create(int klineCapacity, System.Threading.Channels.BoundedChannelFullMode klineFullMode, int tradeCapacity, System.Threading.Channels.BoundedChannelFullMode tradeFullMode, int klineBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, int tradeBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, int indicatorsBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, int signalBroadcastCapacity, System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode);
+        StrategyEventChannels Create(
+            int klineCapacity,
+            System.Threading.Channels.BoundedChannelFullMode klineFullMode,
+            int tradeCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode tradeFullMode,
+            int marketEventDispatcherCapacity,
+            System.Threading.Channels.BoundedChannelFullMode marketEventDispatcherFullMode,
+            int klineBroadcastCapacity, 
+            System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, 
+            int tradeBroadcastCapacity,
+            System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode,
+            int indicatorsBroadcastCapacity,
+            System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode,
+            int signalBroadcastCapacity,
+            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode);
     }
 }

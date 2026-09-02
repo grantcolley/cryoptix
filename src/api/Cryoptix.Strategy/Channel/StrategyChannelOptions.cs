@@ -12,6 +12,10 @@ namespace Cryoptix.Strategy.Channel
         /// </summary>
         public int KlineCapacity { get; set; }
         /// <summary>
+        /// Gets or sets the kline full mode.
+        /// </summary>
+        public BoundedChannelFullMode KlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
         /// Gets or sets the trade capacity.
         /// </summary>
         public int TradeCapacity { get; set; }
@@ -20,21 +24,25 @@ namespace Cryoptix.Strategy.Channel
         /// </summary>
         public BoundedChannelFullMode TradeFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
-        /// Gets or sets the kline full mode.
+        /// Gets or sets the market event dispatcher capacity.
         /// </summary>
-        public BoundedChannelFullMode KlineFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        public int MarketEventDispatcherCapacity { get; init; }
+        /// <summary>
+        /// Gets or sets the market event dispatcher full mode.
+        /// </summary>
+        public BoundedChannelFullMode MarketEventDispatcherFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
         /// Gets or sets the kline broadcast capacity.
         /// </summary>
         public int KlineBroadcastCapacity { get; init; }
         /// <summary>
-        /// Gets or sets the trade broadcast capacity.
-        /// </summary>
-        public int TradeBroadcastCapacity { get; init; }
-        /// <summary>
         /// Gets or sets the kline broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode KlineBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the trade broadcast capacity.
+        /// </summary>
+        public int TradeBroadcastCapacity { get; init; }
         /// <summary>
         /// Gets or sets the trade broadcast full mode.
         /// </summary>
@@ -44,13 +52,13 @@ namespace Cryoptix.Strategy.Channel
         /// </summary>
         public int IndicatorsBroadcastCapacity { get; init; }
         /// <summary>
-        /// Gets or sets the signal broadcast capacity.
-        /// </summary>
-        public int SignalBroadcastCapacity { get; init; }
-        /// <summary>
         /// Gets or sets the indicators broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode IndicatorsBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the signal broadcast capacity.
+        /// </summary>
+        public int SignalBroadcastCapacity { get; init; }
         /// <summary>
         /// Gets or sets the signal broadcast full mode.
         /// </summary>
