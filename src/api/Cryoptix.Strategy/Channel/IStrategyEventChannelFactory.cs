@@ -33,6 +33,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="indicatorsBroadcastFullMode">The indicators broadcast full mode.</param>
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity.</param>
         /// <param name="signalBroadcastFullMode">The signal broadcast full mode.</param>
+        /// <param name="broadcastQueueCapacity">The broadcast queue capacity value.</param>
+        /// <param name="broadcastQueueFullMode">The broadcast queue full mode value.</param>
         /// <returns>The create result.</returns>
         StrategyEventChannels Create(
             int klineCapacity,
@@ -48,6 +50,8 @@ namespace Cryoptix.Strategy.Channel
             int indicatorsBroadcastCapacity,
             System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode,
             int signalBroadcastCapacity,
-            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode);
+            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode,
+            int broadcastQueueCapacity,
+            System.Threading.Channels.BoundedChannelFullMode broadcastQueueFullMode);
     }
 }

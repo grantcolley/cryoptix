@@ -3,6 +3,7 @@ using Cryoptix.Observer.Metrics;
 using Cryoptix.Observer.Notification;
 using Cryoptix.Strategy.Channel;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Threading.Channels;
 
 namespace Cryoptix.Strategy.Notification
@@ -35,6 +36,15 @@ namespace Cryoptix.Strategy.Notification
         /// <summary>
         /// Runs the notification pump, reading broadcasted klines and trades from the provided channels
         /// and publishing them via the configured <see cref="INotificationDispatcher"/> until cancellation.
+        /// 
+        /// Fan-in pattern is used to merge multiple concurrent broadcast channels into a single serialized publish loop,
+        /// ensuring that notifications are published in the order they are received from the channels.
+        /// 
+        /// KlineBroadcasts ─────┐
+        /// TradeBroadcasts ─────┤
+        /// IndicatorsBroadcasts ├──> merged broadcast channel ──> ONE PublishAsync loop
+        /// SignalBroadcasts ────┘
+        /// 
         /// </summary>
         /// <param name="strategy">The strategy for which to publish notifications.</param>
         /// <param name="channels">Strategy event channels containing kline and trade broadcast channels.</param>
@@ -45,153 +55,217 @@ namespace Cryoptix.Strategy.Notification
             StrategyEventChannels channels,
             CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(strategy);
             ArgumentNullException.ThrowIfNull(channels);
 
-            ChannelReader<Kline> klineReader = channels.KlineBroadcasts.Reader;
-            ChannelReader<Trade> tradeReader = channels.TradeBroadcasts.Reader;
-            ChannelReader<Market.Strategy.Indicators> indicatorsReader = channels.IndicatorsBroadcasts.Reader;
-            ChannelReader<Market.Strategy.Signal> signalReader = channels.SignalBroadcasts.Reader;
+            Task klineTask = ReadAsync(
+                channels.KlineBroadcasts.Reader,
+                channels.BroadcastQueue.Writer,
+                cancellationToken);
 
-            while (!cancellationToken.IsCancellationRequested)
+            Task tradeTask = ReadAsync(
+                channels.TradeBroadcasts.Reader,
+                channels.BroadcastQueue.Writer,
+                cancellationToken);
+
+            Task indicatorsTask = ReadAsync(
+                channels.IndicatorsBroadcasts.Reader,
+                channels.BroadcastQueue.Writer,
+                cancellationToken);
+
+            Task signalTask = ReadAsync(
+                channels.SignalBroadcasts.Reader,
+                channels.BroadcastQueue.Writer,
+                cancellationToken);
+
+            Task publishTask = PublishAsync(
+                channels.BroadcastQueue.Reader,
+                cancellationToken);
+
+            try
             {
-                bool processedAny = false;
+                await Task.WhenAll(
+                    klineTask,
+                    tradeTask,
+                    indicatorsTask,
+                    signalTask);
 
-                while (klineReader.TryRead(out Kline? kline))
+                channels.BroadcastQueue.Writer.TryComplete();
+            }
+            catch (Exception ex)
+            {
+                channels.BroadcastQueue.Writer.TryComplete(ex);
+                throw;
+            }
+
+            await publishTask;
+        }
+
+        private static async Task ReadAsync<T>(
+            ChannelReader<T> reader,
+            ChannelWriter<object> writer,
+            CancellationToken cancellationToken)
+        {
+            await foreach (T item in reader.ReadAllAsync(cancellationToken))
+            {
+                await writer.WriteAsync(item!, cancellationToken);
+            }
+        }
+
+        private async Task PublishAsync(
+            ChannelReader<object> reader,
+            CancellationToken cancellationToken)
+        {
+            await foreach (object notification in reader.ReadAllAsync(cancellationToken))
+            {
+                switch (notification)
                 {
-                    processedAny = true;
+                    case Kline kline:
+                        await PublishKlineAsync(kline, cancellationToken);
+                        break;
 
-                    try
-                    {
-                        await _notificationDispatcher.PublishAsync(kline, cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to publish kline notification for {Symbol} {Interval}",
-                            kline.Symbol,
-                            kline.Interval);
+                    case Trade trade:
+                        await PublishTradeAsync(trade, cancellationToken);
+                        break;
 
-                        _notificationMetrics.RecordPublishFailureKline(kline.Symbol, kline.Interval, ex);
-                    }
-                }
+                    case Market.Strategy.Indicators indicators:
+                        await PublishIndicatorsAsync(indicators, cancellationToken);
+                        break;
 
-                while (indicatorsReader.TryRead(out Market.Strategy.Indicators? indicators))
-                {
-                    processedAny = true;
+                    case Market.Strategy.Signal signal:
+                        await PublishSignalAsync(signal, cancellationToken);
+                        break;
 
-                    try
-                    {
-                        await _notificationDispatcher.PublishAsync(indicators, cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to publish indicator notification for {Symbol}",
-                            indicators.TimestampUtc);
-
-                        _notificationMetrics.RecordPublishFailureIndicator(indicators is null ? null : null, ex);
-                    }
-                }
-
-                int maxTradesPerPass = strategy.StrategyProcessorMaxTradesPerPass;
-
-                int tradeBatchCount = 0;
-
-                while (tradeBatchCount < maxTradesPerPass && tradeReader.TryRead(out Trade? trade))
-                {
-                    processedAny = true;
-                    tradeBatchCount++;
-
-                    try
-                    {
-                        await _notificationDispatcher.PublishAsync(trade, cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to publish trade notification for {Symbol} TradeId:{TradeId}",
-                            trade.Symbol,
-                            trade.Id);
-
-                        _notificationMetrics.RecordPublishFailureTrade(trade.Symbol, ex);
-                    }
-                }
-
-                while (signalReader.TryRead(out Market.Strategy.Signal? signal))
-                {
-                    processedAny = true;
-
-                    try
-                    {
-                        await _notificationDispatcher.PublishAsync(signal, cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to publish signal notification for {Symbol}",
-                            signal.TimestampUtc);
-
-                        _notificationMetrics.RecordPublishFailureSignal(signal is null ? null : null, ex);
-                    }
-                }
-
-                if (klineReader.Completion.IsCompleted && tradeReader.Completion.IsCompleted && indicatorsReader.Completion.IsCompleted && signalReader.Completion.IsCompleted)
-                {
-                    bool hasRemainingKlines = klineReader.TryPeek(out _);
-                    bool hasRemainingTrades = tradeReader.TryPeek(out _);
-                    bool hasRemainingIndicators = indicatorsReader.TryPeek(out _);
-                    bool hasRemainingSignals = signalReader.TryPeek(out _);
-
-                    if (!hasRemainingKlines && !hasRemainingTrades && !hasRemainingIndicators && !hasRemainingSignals)
+                    default:
+                        _logger.LogWarning(
+                            "Unknown notification type {NotificationType}",
+                            notification.GetType().Name);
                         break;
                 }
+            }
+        }
 
-                if (processedAny)
-                    continue;
+        private async Task PublishKlineAsync(
+            Kline kline,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _notificationDispatcher.PublishAsync(
+                    kline,
+                    cancellationToken);
 
-                Task<bool> waitForKline = klineReader.WaitToReadAsync(cancellationToken).AsTask();
-                Task<bool> waitForTrade = tradeReader.WaitToReadAsync(cancellationToken).AsTask();
-                Task<bool> waitForIndicator = indicatorsReader.WaitToReadAsync(cancellationToken).AsTask();
-                Task<bool> waitForSignal = signalReader.WaitToReadAsync(cancellationToken).AsTask();
+                _notificationMetrics.RecordNotificationLagKline(
+                    kline.Symbol,
+                    kline.Interval,
+                    DateTime.UtcNow - kline.CloseTime);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to publish kline notification for {Symbol} {Interval}",
+                    kline.Symbol,
+                    kline.Interval);
 
-                Task completed = await Task.WhenAny(waitForKline, waitForTrade, waitForIndicator, waitForSignal);
+                _notificationMetrics.RecordPublishFailureKline(
+                    kline.Symbol,
+                    kline.Interval,
+                    ex);
+            }
+        }
 
-                if (completed == waitForKline)
-                {
-                    await waitForKline;
-                }
-                else if (completed == waitForTrade)
-                {
-                    await waitForTrade;
-                }
-                else if (completed == waitForIndicator)
-                {
-                    await waitForIndicator;
-                }
-                else
-                {
-                    await waitForSignal;
-                }
+        private async Task PublishTradeAsync(
+            Trade trade,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _notificationDispatcher.PublishAsync(
+                    trade,
+                    cancellationToken);
+
+                _notificationMetrics.RecordNotificationLagTrade(
+                    trade.Symbol,
+                    DateTime.UtcNow - trade.Time);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to publish trade notification for {Symbol} TradeId:{TradeId}",
+                    trade.Symbol,
+                    trade.Id);
+
+                _notificationMetrics.RecordPublishFailureTrade(
+                    trade.Symbol,
+                    ex);
+            }
+        }
+
+        private async Task PublishIndicatorsAsync(
+            Market.Strategy.Indicators indicators,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _notificationDispatcher.PublishAsync(
+                    indicators,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to publish indicator notification at {TimestampUtc}",
+                    indicators.TimestampUtc);
+
+                _notificationMetrics.RecordPublishFailureIndicator(
+                    null,
+                    ex);
+            }
+        }
+
+        private async Task PublishSignalAsync(
+            Market.Strategy.Signal signal,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _notificationDispatcher.PublishAsync(
+                    signal,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to publish signal notification at {TimestampUtc}",
+                    signal.TimestampUtc);
+
+                _notificationMetrics.RecordPublishFailureSignal(
+                    null,
+                    ex);
             }
         }
     }

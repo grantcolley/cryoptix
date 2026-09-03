@@ -32,7 +32,9 @@ namespace Cryoptix.Strategy.Channel
                 _options.IndicatorsBroadcastCapacity,
                 _options.IndicatorsBroadcastFullMode, 
                 _options.SignalBroadcastCapacity, 
-                _options.SignalBroadcastFullMode);
+                _options.SignalBroadcastFullMode,
+                _options.BroadcastQueueCapacity,
+                _options.BroadcastQueueFullMode);
         }
 
         /// <summary>
@@ -63,6 +65,9 @@ namespace Cryoptix.Strategy.Channel
             int signalBroadcastCapacity = strategy.SignalBroadcastCapacity > 0 ? strategy.SignalBroadcastCapacity : _options.SignalBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode = strategy.SignalBroadcastFullMode;
 
+            int broadcastQueueCapacity = strategy.BroadcastQueueCapacity > 0 ? strategy.BroadcastQueueCapacity : _options.BroadcastQueueCapacity;
+            System.Threading.Channels.BoundedChannelFullMode broadcastQueueFullMode = strategy.BroadcastQueueFullMode;
+
             return Create(
                 klineCapacity, 
                 klineFullMode, 
@@ -77,7 +82,9 @@ namespace Cryoptix.Strategy.Channel
                 indicatorsBroadcastCapacity, 
                 indicatorsBroadcastFullMode, 
                 signalBroadcastCapacity, 
-                signalBroadcastFullMode);
+                signalBroadcastFullMode,
+                broadcastQueueCapacity,
+                broadcastQueueFullMode);
         }
 
         /// <summary>
@@ -97,6 +104,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="indicatorsBroadcastFullMode">The indicators broadcast full mode value.</param>
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity value.</param>
         /// <param name="signalBroadcastFullMode">The signal broadcast full mode value.</param>
+        /// <param name="broadcastQueueCapacity">The broadcast queue capacity value.</param>
+        /// <param name="broadcastQueueFullMode">The broadcast queue full mode value.</param>
         /// <returns>The create result.</returns>
         public StrategyEventChannels Create(
             int klineCapacity, 
@@ -112,7 +121,9 @@ namespace Cryoptix.Strategy.Channel
             int indicatorsBroadcastCapacity, 
             System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, 
             int signalBroadcastCapacity, 
-            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode)
+            System.Threading.Channels.BoundedChannelFullMode signalBroadcastFullMode,
+            int broadcastQueueCapacity,
+            System.Threading.Channels.BoundedChannelFullMode broadcastQueueFullMode)
         {
             System.Threading.Channels.Channel<KlineMarketEvent> klineChannel = System.Threading.Channels.Channel.CreateBounded<KlineMarketEvent>(
                 new System.Threading.Channels.BoundedChannelOptions(klineCapacity)
@@ -177,6 +188,15 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = signalBroadcastFullMode
                 });
 
+            System.Threading.Channels.Channel<object> broadcastQueueChannel = System.Threading.Channels.Channel.CreateBounded<object>(
+                new System.Threading.Channels.BoundedChannelOptions(broadcastQueueCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = false,
+                    AllowSynchronousContinuations = false,
+                    FullMode = broadcastQueueFullMode
+                });
+
             return new StrategyEventChannels
             {
                 Klines = klineChannel,
@@ -185,7 +205,8 @@ namespace Cryoptix.Strategy.Channel
                 KlineBroadcasts = klineBroadcastChannel,
                 TradeBroadcasts = tradeBroadcastChannel,
                 IndicatorsBroadcasts = indicatorsBroadcastChannel,
-                SignalBroadcasts = signalBroadcastChannel
+                SignalBroadcasts = signalBroadcastChannel,
+                BroadcastQueue = broadcastQueueChannel
             };
         }
     }

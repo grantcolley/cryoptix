@@ -80,10 +80,6 @@ namespace Cryoptix.Strategy.Strategies
         /// </summary>
         public int CacheMaxSignalsPerSeries { get; set; } = 5000;
         /// <summary>
-        /// Gets or sets the strategy processor max trades per pass.
-        /// </summary>
-        public int StrategyProcessorMaxTradesPerPass { get; set; } = 256;
-        /// <summary>
         /// Gets or sets the subscription channel kline capacity.
         /// </summary>
         public int SubscriptionChannelKlineCapacity { get; set; } = 10000;
@@ -139,6 +135,14 @@ namespace Cryoptix.Strategy.Strategies
         /// Gets or sets the signal broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode SignalBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the broadcast queue capacity.
+        /// </summary>
+        public int BroadcastQueueCapacity { get; init; }
+        /// <summary>
+        /// Gets or sets the broadcast queue full mode.
+        /// </summary>
+        public BoundedChannelFullMode BroadcastQueueFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
         /// Gets or sets the periods.
         /// </summary>

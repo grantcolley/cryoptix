@@ -38,6 +38,10 @@ namespace Cryoptix.Strategy.Channel
         /// Gets or sets the signal broadcasts.
         /// </summary>
         public required Channel<Market.Strategy.Signal> SignalBroadcasts { get; init; }
+        /// <summary>
+        /// Gets or sets the broadcast queue.
+        /// </summary>
+        public required Channel<object> BroadcastQueue { get; init; }
 
         /// <summary>
         /// Executes the complete writers operation.
@@ -52,6 +56,7 @@ namespace Cryoptix.Strategy.Channel
             TradeBroadcasts.Writer.TryComplete(error);
             IndicatorsBroadcasts.Writer.TryComplete(error);
             SignalBroadcasts.Writer.TryComplete(error);
+            BroadcastQueue.Writer.TryComplete(error);
         }
     }
 }

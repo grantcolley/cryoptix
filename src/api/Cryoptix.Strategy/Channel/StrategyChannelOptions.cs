@@ -63,5 +63,13 @@ namespace Cryoptix.Strategy.Channel
         /// Gets or sets the signal broadcast full mode.
         /// </summary>
         public BoundedChannelFullMode SignalBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
+        /// Gets or sets the broadcast queue capacity.
+        /// </summary>
+        public int BroadcastQueueCapacity { get; init; }
+        /// <summary>
+        /// Gets or sets the broadcast queue full mode.
+        /// </summary>
+        public BoundedChannelFullMode BroadcastQueueFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
     }
 }
