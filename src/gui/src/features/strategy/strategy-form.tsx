@@ -127,7 +127,6 @@ const fallbackDefaultValues: Strategy = {
   cacheMaxTradesPerSymbol: 10000,
   cacheMaxIndicatorsPerSeries: 5000,
   cacheMaxSignalsPerSeries: 5000,
-  strategyProcessorMaxTradesPerPass: 256,
   subscriptionChannelKlineCapacity: 10000,
   subscriptionChannelKlineFullMode: BoundedChannelFullMode.DropOldest,
   subscriptionChannelTradeCapacity: 10000,
@@ -142,6 +141,8 @@ const fallbackDefaultValues: Strategy = {
   indicatorsBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   signalBroadcastCapacity: 5000,
   signalBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  broadcastQueueCapacity: 10000,
+  broadcastQueueFullMode: BoundedChannelFullMode.DropOldest,
 };
 
 function normalizeStrategyValues(values: StrategyFormValues): Strategy {
@@ -586,13 +587,6 @@ export function StrategyForm({
 
                     <IntegerField
                       control={form.control}
-                      name="strategyProcessorMaxTradesPerPass"
-                      label="Strategy processor max trades per pass"
-                      isReadOnly={isReadOnly}
-                    />
-
-                    <IntegerField
-                      control={form.control}
                       name="subscriptionChannelKlineCapacity"
                       label="Subscription channel kline capacity"
                       isReadOnly={isReadOnly}
@@ -733,6 +727,21 @@ export function StrategyForm({
                       control={form.control}
                       name="signalBroadcastFullMode"
                       label="Signal broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="broadcastQueueCapacity"
+                      label="Broadcast queue capacity"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <EnumSelectField
+                      control={form.control}
+                      name="broadcastQueueFullMode"
+                      label="Broadcast queue full mode"
                       options={boundedChannelFullModeOptions}
                       isReadOnly={isReadOnly}
                     />

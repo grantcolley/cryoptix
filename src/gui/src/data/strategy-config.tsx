@@ -20,7 +20,6 @@ export const STRATEGY_CONFIG: Strategy[] = [
     cacheMaxTradesPerSymbol: 10000,
     cacheMaxIndicatorsPerSeries: 5000,
     cacheMaxSignalsPerSeries: 5000,
-    strategyProcessorMaxTradesPerPass: 256,
     subscriptionChannelKlineCapacity: 10000,
     subscriptionChannelKlineFullMode: 2,
     subscriptionChannelTradeCapacity: 10000,
@@ -35,6 +34,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
     indicatorsBroadcastFullMode: 2,
     signalBroadcastCapacity: 5000,
     signalBroadcastFullMode: 2,
+    broadcastQueueCapacity: 10000,
+    broadcastQueueFullMode: 2,
     periods: {
       "9 EMA": {
         name: "9 EMA",

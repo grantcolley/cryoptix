@@ -34,7 +34,6 @@ export const StrategySchema = z.object({
   cacheMaxTradesPerSymbol: z.number().int().default(10000),
   cacheMaxIndicatorsPerSeries: z.number().int().default(5000),
   cacheMaxSignalsPerSeries: z.number().int().default(5000),
-  strategyProcessorMaxTradesPerPass: z.number().int().default(256),
   subscriptionChannelKlineCapacity: z.number().int().default(500),
   subscriptionChannelKlineFullMode: z
     .enum(BoundedChannelFullMode)
@@ -65,6 +64,10 @@ export const StrategySchema = z.object({
     .default(BoundedChannelFullMode.DropOldest),
   signalBroadcastCapacity: z.number().int().default(5000),
   signalBroadcastFullMode: z
+    .enum(BoundedChannelFullMode)
+    .default(BoundedChannelFullMode.DropOldest),
+  broadcastQueueCapacity: z.number().int().default(10000),
+  broadcastQueueFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
 });
