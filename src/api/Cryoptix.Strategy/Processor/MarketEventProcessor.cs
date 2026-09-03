@@ -189,6 +189,21 @@ namespace Cryoptix.Strategy.Processor
             }
         }
 
+        /// <summary>
+        /// Processes the market events asynchronously.
+        /// 
+        /// A Fan-in pattern is used to read from the Kline and Trade channels concurrently, 
+        /// and then dispatches the merged events to a single serialized dispatch loop.
+        /// 
+        /// Kline channel ──> kline reader ──┐
+        ///                                  ├──> merged market-event dispatcher channel ──> ONE DispatchAsync loop
+        /// Trade channel ──> trade reader ──┘
+        /// 
+        /// </summary>
+        /// <param name="session">The strategy agent session value.</param>
+        /// <param name="channels">The strategy event channels.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task ProcessMarketEventsAsync(
             StrategyProcessorSession session,
             StrategyEventChannels channels,
