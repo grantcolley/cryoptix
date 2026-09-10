@@ -212,11 +212,13 @@ namespace Cryoptix.Strategy.Processor
             Task klineReaderTask = ReadKlineEventsAsync(
                 channels.Klines.Reader,
                 channels.MarketEventDispatcher.Writer,
+                channels.KlineBroadcasts.Writer,
                 cancellationToken);
 
             Task tradeReaderTask = ReadTradeEventsAsync(
                 channels.Trades.Reader,
                 channels.MarketEventDispatcher.Writer,
+                channels.TradeBroadcasts.Writer,
                 cancellationToken);
 
             Task dispatcherTask = DispatchMarketEventsAsync(
@@ -229,24 +231,70 @@ namespace Cryoptix.Strategy.Processor
             await dispatcherTask;
         }
 
-        private static async Task ReadKlineEventsAsync(
+        /// <summary>
+        /// Reads kline events from the subscription channel and forwards them to
+        /// the dispatcher channel. To reduce notification latency this method
+        /// also attempts to write the raw Kline directly to the KlineBroadcasts
+        /// channel before forwarding the KlineMarketEvent to the
+        /// MarketEventDispatcher.
+        ///
+        /// Ordering tradeoff: writing to broadcasts earlier means subscribers
+        /// may receive notification before the dispatcher has processed the
+        /// event (cache updates, analysis, etc.). This reduces notification
+        /// latency but changes the ordering semantics — ensure subscribers do
+        /// not depend on dispatcher-side processing to have completed before
+        /// receiving a broadcast. The dispatcher still receives every event
+        /// via MarketEventDispatcher to perform cache updates and analysis.
+        /// </summary>
+        private async Task ReadKlineEventsAsync(
             ChannelReader<KlineMarketEvent> reader,
             ChannelWriter<MarketEvent> writer,
+            ChannelWriter<Kline> klineBroadcastWriter,
             CancellationToken cancellationToken)
         {
             await foreach (KlineMarketEvent marketEvent in reader.ReadAllAsync(cancellationToken))
             {
+                // Try to write to broadcast path first to reduce notification latency.
+                if (!klineBroadcastWriter.TryWrite(marketEvent.Kline))
+                {
+                    LogDebug.KlineDropped(_logger, marketEvent.Kline.Symbol!, marketEvent.Kline.Interval);
+                    _notificationMetrics.RecordBroadcastDropKline(marketEvent.Kline.Symbol, marketEvent.Kline.Interval);
+                }
+
                 await writer.WriteAsync(marketEvent, cancellationToken);
             }
         }
 
-        private static async Task ReadTradeEventsAsync(
+        /// <summary>
+        /// Reads trade events from the subscription channel and forwards them to
+        /// the dispatcher channel. To reduce notification latency this method
+        /// also attempts to write the Trade directly to the TradeBroadcasts
+        /// channel before forwarding the TradeMarketEvent to the
+        /// MarketEventDispatcher.
+        ///
+        /// Ordering tradeoff: writing to broadcasts earlier means subscribers
+        /// may receive notification before the dispatcher has processed the
+        /// event (cache updates, analysis, etc.). This reduces notification
+        /// latency but changes the ordering semantics — ensure subscribers do
+        /// not depend on dispatcher-side processing to have completed before
+        /// receiving a broadcast. The dispatcher still receives every event
+        /// via MarketEventDispatcher to perform cache updates and analysis.
+        /// </summary>
+        private async Task ReadTradeEventsAsync(
             ChannelReader<TradeMarketEvent> reader,
             ChannelWriter<MarketEvent> writer,
+            ChannelWriter<Trade> tradeBroadcastWriter,
             CancellationToken cancellationToken)
         {
             await foreach (TradeMarketEvent marketEvent in reader.ReadAllAsync(cancellationToken))
             {
+                // Try to write to broadcast path first to reduce notification latency.
+                if (!tradeBroadcastWriter.TryWrite(marketEvent.Trade))
+                {
+                    LogDebug.TradeDropped(_logger, marketEvent.Trade.Symbol!, marketEvent.Trade.Id);
+                    _notificationMetrics.RecordBroadcastDropTrade(marketEvent.Trade.Symbol);
+                }
+
                 await writer.WriteAsync(marketEvent, cancellationToken);
             }
         }
@@ -256,44 +304,10 @@ namespace Cryoptix.Strategy.Processor
             StrategyEventChannels channels, 
             CancellationToken cancellationToken)
         {
-            ChannelWriter<Kline> klineBroadcastWriter = channels.KlineBroadcasts.Writer;
-            ChannelWriter<Trade> tradeBroadcastWriter = channels.TradeBroadcasts.Writer;
             ChannelReader<MarketEvent> marketEventReader = channels.MarketEventDispatcher.Reader;
 
             await foreach (MarketEvent marketEvent in marketEventReader.ReadAllAsync(cancellationToken))
             {
-                switch (marketEvent)
-                {
-                    case KlineMarketEvent klineEvent:
-                        if (!klineBroadcastWriter.TryWrite(klineEvent.Kline))
-                        {
-                            LogDebug.KlineDropped(
-                                _logger,
-                                klineEvent.Kline.Symbol!,
-                                klineEvent.Kline.Interval);
-
-                            _notificationMetrics.RecordBroadcastDropKline(
-                                klineEvent.Kline.Symbol,
-                                klineEvent.Kline.Interval);
-                        }
-
-                        break;
-
-                    case TradeMarketEvent tradeEvent:
-                        if (!tradeBroadcastWriter.TryWrite(tradeEvent.Trade))
-                        {
-                            LogDebug.TradeDropped(
-                                _logger,
-                                tradeEvent.Trade.Symbol!,
-                                tradeEvent.Trade.Id);
-
-                            _notificationMetrics.RecordBroadcastDropTrade(
-                                tradeEvent.Trade.Symbol);
-                        }
-
-                        break;
-                }
-
                 await _strategyMarketEventDispatcher.DispatchAsync(
                     session,
                     marketEvent,
