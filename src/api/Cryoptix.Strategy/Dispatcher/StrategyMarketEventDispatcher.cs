@@ -25,6 +25,15 @@ namespace Cryoptix.Strategy.Dispatcher
 
         /// <summary>
         /// Executes the dispatch async operation.
+        ///
+        /// Note: cache updates (e.g. UpsertKline, AddTrade, UpsertIndicators,
+        /// UpsertSignal) are performed here to centralize state mutation and
+        /// preserve processing order and consistency. Keeping cache mutations
+        /// inside the dispatcher ensures downstream engines see a coherent
+        /// and deterministically updated cache before further computation or
+        /// side-effects. It also consolidates error handling, deduplication
+        /// semantics, and makes reasoning and testing simpler compared to
+        /// spreading cache writes across reader or broadcast paths.
         /// </summary>
         /// <param name="session">The session value.</param>
         /// <param name="marketEvent">The market event value.</param>
