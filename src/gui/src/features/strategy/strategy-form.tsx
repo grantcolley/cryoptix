@@ -35,7 +35,7 @@ import {
   StrategySchema,
   type Strategy,
 } from "@/features/api/schema/strategy-schema";
-import { MovingAveragePeriod } from "@/features/strategy/moving-average-period";
+import { Indicator } from "@/features/strategy/indicator";
 import {
   inputTextToNullable,
   nullableTextToInputValue,
@@ -286,19 +286,19 @@ export function StrategyForm({
                   variant="outline"
                   size="icon"
                   onClick={handleAddIndicator}
-                  aria-label="Add moving average"
+                  aria-label="Add indicator"
                   className="p-0"
                 >
                   <Icon icon={icons.plus} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Add moving average</TooltipContent>
+              <TooltipContent>Add indicator</TooltipContent>
             </Tooltip>
           </div>
         ) : null}
 
         {indicatorEntries.map(([key]) => (
-          <MovingAveragePeriod
+          <Indicator
             key={key}
             control={form.control}
             name={`indicators.${key}`}

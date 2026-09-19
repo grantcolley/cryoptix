@@ -20,7 +20,7 @@ import { enumToOptions } from "@/lib/enum-helper";
 
 const indicatorTypeOptions = enumToOptions(IndicatorType, IndicatorTypeLabels);
 
-type MovingAveragePeriodProps<TFieldValues extends FieldValues> = {
+type IndicatorProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
   name: FieldPath<TFieldValues>;
   isReadOnly: boolean;
@@ -28,13 +28,13 @@ type MovingAveragePeriodProps<TFieldValues extends FieldValues> = {
   onRemove?: () => void;
 };
 
-export function MovingAveragePeriod<TFieldValues extends FieldValues>({
+export function Indicator<TFieldValues extends FieldValues>({
   control,
   name,
   isReadOnly,
   isHorizontal = false,
   onRemove,
-}: MovingAveragePeriodProps<TFieldValues>) {
+}: IndicatorProps<TFieldValues>) {
   const handleRemove = () => {
     onRemove?.();
   };
@@ -47,13 +47,13 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
           variant="ghost"
           size="icon"
           onClick={handleRemove}
-          aria-label="Remove moving average"
+          aria-label="Remove indicator"
           className="size-7 p-0"
         >
           <Icon icon={icons.x} />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Remove moving average</TooltipContent>
+      <TooltipContent>Remove indicator</TooltipContent>
     </Tooltip>
   ) : null;
 
@@ -86,4 +86,4 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
   );
 }
 
-export default MovingAveragePeriod;
+export default Indicator;
