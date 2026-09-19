@@ -83,7 +83,7 @@ public sealed class MarketDataCacheTests
         IReadOnlyList<Trade> trades = cache.GetTrades("BTCUSDT");
 
         Assert.HasCount(2, trades);
-        CollectionAssert.AreEqual(expected, trades.Select(t => t.Id).ToArray());
+        Assert.AreSequenceEqual(expected, [.. trades.Select(t => t.Id)]);
     }
 
     [TestMethod]
