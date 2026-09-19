@@ -33,7 +33,7 @@ public sealed class StrategyControllerTests
         // Assert / Verify
         Assert.IsTrue(result.Success);
         Assert.AreEqual(StrategyControllerStatusCodes.Status202Accepted, result.StatusCode);
-        CollectionAssert.AreEqual(new[] { StrategyProcessorType.MarketEvent }, controller.GetAvailableStrategies().ToArray());
+        Assert.AreSequenceEqual([StrategyProcessorType.MarketEvent], [.. controller.GetAvailableStrategies()]);
         queue.VerifyAll();
     }
 
