@@ -40,13 +40,13 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Periods = new Dictionary<string, Period>
+            Indicators = new Dictionary<string, Indicator>
             {
-                ["3 SMA"] = new Period { Name = "3 SMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Sma },
-                ["5 SMA"] = new Period { Name = "5 SMA", Value = 5, SmoothingType = MovingAverageSmoothingType.Sma },
-                ["9 SMA"] = new Period { Name = "9 SMA", Value = 9, SmoothingType = MovingAverageSmoothingType.Sma },
-                ["too-long"] = new Period { Name = "too-long", Value = 20, SmoothingType = MovingAverageSmoothingType.Sma },
-                ["bad"] = new Period { Name = "bad", Value = 0, SmoothingType = MovingAverageSmoothingType.Sma }
+                ["3 SMA"] = new Indicator { Name = "3 SMA", Value = 3, IndicatorType = IndicatorType.Sma },
+                ["5 SMA"] = new Indicator { Name = "5 SMA", Value = 5, IndicatorType = IndicatorType.Sma },
+                ["9 SMA"] = new Indicator { Name = "9 SMA", Value = 9, IndicatorType = IndicatorType.Sma },
+                ["too-long"] = new Indicator { Name = "too-long", Value = 20, IndicatorType = IndicatorType.Sma },
+                ["bad"] = new Indicator { Name = "bad", Value = 0, IndicatorType = IndicatorType.Sma }
             }
         });
 
@@ -75,9 +75,9 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Periods = new Dictionary<string, Period>
+            Indicators = new Dictionary<string, Indicator>
             {
-                ["3 EMA"] = new Period { Name = "3 EMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Ema }
+                ["3 EMA"] = new Indicator { Name = "3 EMA", Value = 3, IndicatorType = IndicatorType.Ema }
             }
         });
 
@@ -101,9 +101,9 @@ public sealed class MovingAverageIndicatorEngineTests
         Strategies.Strategy strategy = new()
         {
             Symbol = "BTCUSDT",
-            Periods = new Dictionary<string, Period>
+            Indicators = new Dictionary<string, Indicator>
             {
-                ["3 EMA"] = new Period { Name = "3 EMA", Value = 3, SmoothingType = MovingAverageSmoothingType.Ema }
+                ["3 EMA"] = new Indicator { Name = "3 EMA", Value = 3, IndicatorType = IndicatorType.Ema }
             }
         };
 

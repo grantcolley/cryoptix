@@ -3,6 +3,7 @@ using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Logging;
+using Cryoptix.Strategy.Strategies;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 
@@ -39,7 +40,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             Dictionary<string, decimal> values = [];
 
-            if (context.Strategy.Periods != null)
+            if (context.Strategy.Indicators != null)
             {
                 DateTime currentCloseTime = kline.CloseTime;
 
@@ -48,27 +49,27 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                     .OrderByDescending(i => i.TimestampUtc)
                     .FirstOrDefault();
 
-                foreach (var kvp in context.Strategy.Periods)
+                foreach (var kvp in context.Strategy.Indicators)
                 {
                     string name = kvp.Key ?? string.Empty;
-                    Strategies.Period period = kvp.Value;
+                    Indicator indicator = kvp.Value;
 
                     decimal? computed = null;
 
-                    if (period.SmoothingType == MovingAverageSmoothingType.Sma)
+                    if (indicator.IndicatorType == IndicatorType.Sma)
                     {
-                        computed = CalculateSma(klines, period.Value);
+                        computed = CalculateSma(klines, indicator.Value);
                     }
-                    else if (period.SmoothingType == MovingAverageSmoothingType.Ema)
+                    else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
                          if (previousIndicators?.Values.TryGetValue(name, out decimal previousEma) == true)
                         {
-                            computed = CalculateEma(klines, period.Value, previousEma);
+                            computed = CalculateEma(klines, indicator.Value, previousEma);
                         }
                         else
                         {
                             // initialize EMA with SMA if no previous EMA exists
-                            computed = CalculateSma(klines, period.Value);
+                            computed = CalculateSma(klines, indicator.Value);
                         }
                     }
 

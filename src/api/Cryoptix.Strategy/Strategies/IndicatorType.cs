@@ -1,9 +1,9 @@
-namespace Cryoptix.Strategy.Engine.MovingAverage
+namespace Cryoptix.Strategy.Strategies
 {
     /// <summary>
-    /// Defines the moving average smoothing type values.
+    /// Defines the indicator type.
     /// </summary>
-    public enum MovingAverageSmoothingType
+    public enum IndicatorType
     {
         /// <summary>
         /// Specifies the none value.

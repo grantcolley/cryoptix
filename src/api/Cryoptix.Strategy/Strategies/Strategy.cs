@@ -1,6 +1,5 @@
 using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Engine;
-using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Processor;
 using System.Threading.Channels;
 
@@ -144,8 +143,8 @@ namespace Cryoptix.Strategy.Strategies
         /// </summary>
         public BoundedChannelFullMode BroadcastQueueFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
-        /// Gets or sets the periods.
+        /// Gets or sets the indicators.
         /// </summary>
-        public Dictionary<string, Period> Periods { get; init; } = new Dictionary<string, Period>() { { "9 SMA", new Period { Name = "9 SMA", Value = 9, SmoothingType = MovingAverageSmoothingType.Sma } }, { "21 SMA", new Period { Name = "21 SMA", Value = 21, SmoothingType = MovingAverageSmoothingType.Sma } }, { "50 SMA", new Period { Name = "50 SMA", Value = 50, SmoothingType = MovingAverageSmoothingType.Sma } } };
+        public Dictionary<string, Indicator> Indicators { get; init; } = new Dictionary<string, Indicator>() { { "9 SMA", new Indicator { Name = "9 SMA", Value = 9, IndicatorType = IndicatorType.Sma } }, { "21 SMA", new Indicator { Name = "21 SMA", Value = 21, IndicatorType = IndicatorType.Sma } }, { "50 SMA", new Indicator { Name = "50 SMA", Value = 50, IndicatorType = IndicatorType.Sma } } };
     }
 }
