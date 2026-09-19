@@ -207,7 +207,6 @@ builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>(sp =>
 });
 
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
-
 builder.Services.AddSingleton<IExchangeApiFactory, ExchangeApiFactory>();
 builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();
