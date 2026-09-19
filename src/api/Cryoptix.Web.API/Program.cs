@@ -1,5 +1,7 @@
+using Binance.Net;
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
+using Binance.Net.Objects.Options;
 using Cryoptix.Exchange.Api;
 using Cryoptix.Exchange.Binance;
 using Cryoptix.Market.Data;
@@ -185,9 +187,27 @@ builder.Services.AddSingleton<INotificationBroadcaster, SignalRNotificationBroad
 builder.Services.AddSingleton<INotificationMetrics, NotificationMetrics>();
 builder.Services.AddSingleton<INotificationDispatcher, NotificationDispatcher>();
 builder.Services.AddSingleton<INotificationPump, NotificationPump>();
-builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
-builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>();
+
+builder.Services.AddSingleton<IBinanceRestClient>(sp =>
+{
+    Credentials credentials = sp.GetRequiredService<Credentials>();
+
+    return new BinanceRestClient(bo =>
+    {
+        bo.ApiCredentials = new BinanceCredentials(credentials.ApiKey!, credentials.ApiSecret!);
+    });
+});
+
+builder.Services.AddSingleton<IExchangeRestApi, BinanceRestApi>(sp =>
+{
+    IBinanceRestClient binanceRestClient = sp.GetRequiredService<IBinanceRestClient>();
+    Credentials credentials = sp.GetRequiredService<Credentials>();
+
+    return new BinanceRestApi(binanceRestClient) { AccountName = credentials.AccountName! };
+});
+
 builder.Services.AddSingleton<IExchangeSubscriptionApi, BinanceSubscriptionApi>();
+
 builder.Services.AddSingleton<IExchangeApiFactory, ExchangeApiFactory>();
 builder.Services.AddSingleton<StrategyStateStore>();
 builder.Services.AddSingleton<IStrategyCommandQueue, StrategyCommandQueue>();

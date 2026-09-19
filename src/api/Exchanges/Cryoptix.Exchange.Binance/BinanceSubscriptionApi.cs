@@ -1,11 +1,11 @@
-﻿using Binance.Net.Clients;
+﻿using Binance.Net;
+using Binance.Net.Clients;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects.Models.Spot.Socket;
 using Binance.Net.SymbolOrderBooks;
 using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Args;
 using Cryoptix.Market.Data;
-using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Interfaces;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Objects.Sockets;
@@ -31,12 +31,11 @@ namespace Cryoptix.Exchange.Binance
 
             // NOTE: For Spot WS user-data in recent Binance.Net versions, Binance requires Ed25519 keys.
             // If your `ApiSecret` is not an Ed25519 private key, authentication may fail.
-            ApiCredentials apiCredentials = new(credentials.ApiKey, credentials.ApiSecret);
 
             // IMPORTANT: do NOT 'using' this. The returned handle owns it.
-            BinanceSocketClient socketClient = new(options =>
+            BinanceSocketClient socketClient = new(bo =>
             {
-                options.ApiCredentials = apiCredentials;
+                bo.ApiCredentials = new BinanceCredentials(credentials.ApiKey, credentials.ApiSecret);
             });
 
             // We'll create the handle early, but it will only be "armed" once subscription is set.
@@ -58,7 +57,7 @@ namespace Cryoptix.Exchange.Binance
 
             try
             {
-                CallResult<UpdateSubscription> result = await socketClient.SpotApi.Account.SubscribeToUserDataUpdatesAsync(
+                WebSocketResult<UpdateSubscription> result = await socketClient.SpotApi.Account.SubscribeToUserDataUpdatesAsync(
                     onAccountPositionMessage: data =>
                     {
                         try
@@ -162,7 +161,7 @@ namespace Cryoptix.Exchange.Binance
 
             try
             {
-                CallResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData
+                WebSocketResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData
                     .SubscribeToKlineUpdatesAsync(
                         symbol,
                         klineInterval,
@@ -293,9 +292,9 @@ namespace Cryoptix.Exchange.Binance
             try
             {
                 // Start syncing (downloads snapshot + subscribes to diffs)
-                CallResult<bool> result = await book.StartAsync().ConfigureAwait(false);
+                CallResult result = await book.StartAsync().ConfigureAwait(false);
 
-                if (!result)
+                if (!result.Success)
                 {
                     throw new Exception($"SubscribeToOrderBookAsync({symbol}, {limit}) {result.Error?.ToExchangeErrorMessage()}", result.Error?.Exception);
                 }
@@ -385,7 +384,7 @@ namespace Cryoptix.Exchange.Binance
             {
                 foreach (string symbol in list)
                 {
-                    CallResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData.SubscribeToTickerUpdatesAsync(
+                    WebSocketResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData.SubscribeToTickerUpdatesAsync(
                         symbol,
                         data =>
                         {
@@ -495,7 +494,7 @@ namespace Cryoptix.Exchange.Binance
 
             try
             {
-                CallResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData
+                WebSocketResult<UpdateSubscription> result = await socketClient.SpotApi.ExchangeData
                     .SubscribeToAggregatedTradeUpdatesAsync(
                         symbol,
                         data =>
