@@ -71,7 +71,7 @@ const INITIAL_VISIBLE_KLINE_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
 const MANUAL_SCROLL_THRESHOLD = 0.5;
-const MOVING_AVERAGE_LABEL_PATTERN = /^\d+\s+[a-z]+$/i;
+const INDICATOR_LABEL_PATTERN = /^\d+\s+[a-z]+$/i;
 
 const INDICATOR_SERIES_COLORS = [
   "#2563eb",
@@ -85,16 +85,16 @@ const INDICATOR_SERIES_COLORS = [
 const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
 
-const formatMovingAveragePeriodLabel = (
-  period: Strategy["indicators"][string]
+const formatIndicatorLabel = (
+  indicator: Strategy["indicators"][string]
 ) => {
-  const generatedLabel = `${period.value} ${IndicatorTypeLabels[period.indicatorType]}`;
-  const configuredName = period.name?.trim();
+  const generatedLabel = `${indicator.value} ${IndicatorTypeLabels[indicator.indicatorType]}`;
+  const configuredName = indicator.name?.trim();
 
   if (
     configuredName &&
     configuredName !== generatedLabel &&
-    !MOVING_AVERAGE_LABEL_PATTERN.test(configuredName)
+    !INDICATOR_LABEL_PATTERN.test(configuredName)
   ) {
     return configuredName;
   }
@@ -257,18 +257,18 @@ export function StrategyPage() {
         return key;
       }
 
-      const period =
+      const indicator =
         indicators[key] ??
-        Object.values(indicators).find((period) => {
-          const configuredName = period.name?.trim();
+        Object.values(indicators).find((indicator) => {
+          const configuredName = indicator.name?.trim();
 
           return (
             configuredName === key ||
-            formatMovingAveragePeriodLabel(period) === key
+            formatIndicatorLabel(indicator) === key
           );
         });
 
-      return period ? formatMovingAveragePeriodLabel(period) : key;
+      return indicator ? formatIndicatorLabel(indicator) : key;
     },
     [strategy?.indicators]
   );
