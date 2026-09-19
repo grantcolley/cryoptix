@@ -26,7 +26,7 @@ import {
   StrategyEngineType,
   StrategyEngineTypeLabels,
 } from "@/features/api/schema/strategy-engine-type";
-import { MovingAverageSmoothingType } from "@/features/api/schema/moving-average-smothing-type";
+import { IndicatorType } from "@/features/api/schema/indicator-type";
 import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
@@ -100,21 +100,21 @@ const fallbackDefaultValues: Strategy = {
   strategyProcessorType: StrategyProcessorType.None,
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
-  periods: {
+  indicators: {
     "9 EMA": {
       name: "9 EMA",
       value: 9,
-      smoothingType: MovingAverageSmoothingType.Ema,
+      indicatorType: IndicatorType.Ema,
     },
     "21 EMA": {
       name: "21 EMA",
       value: 21,
-      smoothingType: MovingAverageSmoothingType.Ema,
+      indicatorType: IndicatorType.Ema,
     },
     "50 EMA": {
       name: "50 EMA",
       value: 50,
-      smoothingType: MovingAverageSmoothingType.Ema,
+      indicatorType: IndicatorType.Ema,
     },
   },
   klineInterval: KlineInterval.Minute,
@@ -186,9 +186,9 @@ export function StrategyForm({
     resolver: zodResolver(StrategySchema),
     defaultValues: mergedDefaultValues,
   });
-  const periods = useWatch({
+  const indicators = useWatch({
     control: form.control,
-    name: "periods",
+    name: "indicators",
   });
 
   const [uncontrolledSubscriptionOpen, setUncontrolledSubscriptionOpen] =
@@ -225,10 +225,10 @@ export function StrategyForm({
     onBroadcastOpenChange?.(open);
   };
 
-  const handleAddPeriod = () => {
-    const current = form.getValues("periods") ?? {};
+  const handleAddIndicator = () => {
+    const current = form.getValues("indicators") ?? {};
 
-    const base = "New Period";
+    const base = "New Indicator";
     let index = 1;
     let key = `${base} ${index}`;
     while (current[key]) {
@@ -236,13 +236,13 @@ export function StrategyForm({
       key = `${base} ${index}`;
     }
 
-    const period = {
+    const indicator = {
       name: key,
       value: 9,
-      smoothingType: MovingAverageSmoothingType.Sma,
+      indicatorType: IndicatorType.Sma,
     } as const;
 
-    form.setValue("periods", { ...current, [key]: period });
+    form.setValue("indicators", { ...current, [key]: indicator });
   };
 
   React.useEffect(() => {
@@ -273,7 +273,7 @@ export function StrategyForm({
   }
 
   const renderParameterFields = (isHorizontal = false) => {
-    const periodEntries = Object.entries(periods ?? {});
+    const indicatorEntries = Object.entries(indicators ?? {});
 
     return (
       <div className={cn("flex gap-3", isHorizontal ? "flex-row" : "flex-col")}>
@@ -285,7 +285,7 @@ export function StrategyForm({
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={handleAddPeriod}
+                  onClick={handleAddIndicator}
                   aria-label="Add moving average"
                   className="p-0"
                 >
@@ -297,18 +297,18 @@ export function StrategyForm({
           </div>
         ) : null}
 
-        {periodEntries.map(([key]) => (
+        {indicatorEntries.map(([key]) => (
           <MovingAveragePeriod
             key={key}
             control={form.control}
-            name={`periods.${key}`}
+            name={`indicators.${key}`}
             isReadOnly={isReadOnly}
             isHorizontal={isHorizontal}
             onRemove={() => {
-              const current = form.getValues("periods") ?? {};
-              const nextPeriods = { ...current };
-              delete nextPeriods[key];
-              form.setValue("periods", nextPeriods);
+              const current = form.getValues("indicators") ?? {};
+              const nextIndicators = { ...current };
+              delete nextIndicators[key];
+              form.setValue("indicators", nextIndicators);
             }}
           />
         ))}

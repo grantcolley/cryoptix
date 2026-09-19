@@ -4,7 +4,7 @@ import { Exchange } from "./exchange";
 import { StrategyProcessorType } from "./strategy-processor-type";
 import { StrategyEngineType } from "./strategy-engine-type";
 import { BoundedChannelFullMode } from "./bounded-channel-full-mode";
-import { PeriodSchema } from "./period-schema";
+import { IndicatorSchema } from "./indicator-schema";
 
 export const StrategySchema = z.object({
   // Strategy fields
@@ -21,7 +21,7 @@ export const StrategySchema = z.object({
   exchange: z.enum(Exchange).default(Exchange.None),
 
   // Parameters for strategy logic
-  periods: z.record(z.string(), PeriodSchema),
+  indicators: z.record(z.string(), IndicatorSchema),
 
   // Subscription and caching fields
   klineInterval: z.enum(KlineInterval).default(KlineInterval.Minute),

@@ -35,7 +35,7 @@ import type { NotificationEnvelope } from "@/features/api/messages/notification-
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
 import { MessageType } from "@/features/api/messages/message-type";
 import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
-import { MovingAverageSmoothingTypeLabels } from "@/features/api/schema/moving-average-smothing-type";
+import { IndicatorTypeLabels } from "@/features/api/schema/indicator-type";
 import {
   StrategyStatusSchema,
   type StrategyStatus,
@@ -86,9 +86,9 @@ const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
 
 const formatMovingAveragePeriodLabel = (
-  period: Strategy["periods"][string]
+  period: Strategy["indicators"][string]
 ) => {
-  const generatedLabel = `${period.value} ${MovingAverageSmoothingTypeLabels[period.smoothingType]}`;
+  const generatedLabel = `${period.value} ${IndicatorTypeLabels[period.indicatorType]}`;
   const configuredName = period.name?.trim();
 
   if (
@@ -251,15 +251,15 @@ export function StrategyPage() {
 
   const getIndicatorSeriesLabel = React.useCallback(
     (key: string) => {
-      const periods = strategy?.periods;
+      const indicators = strategy?.indicators;
 
-      if (!periods) {
+      if (!indicators) {
         return key;
       }
 
       const period =
-        periods[key] ??
-        Object.values(periods).find((period) => {
+        indicators[key] ??
+        Object.values(indicators).find((period) => {
           const configuredName = period.name?.trim();
 
           return (
@@ -270,7 +270,7 @@ export function StrategyPage() {
 
       return period ? formatMovingAveragePeriodLabel(period) : key;
     },
-    [strategy?.periods]
+    [strategy?.indicators]
   );
 
   const resetPriceComparison = () => {

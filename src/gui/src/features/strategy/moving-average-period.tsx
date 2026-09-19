@@ -8,9 +8,9 @@ import {
 import { Icon } from "@/components/icon/icon";
 import { icons } from "@/components/icon/icons";
 import {
-  MovingAverageSmoothingType,
-  MovingAverageSmoothingTypeLabels,
-} from "@/features/api/schema/moving-average-smothing-type";
+  IndicatorType,
+  IndicatorTypeLabels,
+} from "@/features/api/schema/indicator-type";
 import {
   EnumSelectField,
   IntegerField,
@@ -18,10 +18,7 @@ import {
 } from "@/features/strategy/strategy-form-fields";
 import { enumToOptions } from "@/lib/enum-helper";
 
-const movingAverageSmoothingTypeOptions = enumToOptions(
-  MovingAverageSmoothingType,
-  MovingAverageSmoothingTypeLabels
-);
+const indicatorTypeOptions = enumToOptions(IndicatorType, IndicatorTypeLabels);
 
 type MovingAveragePeriodProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>;
@@ -79,9 +76,9 @@ export function MovingAveragePeriod<TFieldValues extends FieldValues>({
       />
       <EnumSelectField
         control={control}
-        name={`${name}.smoothingType` as Path<TFieldValues>}
+        name={`${name}.indicatorType` as Path<TFieldValues>}
         label="Type"
-        options={movingAverageSmoothingTypeOptions}
+        options={indicatorTypeOptions}
         isReadOnly={isReadOnly}
         isHorizontal={isHorizontal}
       />

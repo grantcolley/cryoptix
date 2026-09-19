@@ -36,21 +36,21 @@ export const STRATEGY_CONFIG: Strategy[] = [
     signalBroadcastFullMode: 2,
     broadcastQueueCapacity: 10000,
     broadcastQueueFullMode: 2,
-    periods: {
+    indicators: {
       "9 EMA": {
         name: "9 EMA",
         value: 9,
-        smoothingType: 2,
+        indicatorType: 2,
       },
       "21 EMA": {
         name: "21 EMA",
         value: 21,
-        smoothingType: 2,
+        indicatorType: 2,
       },
       "50 EMA": {
         name: "50 EMA",
         value: 50,
-        smoothingType: 2,
+        indicatorType: 2,
       },
     },
   },
