@@ -39,13 +39,13 @@ public sealed class EndpointsTests
 
         // Assert
         Assert.AreSame(app, returned);
-        CollectionAssert.Contains(patterns, "/");
-        CollectionAssert.Contains(patterns, "/health");
-        CollectionAssert.Contains(patterns, "/api/strategy/strategies");
-        CollectionAssert.Contains(patterns, "/api/strategy/status");
-        CollectionAssert.Contains(patterns, "/api/strategy/start");
-        CollectionAssert.Contains(patterns, "/api/strategy/update");
-        CollectionAssert.Contains(patterns, "/api/strategy/stop");
-        CollectionAssert.Contains(patterns, "/api/strategy/subscribe");
+        Assert.Contains(patterns, "/");
+        Assert.Contains(patterns, "/health");
+        Assert.Contains(patterns, "/api/strategy/strategies");
+        Assert.Contains(patterns, "/api/strategy/status");
+        Assert.Contains(patterns, "/api/strategy/start");
+        Assert.Contains(patterns, "/api/strategy/update");
+        Assert.Contains(patterns, "/api/strategy/stop");
+        Assert.Contains(patterns, "/api/strategy/subscribe");
     }
 }
