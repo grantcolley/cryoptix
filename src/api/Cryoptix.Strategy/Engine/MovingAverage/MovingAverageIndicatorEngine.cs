@@ -1,4 +1,5 @@
 using Cryoptix.Market.Data;
+using Cryoptix.Strategy.Calculators;
 using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Event;
@@ -18,6 +19,11 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
         /// <summary>
         /// Executes the compute async operation.
+        /// 
+        /// NOTE: Indicator calculations have been extracted to
+        /// Cryoptix.Strategy.Calculators.IndicatorCalculator to 
+        /// keep the engine focused on orchestration and make 
+        /// calculation helpers reusable/testable.
         /// </summary>
         /// <param name="context">The context value.</param>
         /// <param name="cancellationToken">The cancellation token value.</param>
@@ -58,18 +64,17 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                     if (indicator.IndicatorType == IndicatorType.Sma)
                     {
-                        computed = CalculateSma(klines, indicator.Value);
+                        computed = IndicatorCalculator.Sma(klines, indicator.Value);
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
-                         if (previousIndicators?.Values.TryGetValue(name, out decimal previousEma) == true)
+                        if (previousIndicators?.Values.TryGetValue(name, out decimal previousEma) == true)
                         {
-                            computed = CalculateEma(klines, indicator.Value, previousEma);
+                            computed = IndicatorCalculator.Ema(klines, indicator.Value, previousEma);
                         }
                         else
                         {
-                            // initialize EMA with SMA if no previous EMA exists
-                            computed = CalculateSma(klines, indicator.Value);
+                            computed = IndicatorCalculator.Ema(klines, indicator.Value);
                         }
                     }
 
@@ -90,35 +95,6 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                     Values = values.ToImmutableDictionary()
                 },
             });
-        }
-
-        private static decimal? CalculateSma(IReadOnlyList<Kline> klines, int period)
-        {
-            if (period <= 0 || klines.Count < period)
-                return null;
-
-            // SMA formula: SMA = SUM(close[1] + close[2] + ... + close[period]) / period
-
-            decimal sum = 0m;
-            int start = klines.Count - period;
-            for (int i = start; i < klines.Count; i++)
-                sum += klines[i].Close;
-
-            return sum / period;
-        }
-
-        private static decimal? CalculateEma(IReadOnlyList<Kline> klines, int period, decimal previousEma)
-        {
-            if (period <= 0 || klines.Count < period)
-                return null;
-
-            // EMA formula: newEMA = ((latestClose - previousEma) * multiplier) + previousEma
-
-            decimal multiplier = 2m / (period + 1);
-
-            decimal latestClose = klines[^1].Close;
-
-            return (latestClose - previousEma) * multiplier + previousEma;
         }
     }
 }
