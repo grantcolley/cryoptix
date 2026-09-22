@@ -1,12 +1,11 @@
 using Cryoptix.Exchange.Api;
 using Cryoptix.Market.Data;
-using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
 using Cryoptix.Strategy.Engine;
 using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Snapshot;
-using Cryoptix.Strategy.Strategies;
+using Cryoptix.Strategy.Indicators;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Immutable;
 
@@ -109,7 +108,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
         // Provide a previous EMA value that occurred before the current close time
         decimal previousEma = 108m;
-        List<Indicators> previousIndicators =
+        List<Market.Strategy.Indicators> previousIndicators =
         [
             new() {
                 TimestampUtc = klines[^1].CloseTime.AddMinutes(-1),
@@ -141,7 +140,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
     private static StrategyAnalysisContext StrategyAnalysisContext(
         IReadOnlyList<Kline> klines,
-        IReadOnlyList<Indicators> indicators,
+        IReadOnlyList<Market.Strategy.Indicators> indicators,
         Kline? currentKline,
         Strategies.Strategy strategy,
         MarketEventKind kind = MarketEventKind.Kline)

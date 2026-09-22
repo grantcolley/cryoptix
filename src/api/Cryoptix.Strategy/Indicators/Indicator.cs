@@ -1,4 +1,4 @@
-namespace Cryoptix.Strategy.Strategies
+namespace Cryoptix.Strategy.Indicators
 {
     public class Indicator
     {

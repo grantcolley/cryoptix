@@ -1,4 +1,4 @@
-namespace Cryoptix.Strategy.Strategies
+namespace Cryoptix.Strategy.Indicators
 {
     /// <summary>
     /// Defines the indicator type.

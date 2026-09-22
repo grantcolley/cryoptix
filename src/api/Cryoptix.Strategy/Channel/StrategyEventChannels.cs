@@ -1,5 +1,4 @@
 using Cryoptix.Market.Data;
-using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Event;
 using System.Threading.Channels;
 
@@ -33,7 +32,7 @@ namespace Cryoptix.Strategy.Channel
         /// <summary>
         /// Gets or sets the indicators broadcasts.
         /// </summary>
-        public required Channel<Indicators> IndicatorsBroadcasts { get; init; }
+        public required Channel<Market.Strategy.Indicators> IndicatorsBroadcasts { get; init; }
         /// <summary>
         /// Gets or sets the signal broadcasts.
         /// </summary>

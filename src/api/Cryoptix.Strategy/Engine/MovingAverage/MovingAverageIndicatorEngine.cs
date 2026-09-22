@@ -1,10 +1,9 @@
 using Cryoptix.Market.Data;
-using Cryoptix.Strategy.Calculators;
-using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Analysis;
+using Cryoptix.Strategy.Calculators;
 using Cryoptix.Strategy.Event;
+using Cryoptix.Strategy.Indicators;
 using Cryoptix.Strategy.Logging;
-using Cryoptix.Strategy.Strategies;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
 
@@ -50,7 +49,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 DateTime currentCloseTime = kline.CloseTime;
 
-                Indicators? previousIndicators = context.Indicators
+                Market.Strategy.Indicators? previousIndicators = context.Indicators
                     .Where(i => i.TimestampUtc < currentCloseTime)
                     .OrderByDescending(i => i.TimestampUtc)
                     .FirstOrDefault();
@@ -89,7 +88,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             return Task.FromResult(new IndicatorComputationResult
             {
-                Indicators = new Indicators
+                Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = kline.CloseTime,
                     Values = values.ToImmutableDictionary()
