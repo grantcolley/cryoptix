@@ -92,12 +92,12 @@ public sealed class MarketDataCacheTests
         MarketDataCache cache = new(maxTradesPerSymbol: 5, maxKlinesPerSeries: 5, maxIndicatorsPerSeries: 1, maxSignalsPerSeries: 1);
         DateTime t0 = DateTime.UtcNow;
 
-        cache.UpsertIndicators("btcusdt", new Indicators { TimestampUtc = t0, Values = new Dictionary<string, decimal> { ["fast"] = 1m } });
-        cache.UpsertIndicators("btcusdt", new Indicators { TimestampUtc = t0.AddMinutes(1), Values = new Dictionary<string, decimal> { ["fast"] = 2m } });
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0, Values = new Dictionary<string, decimal> { ["fast"] = 1m } });
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0.AddMinutes(1), Values = new Dictionary<string, decimal> { ["fast"] = 2m } });
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0, SignalType = SignalType.Buy, Reason = "old" });
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0.AddMinutes(1), SignalType = SignalType.Sell, Reason = "new" });
 
-        IReadOnlyList<Indicators> indicators = cache.GetIndicators("BTCUSDT");
+        IReadOnlyList<Market.Strategy.Indicators> indicators = cache.GetIndicators("BTCUSDT");
         IReadOnlyList<Market.Strategy.Signal> signals = cache.GetSignals("BTCUSDT");
 
         Assert.HasCount(1, indicators);
