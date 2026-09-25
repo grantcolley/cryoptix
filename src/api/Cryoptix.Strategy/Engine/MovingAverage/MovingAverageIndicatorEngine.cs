@@ -56,7 +56,6 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                 foreach (var kvp in context.Strategy.Indicators)
                 {
-                    string name = kvp.Key ?? string.Empty;
                     Indicator indicator = kvp.Value;
 
                     decimal? computed = null;
@@ -67,7 +66,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
-                        if (previousIndicators?.Values.TryGetValue(name, out decimal previousEma) == true)
+                        if (previousIndicators?.Values.TryGetValue(kvp.Key, out decimal previousEma) == true)
                         {
                             computed = IndicatorCalculator.Ema(klines, indicator.Value, previousEma);
                         }
@@ -79,7 +78,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                     if (computed.HasValue)
                     {
-                        values[name] = computed.Value;
+                        values[kvp.Key] = computed.Value;
                     }
                 }
             }
