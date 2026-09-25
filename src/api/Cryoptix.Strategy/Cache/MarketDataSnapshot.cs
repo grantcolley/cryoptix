@@ -1,5 +1,4 @@
 using Cryoptix.Market.Data;
-using Cryoptix.Market.Strategy;
 
 namespace Cryoptix.Strategy.Cache
 {
@@ -31,7 +30,7 @@ namespace Cryoptix.Strategy.Cache
         /// <summary>
         /// Gets or sets the indicators.
         /// </summary>
-        public List<Indicators> Indicators { get; init; } = [];
+        public List<Market.Strategy.Indicators> Indicators { get; init; } = [];
         /// <summary>
         /// Gets or sets the signals.
         /// </summary>
