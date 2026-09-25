@@ -1,5 +1,4 @@
 using Cryoptix.Market.Data;
-using Cryoptix.Market.Strategy;
 using Cryoptix.Strategy.Event;
 
 namespace Cryoptix.Strategy.Channel
@@ -170,7 +169,7 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = tradeBroadcastFullMode
                 });
 
-            System.Threading.Channels.Channel<Indicators> indicatorsBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Indicators>(
+            System.Threading.Channels.Channel<Market.Strategy.Indicators> indicatorsBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Market.Strategy.Indicators>(
                 new System.Threading.Channels.BoundedChannelOptions(indicatorsBroadcastCapacity)
                 {
                     SingleReader = true,
