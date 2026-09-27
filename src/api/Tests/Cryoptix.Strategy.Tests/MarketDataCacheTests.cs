@@ -107,6 +107,31 @@ public sealed class MarketDataCacheTests
         Assert.AreEqual("new", signals[0].Reason);
     }
 
+    [TestMethod]
+    public void Rsis_AreUpsertedReplacedAndRetrieved()
+    {
+        MarketDataCache cache = NewCache();
+        DateTime t0 = DateTime.UtcNow;
+
+        var rsi1 = new Indicators.Rsi { Period = 3, PreviousClose = 100m, AverageGain = 1m, AverageLoss = 0m, Value = 100m, TimestampUtc = t0 };
+        var rsi2 = new Indicators.Rsi { Period = 5, PreviousClose = 100m, AverageGain = 0.5m, AverageLoss = 0.5m, Value = 50m, TimestampUtc = t0 };
+
+        // Upsert initial set
+        cache.UpsertRsis("btcusdt", [ rsi1, rsi2 ]);
+
+        IReadOnlyList<Indicators.Rsi> fetched = cache.GetRsis("BTCUSDT");
+        Assert.HasCount(2, fetched);
+
+        // Replace with a different set (only one period)
+        var rsi3 = new Indicators.Rsi { Period = 3, PreviousClose = 101m, AverageGain = 2m, AverageLoss = 0m, Value = 100m, TimestampUtc = t0.AddMinutes(1) };
+        cache.UpsertRsis("btcusdt", [ rsi3 ]);
+
+        IReadOnlyList<Indicators.Rsi> fetched2 = cache.GetRsis("BTCUSDT");
+        Assert.HasCount(1, fetched2);
+        Assert.AreEqual(3, fetched2[0].Period);
+        Assert.AreEqual(101m, fetched2[0].PreviousClose);
+    }
+
     private static MarketDataCache NewCache() => new(5, 5, 5, 5);
 
     private static Kline Kline(long id, DateTime openTime, decimal close) => new()
