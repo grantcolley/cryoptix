@@ -43,6 +43,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 return Task.FromResult(IndicatorComputationResult.Empty(DateTime.MinValue));
             }
 
+            List<Rsi> rsis = [];
             Dictionary<string, decimal> values = [];
 
             if (context.Strategy.Indicators != null)
@@ -75,6 +76,26 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                             computed = IndicatorCalculator.Ema(klines, indicator.Value);
                         }
                     }
+                    else if (indicator.IndicatorType == IndicatorType.Rsi)
+                    {
+                        Rsi? rsi = null;
+                        Rsi? prev = context.Rsis?.FirstOrDefault(x => x.Period == indicator.Value);
+
+                        if (prev == null)
+                        {
+                            rsi = IndicatorCalculator.RsiInitialize(klines, indicator.Value);
+                        }
+                        else
+                        {
+                            rsi = IndicatorCalculator.RsiUpdate(prev, kline);
+                        }
+
+                        if(rsi != null)
+                        {
+                            rsis.Add(rsi);
+                            computed = rsi.Value;
+                        }
+                    }
 
                     if (computed.HasValue)
                     {
@@ -87,6 +108,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             return Task.FromResult(new IndicatorComputationResult
             {
+                Rsis = rsis,
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = kline.CloseTime,

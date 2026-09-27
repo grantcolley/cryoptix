@@ -16,6 +16,10 @@ namespace Cryoptix.Strategy.Indicators
         /// <summary>
         /// Specifies the ema value.
         /// </summary>
-        Ema
+        Ema,
+        /// <summary>
+        /// Specifies the rsi value.
+        /// </summary>
+        Rsi,
     }
 }

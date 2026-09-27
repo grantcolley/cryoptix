@@ -31,6 +31,13 @@ namespace Cryoptix.Strategy.Analysis
         /// </summary>
         public required IReadOnlyList<Market.Strategy.Indicators> Indicators { get; init; }
         /// <summary>
+        /// Gets or sets the latest computed RSI snapshots for the strategy symbol
+        /// across multiple periods. Each entry represents the most recent RSI state
+        /// for a particular period. The collection may be empty when no RSI data is
+        /// available for the symbol.
+        /// </summary>
+        public IReadOnlyList<Indicators.Rsi> Rsis { get; init; } = [];
+        /// <summary>
         /// Gets or sets the trades.
         /// </summary>
         public required IReadOnlyList<Trade> Trades { get; init; }

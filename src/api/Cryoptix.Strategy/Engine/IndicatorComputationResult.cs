@@ -1,3 +1,5 @@
+using Cryoptix.Strategy.Indicators;
+
 namespace Cryoptix.Strategy.Engine
 {
     /// <summary>
@@ -11,6 +13,13 @@ namespace Cryoptix.Strategy.Engine
         public required Market.Strategy.Indicators Indicators { get; init; }
 
         /// <summary>
+        /// Gets or sets the RSI (Relative Strength Index) computation results for one
+        /// or more periods. Engines should populate this collection with the RSI
+        /// snapshots they computed during the indicator calculation pass.
+        /// </summary>
+        public required IReadOnlyList<Rsi> Rsis { get; init; }
+
+        /// <summary>
         /// Executes the empty operation.
         /// </summary>
         /// <param name="timestampUtc">The timestamp utc value.</param>
@@ -18,6 +27,7 @@ namespace Cryoptix.Strategy.Engine
         public static IndicatorComputationResult Empty(DateTime timestampUtc) =>
             new()
             {
+                Rsis = [],
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = timestampUtc,

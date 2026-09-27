@@ -16,11 +16,13 @@ namespace Cryoptix.Strategy.Cache
         private readonly Lock _klinesGate = new();
         private readonly Lock _tradesGate = new();
         private readonly Lock _indicatorsGate = new();
+        private readonly Lock _rsiGate = new();
         private readonly Lock _signalsGate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
         private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
+        private readonly Dictionary<string, Dictionary<int, Indicators.Rsi>> _rsis = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Indicators>> _indicators = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Signal>> _signals = [];
         private readonly HashSet<Symbol> _symbols = new(SymbolComparer.Instance);
@@ -146,6 +148,55 @@ namespace Cryoptix.Strategy.Cache
                     return [];
 
                 return [.. series.Values.Select(CloneIndicators)];
+            }
+        }
+
+        /// <summary>
+        /// Replaces the cached RSIs for the specified symbol with the provided set.
+        /// This operation overwrites any previously cached RSIs for the symbol and
+        /// replaces them with the given collection. The provided collection may
+        /// contain multiple RSI snapshots for different periods.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="rsis">Collection of RSI snapshots to cache for the symbol.</param>
+        public void UpsertRsis(string symbol, IReadOnlyCollection<Indicators.Rsi> rsis)
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNull(rsis);
+
+            lock (_rsiGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                var dict = new Dictionary<int, Indicators.Rsi>(rsis.Count);
+                foreach (var r in rsis)
+                {
+                    if (r == null)
+                        continue;
+
+                    dict[r.Period] = CloneRsi(r);
+                }
+
+                _rsis[key] = dict;
+            }
+        }
+
+        /// <summary>
+        /// Gets the latest cached RSIs for the specified symbol. Returns an empty list
+        /// when no RSIs are cached for the symbol.
+        /// </summary>
+        public IReadOnlyList<Indicators.Rsi> GetRsis(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_rsiGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_rsis.TryGetValue(key, out var dict))
+                    return [];
+
+                return [.. dict.Values.Select(CloneRsi)];
             }
         }
 
@@ -439,6 +490,19 @@ namespace Cryoptix.Strategy.Cache
                 TimestampUtc = source.TimestampUtc,
                 SignalType = source.SignalType,
                 Reason = source.Reason
+            };
+        }
+
+        private static Indicators.Rsi CloneRsi(Indicators.Rsi source)
+        {
+            return new Indicators.Rsi
+            {
+                Period = source.Period,
+                PreviousClose = source.PreviousClose,
+                AverageGain = source.AverageGain,
+                AverageLoss = source.AverageLoss,
+                Value = source.Value,
+                TimestampUtc = source.TimestampUtc
             };
         }
     }
