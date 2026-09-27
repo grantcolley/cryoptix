@@ -6,6 +6,7 @@ using Cryoptix.Strategy.Engine.MovingAverage;
 using Cryoptix.Strategy.Event;
 using Cryoptix.Strategy.Snapshot;
 using Cryoptix.Strategy.Indicators;
+using Cryoptix.Strategy.Calculators;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Immutable;
 
@@ -138,6 +139,35 @@ public sealed class MovingAverageIndicatorEngineTests
         Assert.IsEmpty(result.Indicators.Values);
     }
 
+    [TestMethod]
+    public async Task ComputesRsiForConfiguredPeriod()
+    {
+        // Arrange
+        MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = RealisticKlines(start);
+
+        StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
+        {
+            Symbol = "BTCUSDT",
+            Indicators = new Dictionary<string, Indicator>
+            {
+                ["3 RSI"] = new Indicator { Name = "3 RSI", Value = 3, IndicatorType = IndicatorType.Rsi }
+            }
+        });
+
+        // Act
+        IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.IsNotNull(result.Rsis);
+        Assert.HasCount(1, result.Rsis);
+        Rsi? expected = IndicatorCalculator.RsiInitialize(klines, 3);
+        Assert.IsNotNull(expected);
+        Assert.AreEqual(expected!.Value, result.Rsis[0].Value);
+        Assert.AreEqual(expected.Value, result.Indicators.Values["3 RSI"]);
+    }
+
     private static StrategyAnalysisContext StrategyAnalysisContext(
         IReadOnlyList<Kline> klines,
         IReadOnlyList<Market.Strategy.Indicators> indicators,
@@ -170,6 +200,7 @@ public sealed class MovingAverageIndicatorEngineTests
         Interval = KlineInterval.Minute,
         OpenTime = openTime,
         CloseTime = openTime.AddMinutes(1),
-        Close = close
+        Close = close,
+        Final = true
     };
 }
