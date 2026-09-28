@@ -43,6 +43,7 @@ import {
 import { StrategyState } from "@/features/api/schema/strategy-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSidebar } from "@/components/ui/sidebar";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
 type PriceDirection = "up" | "down" | "flat";
@@ -85,9 +86,7 @@ const INDICATOR_SERIES_COLORS = [
 const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
 
-const formatIndicatorLabel = (
-  indicator: Strategy["indicators"][string]
-) => {
+const formatIndicatorLabel = (indicator: Strategy["indicators"][string]) => {
   const generatedLabel = `${indicator.value} ${IndicatorTypeLabels[indicator.indicatorType]}`;
   const configuredName = indicator.name?.trim();
 
@@ -142,6 +141,7 @@ function formatChartLocalTime(
 
 export function StrategyPage() {
   const { getAccessTokenSilently } = useAuth0();
+  const { isMobile, open, openMobile, setOpen, setOpenMobile } = useSidebar();
 
   const [isStrategyConfigOpen, setIsStrategyConfigOpen] = React.useState(false);
   const [showParametersOnly, setShowParametersOnly] = React.useState(false);
@@ -263,8 +263,7 @@ export function StrategyPage() {
           const configuredName = indicator.name?.trim();
 
           return (
-            configuredName === key ||
-            formatIndicatorLabel(indicator) === key
+            configuredName === key || formatIndicatorLabel(indicator) === key
           );
         });
 
@@ -1202,6 +1201,11 @@ export function StrategyPage() {
       const accessToken = await getAccessTokenSilently();
 
       if (isStart) {
+        if (isMobile && openMobile) {
+          setOpenMobile(false);
+        } else if (!isMobile && open) {
+          setOpen(false);
+        }
         setIsStrategyConfigOpen(false);
         setShowParametersOnly(false);
         setShowStartButton(false);
