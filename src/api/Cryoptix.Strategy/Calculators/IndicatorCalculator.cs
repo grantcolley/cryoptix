@@ -105,7 +105,7 @@ namespace Cryoptix.Strategy.Calculators
                 avgLoss = ((avgLoss * (period - 1)) + loss) / period;
             }
 
-            Kline latest = usable[usable.Count - 1];
+            Kline latest = usable[^1];
 
             return new Rsi
             {
