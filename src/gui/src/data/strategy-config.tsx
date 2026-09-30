@@ -52,6 +52,11 @@ export const STRATEGY_CONFIG: Strategy[] = [
         value: 50,
         indicatorType: 2,
       },
+      "RSI 14": {
+        name: "RSI 14",
+        value: 14,
+        indicatorType: 3,
+      },
     },
   },
 ];

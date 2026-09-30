@@ -116,6 +116,11 @@ const fallbackDefaultValues: Strategy = {
       value: 50,
       indicatorType: IndicatorType.Ema,
     },
+    "RSI 14": {
+      name: "RSI 14",
+      value: 14,
+      indicatorType: IndicatorType.Rsi,
+    },
   },
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 1440,

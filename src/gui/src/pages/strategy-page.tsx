@@ -380,7 +380,7 @@ export function StrategyPage() {
     for (const indicator of indicators) {
       const time = toChartTime(indicator.timestampUtc);
 
-      for (const item of indicator.values) {
+      for (const item of indicator.series) {
         const dataByTime =
           seriesByKey.get(item.key) ??
           new Map<number, LineData<UTCTimestamp>>();
@@ -675,7 +675,7 @@ export function StrategyPage() {
       indicatorSeriesDataRef.current.map(({ key, data }) => [key, data])
     );
 
-    for (const item of indicator.values) {
+    for (const item of indicator.series) {
       const data = seriesByKey.get(item.key) ?? [];
       const nextData = data.filter((point) => point.time !== time);
 

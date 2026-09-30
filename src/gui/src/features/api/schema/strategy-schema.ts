@@ -9,7 +9,7 @@ import { IndicatorSchema } from "./indicator-schema";
 export const StrategySchema = z.object({
   // Strategy fields
   strategyId: z.number().int(),
-  name: z.string().nonempty(),
+  name: z.string().nullable(),
   description: z.string().nullable().optional(),
   symbol: z.string().nullable().optional(),
   strategyProcessorType: z

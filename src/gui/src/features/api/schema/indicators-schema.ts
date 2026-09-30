@@ -15,7 +15,8 @@ const IndicatorValuesSchema = z
 
 export const IndicatorsSchema = z.object({
   timestampUtc: z.coerce.date(),
-  values: IndicatorValuesSchema,
+  series: IndicatorValuesSchema,
+  snapshots: IndicatorValuesSchema,
 });
 
 export type IndicatorValue = z.infer<typeof IndicatorValueSchema>;
