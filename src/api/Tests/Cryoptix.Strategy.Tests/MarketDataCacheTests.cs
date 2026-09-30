@@ -92,8 +92,8 @@ public sealed class MarketDataCacheTests
         MarketDataCache cache = new(maxTradesPerSymbol: 5, maxKlinesPerSeries: 5, maxIndicatorsPerSeries: 1, maxSignalsPerSeries: 1);
         DateTime t0 = DateTime.UtcNow;
 
-        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0, Values = new Dictionary<string, decimal> { ["fast"] = 1m } });
-        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0.AddMinutes(1), Values = new Dictionary<string, decimal> { ["fast"] = 2m } });
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0, Series = new Dictionary<string, decimal> { ["fast"] = 1m }, Snapshots = new Dictionary<string, decimal> { ["fast"] = 10m } });
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0.AddMinutes(1), Series = new Dictionary<string, decimal> { ["fast"] = 2m }, Snapshots = new Dictionary<string, decimal> { ["fast"] = 20m } });
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0, SignalType = SignalType.Buy, Reason = "old" });
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0.AddMinutes(1), SignalType = SignalType.Sell, Reason = "new" });
 
@@ -101,7 +101,8 @@ public sealed class MarketDataCacheTests
         IReadOnlyList<Market.Strategy.Signal> signals = cache.GetSignals("BTCUSDT");
 
         Assert.HasCount(1, indicators);
-        Assert.AreEqual(2m, indicators[0].Values["fast"]);
+        Assert.AreEqual(2m, indicators[0].Series["fast"]);
+        Assert.AreEqual(20m, indicators[0].Snapshots["fast"]);
         Assert.HasCount(1, signals);
         Assert.AreEqual(SignalType.Sell, signals[0].SignalType);
         Assert.AreEqual("new", signals[0].Reason);

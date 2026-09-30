@@ -10,8 +10,12 @@ namespace Cryoptix.Market.Strategy
         /// </summary>
         public required DateTime TimestampUtc { get; init; }
         /// <summary>
-        /// Gets or sets the values.
+        /// Gets or sets the indicator series.
         /// </summary>
-        public required IReadOnlyDictionary<string, decimal> Values { get; init; }
+        public required IReadOnlyDictionary<string, decimal> Series { get; init; }
+        /// <summary>
+        /// Gets or sets the indicator snapshots.
+        /// </summary>
+        public required IReadOnlyDictionary<string, decimal> Snapshots { get; init; }
     }
 }

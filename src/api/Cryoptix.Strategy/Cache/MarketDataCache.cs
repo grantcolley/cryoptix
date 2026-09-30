@@ -144,10 +144,10 @@ namespace Cryoptix.Strategy.Cache
             {
                 string key = NormalizeSymbol(symbol);
 
-                if (!_indicators.TryGetValue(key, out var series))
+                if (!_indicators.TryGetValue(key, out var indicators))
                     return [];
 
-                return [.. series.Values.Select(CloneIndicators)];
+                return [.. indicators.Values.Select(CloneIndicators)];
             }
         }
 
@@ -479,7 +479,8 @@ namespace Cryoptix.Strategy.Cache
             return new Market.Strategy.Indicators
             {
                 TimestampUtc = source.TimestampUtc,
-                Values = new Dictionary<string, decimal>(source.Values)
+                Series = new Dictionary<string, decimal>(source.Series),
+                Snapshots = new Dictionary<string, decimal>(source.Snapshots)
             };
         }
 

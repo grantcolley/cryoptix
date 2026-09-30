@@ -154,6 +154,11 @@ namespace Cryoptix.Strategy.Dispatcher
                 // Upsert and broadcast indicators for trades as well
                 session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicatorsResult.Indicators);
 
+                if (indicatorsResult.Rsis != null && indicatorsResult.Rsis.Count > 0)
+                {
+                    session.Cache.UpsertRsis(context.Strategy.Symbol!, indicatorsResult.Rsis);
+                }
+
                 if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
                 {
                     LogDebug.IndicatorsDropped(_logger, context.Strategy.Symbol!);

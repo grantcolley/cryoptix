@@ -44,7 +44,8 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             }
 
             List<Rsi> rsis = [];
-            Dictionary<string, decimal> values = [];
+            Dictionary<string, decimal> series = [];
+            Dictionary<string, decimal> snapshots = [];
 
             if (context.Strategy.Indicators != null)
             {
@@ -59,21 +60,31 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 {
                     Indicator indicator = kvp.Value;
 
-                    decimal? computed = null;
-
                     if (indicator.IndicatorType == IndicatorType.Sma)
                     {
-                        computed = IndicatorCalculator.Sma(klines, indicator.Value);
+                        decimal? computed = IndicatorCalculator.Sma(klines, indicator.Value);
+
+                        if (computed.HasValue)
+                        {
+                            series[kvp.Key] = computed.Value;
+                        }
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
-                        if (previousIndicators?.Values.TryGetValue(kvp.Key, out decimal previousEma) == true)
+                        decimal? computed = null;
+
+                        if (previousIndicators?.Series.TryGetValue(kvp.Key, out decimal previousEma) == true)
                         {
                             computed = IndicatorCalculator.Ema(klines, indicator.Value, previousEma);
                         }
                         else
                         {
                             computed = IndicatorCalculator.Ema(klines, indicator.Value);
+                        }
+
+                        if (computed.HasValue)
+                        {
+                            series[kvp.Key] = computed.Value;
                         }
                     }
                     else if (indicator.IndicatorType == IndicatorType.Rsi)
@@ -93,18 +104,13 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                         if(rsi != null)
                         {
                             rsis.Add(rsi);
-                            computed = rsi.Value;
+                            snapshots[kvp.Key] = rsi.Value;
                         }
-                    }
-
-                    if (computed.HasValue)
-                    {
-                        values[kvp.Key] = computed.Value;
                     }
                 }
             }
 
-            LogDebug.IndicatorsComputed(_logger, context.Strategy.Symbol!, values);
+            LogDebug.IndicatorsComputed(_logger, context.Strategy.Symbol!, series);
 
             return Task.FromResult(new IndicatorComputationResult
             {
@@ -112,7 +118,8 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = kline.CloseTime,
-                    Values = values.ToImmutableDictionary()
+                    Series = series.ToImmutableDictionary(),
+                    Snapshots = snapshots.ToImmutableDictionary(),
                 },
             });
         }

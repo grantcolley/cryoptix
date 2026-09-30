@@ -45,14 +45,14 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             //        "Indicators unavailable."));
             //}
 
-            //if (!indicatorsResult.Indicators.Values.TryGetValue("9 SMA", out decimal fast))
+            //if (!indicatorsResult.Indicators.Series.TryGetValue("9 SMA", out decimal fast))
             //{
             //    return Task.FromResult(SignalEvaluationResult.None(
             //        DateTime.UtcNow,
             //        "9 SMA unavailable."));
             //}
 
-            //if (!indicatorsResult.Indicators.Values.TryGetValue("21 SMA", out decimal slow))
+            //if (!indicatorsResult.Indicators.Series.TryGetValue("21 SMA", out decimal slow))
             //{
             //    return Task.FromResult(SignalEvaluationResult.None(
             //        DateTime.UtcNow,

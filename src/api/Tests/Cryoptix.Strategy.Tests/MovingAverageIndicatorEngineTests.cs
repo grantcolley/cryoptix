@@ -56,12 +56,12 @@ public sealed class MovingAverageIndicatorEngineTests
         // Assert
         Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
 
-        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Values["3 SMA"]);
-        Assert.AreEqual(108.4m, result.Indicators.Values["5 SMA"]);
-        Assert.AreEqual(105.77777777777777777777777778m, result.Indicators.Values["9 SMA"]);
+        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Series["3 SMA"]);
+        Assert.AreEqual(108.4m, result.Indicators.Series["5 SMA"]);
+        Assert.AreEqual(105.77777777777777777777777778m, result.Indicators.Series["9 SMA"]);
 
-        Assert.IsFalse(result.Indicators.Values.ContainsKey("too-long"));
-        Assert.IsFalse(result.Indicators.Values.ContainsKey("bad"));
+        Assert.IsFalse(result.Indicators.Series.ContainsKey("too-long"));
+        Assert.IsFalse(result.Indicators.Series.ContainsKey("bad"));
     }
 
     [TestMethod]
@@ -86,7 +86,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
         // Assert
         // No previous EMA exists, so EMA should be initialized with SMA for the period
-        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Values["3 EMA"]);
+        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Series["3 EMA"]);
         Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
     }
 
@@ -113,7 +113,8 @@ public sealed class MovingAverageIndicatorEngineTests
         [
             new() {
                 TimestampUtc = klines[^1].CloseTime.AddMinutes(-1),
-                Values = new Dictionary<string, decimal> { ["3 EMA"] = previousEma }.ToImmutableDictionary()
+                Series = new Dictionary<string, decimal> { ["3 EMA"] = previousEma }.ToImmutableDictionary(),
+                Snapshots = new Dictionary<string, decimal>().ToImmutableDictionary()
             }
         ];
 
@@ -124,7 +125,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
         // Assert
         // multiplier = 2/(3+1) = 0.5, latestClose = 110m => newEma = ((110 - 108) * 0.5) + 108 = 109m
-        Assert.AreEqual(109m, result.Indicators.Values["3 EMA"]);
+        Assert.AreEqual(109m, result.Indicators.Series["3 EMA"]);
     }
 
     [TestMethod]
@@ -136,7 +137,7 @@ public sealed class MovingAverageIndicatorEngineTests
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
         Assert.AreEqual(DateTime.MinValue, result.Indicators.TimestampUtc);
-        Assert.IsEmpty(result.Indicators.Values);
+        Assert.IsEmpty(result.Indicators.Series);
     }
 
     [TestMethod]
@@ -165,7 +166,7 @@ public sealed class MovingAverageIndicatorEngineTests
         Rsi? expected = IndicatorCalculator.RsiInitialize(klines, 3);
         Assert.IsNotNull(expected);
         Assert.AreEqual(expected!.Value, result.Rsis[0].Value);
-        Assert.AreEqual(expected.Value, result.Indicators.Values["3 RSI"]);
+        Assert.AreEqual(expected.Value, result.Indicators.Snapshots["3 RSI"]);
     }
 
     private static StrategyAnalysisContext StrategyAnalysisContext(
