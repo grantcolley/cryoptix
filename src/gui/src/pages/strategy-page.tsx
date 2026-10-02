@@ -994,11 +994,20 @@ export function StrategyPage() {
       if (!notificationConnectionRef.current) {
         await startSignalRSubscription(accessToken);
       }
-      return;
+      return parsedStatus;
     }
 
     await stopSignalRSubscription();
     setNotificationMessage(null);
+    return parsedStatus;
+  };
+
+  const closeSidebar = () => {
+    if (isMobile && openMobile) {
+      setOpenMobile(false);
+    } else if (!isMobile && open) {
+      setOpen(false);
+    }
   };
 
   const handleConnect = async () => {
@@ -1016,7 +1025,11 @@ export function StrategyPage() {
     try {
       const accessToken = await getAccessTokenSilently();
 
-      await fetchStrategyStatus(accessToken);
+      const status = await fetchStrategyStatus(accessToken);
+
+      if (status.strategyState === StrategyState.Running) {
+        closeSidebar();
+      }
     } catch (error) {
       setConnectError(getErrorMessage(error));
     } finally {
@@ -1200,11 +1213,7 @@ export function StrategyPage() {
       const accessToken = await getAccessTokenSilently();
 
       if (isStart) {
-        if (isMobile && openMobile) {
-          setOpenMobile(false);
-        } else if (!isMobile && open) {
-          setOpen(false);
-        }
+        closeSidebar();
         setIsStrategyConfigOpen(false);
         setShowParametersOnly(false);
         setShowStartButton(false);
