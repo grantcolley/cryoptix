@@ -9,7 +9,9 @@ const Authentication = () => {
     <div>
       {isAuthenticated ? (
         <div className="ml-auto flex items-center gap-2">
-          <p className="text-muted-foreground">{user?.name}</p>
+          <p className="text-muted-foreground [overflow-wrap:anywhere]">
+            {user?.name}
+          </p>
           <Logout />
         </div>
       ) : (
