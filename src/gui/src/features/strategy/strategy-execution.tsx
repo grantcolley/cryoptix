@@ -63,13 +63,6 @@ export function StrategyExecution({
               >
                 {serverUrl}
               </p>
-              // <span
-              //   id="server-url"
-              //   aria-label="Server url"
-              //   className="block text-right text-sm text-muted-foreground [overflow-wrap:anywhere]"
-              // >
-              //   {serverUrl}
-              // </span>
             )}
           </span>
         </TooltipTrigger>
