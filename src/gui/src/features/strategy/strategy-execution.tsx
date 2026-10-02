@@ -44,9 +44,9 @@ export function StrategyExecution({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`block w-full min-w-0 ${showConnectButton ? "" : "mr-1"}`}
+            className={`block w-full min-w-0 ${showUpdateAndStopButtons ? "mr-1" : ""}`}
           >
-            {showConnectButton ? (
+            {!showUpdateAndStopButtons ? (
               <Input
                 id="server-url"
                 type="text"
@@ -54,7 +54,7 @@ export function StrategyExecution({
                 aria-label="Server url"
                 value={serverUrl}
                 onChange={(event) => onServerUrlChange(event.target.value)}
-                disabled={isConnecting}
+                disabled={isConnecting || !showConnectButton}
               />
             ) : (
               <p
@@ -67,7 +67,7 @@ export function StrategyExecution({
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          {showConnectButton ? "Enter server url" : serverUrl}
+          {showUpdateAndStopButtons ? serverUrl : "Enter server url"}
         </TooltipContent>
       </Tooltip>
 
