@@ -21,8 +21,7 @@ import {
 import { Config } from "@/config/config";
 import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
-import { StrategyExecution } from "@/features/strategy/strategy-execution";
-import { StrategyHeader } from "@/features/strategy/strategy-header";
+import { StrategyToolbar } from "@/features/strategy/strategy-toolbar";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
@@ -1321,20 +1320,20 @@ export function StrategyPage() {
   return (
     <div className="flex h-[calc(100svh-var(--header-height))] min-h-0 flex-1 flex-col p-2 md:h-[calc(100svh-var(--header-height)-1rem)]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-muted/50">
-        <form
-          className="flex items-center gap-1 px-4 pt-4 pb-2"
-          onSubmit={handleServerConnectSubmit}
-        >
-          <StrategyExecution
-            isConnecting={isConnecting}
-            showConnectButton={showConnectButton}
-            showStartButton={showStartButton}
-            showUpdateAndStopButtons={showStrategyRunning}
-            showDisconnectButton={showDisconnectButton}
-            serverUrl={serverUrl}
-            strategy={strategy}
-            onServerUrlChange={setServerUrl}
-            onStart={() => {
+        <StrategyToolbar
+          connectError={connectError}
+          notificationMessage={notificationMessage}
+          onConnectSubmit={handleServerConnectSubmit}
+          executionProps={{
+            isConnecting,
+            showConnectButton,
+            showStartButton,
+            showUpdateAndStopButtons: showStrategyRunning,
+            showDisconnectButton,
+            serverUrl,
+            strategy,
+            onServerUrlChange: setServerUrl,
+            onStart: () => {
               const strategyToSend = latestStrategyRef.current ?? strategy;
               if (!strategyToSend) return;
               void handleStrategyAction(
@@ -1344,11 +1343,11 @@ export function StrategyPage() {
                 false,
                 false
               );
-            }}
-            onDisconnect={() => {
+            },
+            onDisconnect: () => {
               clearCurrentStrategy();
-            }}
-            onUpdate={() => {
+            },
+            onUpdate: () => {
               const strategyToSend = latestStrategyRef.current ?? strategy;
               if (!strategyToSend) return;
               void handleStrategyAction(
@@ -1358,8 +1357,8 @@ export function StrategyPage() {
                 true,
                 false
               );
-            }}
-            onStop={() => {
+            },
+            onStop: () => {
               void handleStrategyAction(
                 Config.API_ROUTE_STOP,
                 undefined,
@@ -1367,19 +1366,16 @@ export function StrategyPage() {
                 false,
                 true
               );
-            }}
-          />
-        </form>
-
-        <StrategyHeader
-          connectError={connectError}
-          notificationMessage={notificationMessage}
-          showStrategyRunning={showStrategyRunning}
-          strategy={strategy}
-          isStrategyParametersActive={isStrategyParametersActive}
-          isStrategyConfigActive={isStrategyConfigActive}
-          onToggleStrategyParameters={handleToggleStrategyParameters}
-          onToggleStrategyConfig={handleToggleStrategyConfig}
+            },
+          }}
+          headerProps={{
+            showStrategyRunning,
+            strategy,
+            isStrategyParametersActive,
+            isStrategyConfigActive,
+            onToggleStrategyParameters: handleToggleStrategyParameters,
+            onToggleStrategyConfig: handleToggleStrategyConfig,
+          }}
         />
 
         <StrategySelect

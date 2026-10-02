@@ -43,19 +43,39 @@ export function StrategyExecution({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="block w-full">
-            <Input
-              id="server-url"
-              type="text"
-              placeholder="Server url..."
-              aria-label="Server url"
-              value={serverUrl}
-              onChange={(event) => onServerUrlChange(event.target.value)}
-              disabled={isConnecting || !showConnectButton}
-            />
+          <span
+            className={`block w-full min-w-0 ${showConnectButton ? "" : "mr-1"}`}
+          >
+            {showConnectButton ? (
+              <Input
+                id="server-url"
+                type="text"
+                placeholder="Server url..."
+                aria-label="Server url"
+                value={serverUrl}
+                onChange={(event) => onServerUrlChange(event.target.value)}
+                disabled={isConnecting}
+              />
+            ) : (
+              <p
+                aria-label="Server url"
+                className="text-right text-muted-foreground [overflow-wrap:anywhere]"
+              >
+                {serverUrl}
+              </p>
+              // <span
+              //   id="server-url"
+              //   aria-label="Server url"
+              //   className="block text-right text-sm text-muted-foreground [overflow-wrap:anywhere]"
+              // >
+              //   {serverUrl}
+              // </span>
+            )}
           </span>
         </TooltipTrigger>
-        <TooltipContent>Enter server url</TooltipContent>
+        <TooltipContent>
+          {showConnectButton ? "Enter server url" : serverUrl}
+        </TooltipContent>
       </Tooltip>
 
       {isConnecting ? (

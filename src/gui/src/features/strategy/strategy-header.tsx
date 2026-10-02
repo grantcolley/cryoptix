@@ -9,8 +9,6 @@ import {
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 
 interface StrategyHeaderProps {
-  connectError: string | null;
-  notificationMessage: string | null;
   showStrategyRunning: boolean;
   strategy: Strategy | null;
   isStrategyParametersActive: boolean;
@@ -20,8 +18,6 @@ interface StrategyHeaderProps {
 }
 
 export function StrategyHeader({
-  connectError,
-  notificationMessage,
   showStrategyRunning,
   strategy,
   isStrategyParametersActive,
@@ -38,19 +34,9 @@ export function StrategyHeader({
 
   return (
     <>
-      {connectError && (
-        <p className="px-4 text-sm text-destructive">{connectError}</p>
-      )}
-
-      {notificationMessage && (
-        <p className="px-4 text-sm text-muted-foreground">
-          {notificationMessage}
-        </p>
-      )}
-
       {showStrategyRunning && strategy ? (
-        <div className="flex flex-row items-baseline gap-4 px-4 py-1">
-          <div className="flex items-center gap-1">
+        <div className="flex min-w-0 max-w-full flex-row items-center gap-4">
+          <div className="flex min-w-0 items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -91,7 +77,7 @@ export function StrategyHeader({
               </TooltipTrigger>
               <TooltipContent>{strategyParametersTooltip}</TooltipContent>
             </Tooltip>
-            <h4 className="text-sm text-foreground-semimuted ml-2">
+            <h4 className="text-sm text-foreground-semimuted ml-2 break-words min-w-0">
               {strategy.name}
             </h4>
           </div>
