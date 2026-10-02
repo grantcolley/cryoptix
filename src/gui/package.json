@@ -14,6 +14,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.16.2",
     "@auth0/auth0-spa-js": "^2.19.2",
+    "@base-ui/react": "^1.8.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@microsoft/signalr": "^10.0.0",

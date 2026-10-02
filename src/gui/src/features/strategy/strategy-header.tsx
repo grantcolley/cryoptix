@@ -55,6 +55,8 @@ export function StrategyHeader({
               <TooltipTrigger asChild>
                 <Button
                   id="btnStrategyConfig"
+                  aria-haspopup="dialog"
+                  aria-expanded={isStrategyConfigActive}
                   variant="outline"
                   size="icon"
                   aria-label={strategyConfigTooltip}
@@ -71,6 +73,8 @@ export function StrategyHeader({
               <TooltipTrigger asChild>
                 <Button
                   id="btnStrategyParameters"
+                  aria-haspopup="dialog"
+                  aria-expanded={isStrategyParametersActive}
                   variant="outline"
                   size="icon"
                   aria-label={strategyParametersTooltip}

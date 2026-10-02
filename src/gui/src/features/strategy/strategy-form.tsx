@@ -277,11 +277,11 @@ export function StrategyForm({
     await onSubmit?.(normalizedValues);
   }
 
-  const renderParameterFields = (isHorizontal = false) => {
+  const renderParameterFields = () => {
     const indicatorEntries = Object.entries(indicators ?? {});
 
     return (
-      <div className={cn("flex gap-3", isHorizontal ? "flex-row" : "flex-col")}>
+      <div className="flex flex-col gap-3">
         {!isReadOnly ? (
           <div className="flex justify-start">
             <Tooltip>
@@ -308,7 +308,6 @@ export function StrategyForm({
             control={form.control}
             name={`indicators.${key}`}
             isReadOnly={isReadOnly}
-            isHorizontal={isHorizontal}
             onRemove={() => {
               const current = form.getValues("indicators") ?? {};
               const nextIndicators = { ...current };
@@ -343,7 +342,7 @@ export function StrategyForm({
             <FieldGroup
               className={cn("flex flex-col", isCompact ? "gap-3" : "gap-4")}
             >
-              {renderParameterFields(true)}
+              {renderParameterFields()}
             </FieldGroup>
           </FieldSet>
         ) : (
