@@ -23,6 +23,7 @@ import { STRATEGY_CONFIG } from "@/data/strategy-config";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
 import { StrategyToolbar } from "@/features/strategy/strategy-toolbar";
 import { StrategySelect } from "@/features/strategy/strategy-select";
+import { IndicatorSnapshot } from "@/features/strategy/indicator-snapshot";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
 import type { Indicators } from "@/features/api/schema/indicators-schema";
@@ -158,6 +159,7 @@ export function StrategyPage() {
     });
   const [chartSeriesLabelPositions, setChartSeriesLabelPositions] =
     React.useState<ChartSeriesLabelPosition[]>([]);
+  const [chartRightScaleWidth, setChartRightScaleWidth] = React.useState(0);
 
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -175,6 +177,10 @@ export function StrategyPage() {
     React.useState<PriceDirection>("flat");
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
   const [symbolName, setSymbolName] = React.useState<string | null>(null);
+  const [indicatorSnapshots, setIndicatorSnapshots] = React.useState<
+    Indicators["snapshots"]
+  >([]);
+  const indicatorSnapshotsRef = React.useRef<Map<string, number>>(new Map());
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const previousPriceRef = React.useRef<number | null>(null);
@@ -418,6 +424,8 @@ export function StrategyPage() {
   const updateChartSeriesLabelPositions = React.useCallback(() => {
     const chart = chartApiRef.current;
     const container = chartRef.current;
+
+    setChartRightScaleWidth(chart?.priceScale("right").width() ?? 0);
 
     if (!chart || !container) {
       setChartSeriesLabelPositions([]);
@@ -705,6 +713,8 @@ export function StrategyPage() {
   };
 
   const resetChartData = () => {
+    indicatorSnapshotsRef.current = new Map();
+    setIndicatorSnapshots([]);
     candleDataByTimeRef.current = new Map();
     volumeDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
@@ -806,6 +816,22 @@ export function StrategyPage() {
     }
   }, []);
 
+  const retainIndicatorSnapshots = (indicators: Indicators[]) => {
+    for (const indicator of indicators) {
+      for (const { key, value } of indicator.snapshots) {
+        indicatorSnapshotsRef.current.set(key, value);
+      }
+    }
+  };
+
+  const applyIndicatorSnapshots = () => {
+    setIndicatorSnapshots(
+      [...indicatorSnapshotsRef.current.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => ({ key, value }))
+    );
+  };
+
   const handleNotification = (envelope: NotificationEnvelope) => {
     switch (envelope.messageType) {
       case MessageType.MarketDataSnapshot: {
@@ -819,6 +845,12 @@ export function StrategyPage() {
             setShowChart(true);
           }
           applyIndicatorsToChart(payload.indicators);
+          retainIndicatorSnapshots(
+            [...payload.indicators].sort(
+              (a, b) => a.timestampUtc.getTime() - b.timestampUtc.getTime()
+            )
+          );
+          applyIndicatorSnapshots();
           applySignalsToChart(payload.signals);
 
           setNotificationMessage(null);
@@ -831,6 +863,7 @@ export function StrategyPage() {
 
         if (payload) {
           applyKlinesToChart([payload]);
+          applyIndicatorSnapshots();
           setShowChart(true);
         }
 
@@ -842,6 +875,7 @@ export function StrategyPage() {
 
         if (payload) {
           applyIndicatorToChart(payload);
+          retainIndicatorSnapshots([payload]);
         }
 
         setNotificationMessage(null);
@@ -1395,7 +1429,7 @@ export function StrategyPage() {
           <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
             <Card className="flex min-h-0 flex-1 flex-col">
               <CardHeader>
-                <CardTitle className="flex min-h-5 items-baseline gap-1">
+                <CardTitle className="flex min-h-5 flex-wrap items-baseline justify-start gap-1 text-left">
                   {hasSymbol ? (
                     <>
                       <h4 className="text-sm text-foreground-semimuted">
@@ -1411,6 +1445,15 @@ export function StrategyPage() {
                       {price}
                     </p>
                   ) : null}
+                  <dl
+                    className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
+                    aria-label="Indicator snapshots"
+                    style={{ marginRight: chartRightScaleWidth }}
+                  >
+                    {indicatorSnapshots.map(({ key, value }) => (
+                      <IndicatorSnapshot key={key} name={key} value={value} />
+                    ))}
+                  </dl>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col">
