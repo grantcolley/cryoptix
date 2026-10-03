@@ -44,25 +44,37 @@ export function StrategyExecution({
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`block w-full min-w-0 ${showUpdateAndStopButtons ? "mr-1" : ""}`}
+            className={
+              showUpdateAndStopButtons
+                ? "block w-auto shrink-0 whitespace-nowrap mr-1"
+                : "block w-full min-w-0"
+            }
           >
             {!showUpdateAndStopButtons ? (
-              <Input
-                id="server-url"
-                type="text"
-                placeholder="Server url..."
-                aria-label="Server url"
-                value={serverUrl}
-                onChange={(event) => onServerUrlChange(event.target.value)}
-                disabled={isConnecting || !showConnectButton}
-              />
+              <span className="flex items-center gap-2">
+                <label htmlFor="server-url" className="shrink-0">
+                  Cryoptix API
+                </label>
+                <Input
+                  id="server-url"
+                  type="text"
+                  placeholder="Server url..."
+                  aria-label="Server url"
+                  value={serverUrl}
+                  onChange={(event) => onServerUrlChange(event.target.value)}
+                  disabled={isConnecting || !showConnectButton}
+                />
+              </span>
             ) : (
-              <p
-                aria-label="Server url"
-                className="text-right text-muted-foreground [overflow-wrap:anywhere]"
-              >
-                {serverUrl}
-              </p>
+              <span className="flex items-center justify-end gap-2">
+                <span className="shrink-0 ">Cryoptix API</span>
+                <span
+                  aria-label="Server url"
+                  className="text-right text-muted-foreground"
+                >
+                  {serverUrl}
+                </span>
+              </span>
             )}
           </span>
         </TooltipTrigger>
