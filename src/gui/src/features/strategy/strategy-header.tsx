@@ -7,10 +7,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Strategy } from "@/features/api/schema/strategy-schema";
+import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
 
 interface StrategyHeaderProps {
   showStrategyRunning: boolean;
   strategy: Strategy | null;
+  exchange: Exchange | null;
   isStrategyParametersActive: boolean;
   isStrategyConfigActive: boolean;
   onToggleStrategyParameters: () => void;
@@ -20,11 +22,16 @@ interface StrategyHeaderProps {
 export function StrategyHeader({
   showStrategyRunning,
   strategy,
+  exchange,
   isStrategyParametersActive,
   isStrategyConfigActive,
   onToggleStrategyParameters,
   onToggleStrategyConfig,
 }: StrategyHeaderProps) {
+  const exchangeLabel =
+    exchange === null || exchange === Exchange.None
+      ? null
+      : ExchangeLabels[exchange];
   const strategyConfigTooltip = isStrategyConfigActive
     ? "Hide strategy config"
     : "Show strategy config";
@@ -77,9 +84,20 @@ export function StrategyHeader({
               </TooltipTrigger>
               <TooltipContent>{strategyParametersTooltip}</TooltipContent>
             </Tooltip>
-            <h4 className="text-sm text-foreground-semimuted ml-2 break-words min-w-0">
-              {strategy.name}
-            </h4>
+            <span className="ml-2 flex shrink-0 items-center gap-2">
+              <span className="shrink-0">Strategy</span>
+              <span className="text-right text-muted-foreground">
+                {strategy.name}
+              </span>
+            </span>
+            {exchangeLabel ? (
+              <span className="ml-2 flex shrink-0 items-center gap-2">
+                <span className="shrink-0">Exchange</span>
+                <span className="text-right text-muted-foreground">
+                  {exchangeLabel}
+                </span>
+              </span>
+            ) : null}
           </div>
         </div>
       ) : null}

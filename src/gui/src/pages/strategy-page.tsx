@@ -33,7 +33,6 @@ import type { Trade } from "@/features/api/schema/trade-schema";
 import type { NotificationEnvelope } from "@/features/api/messages/notification-envelope-schema";
 import { NotificationEnvelopeSchema } from "@/features/api/messages/notification-envelope-schema";
 import { MessageType } from "@/features/api/messages/message-type";
-import { Exchange, ExchangeLabels } from "@/features/api/schema/exchange";
 import { IndicatorTypeLabels } from "@/features/api/schema/indicator-type";
 import {
   StrategyStatusSchema,
@@ -176,9 +175,6 @@ export function StrategyPage() {
     React.useState<PriceDirection>("flat");
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
   const [symbolName, setSymbolName] = React.useState<string | null>(null);
-  const [symbolExchange, setSymbolExchange] = React.useState<
-    ApiSymbol["exchange"] | null
-  >(null);
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const previousPriceRef = React.useRef<number | null>(null);
@@ -237,15 +233,10 @@ export function StrategyPage() {
         ? "text-green-600 dark:text-green-400"
         : "text-foreground";
   const valueWidthCh = Math.max(14, valuePrecision + 10);
-  const exchangeLabel =
-    symbolExchange === null || symbolExchange === Exchange.None
-      ? null
-      : ExchangeLabels[symbolExchange];
 
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
     setSymbol(nextSymbol);
     setSymbolName(nextSymbol?.name ?? nextSymbol?.exchangeSymbol ?? null);
-    setSymbolExchange(nextSymbol?.exchange ?? null);
   };
 
   const getIndicatorSeriesLabel = React.useCallback(
@@ -1380,6 +1371,7 @@ export function StrategyPage() {
           headerProps={{
             showStrategyRunning,
             strategy,
+            exchange: symbol?.exchange ?? null,
             isStrategyParametersActive,
             isStrategyConfigActive,
             onToggleStrategyParameters: handleToggleStrategyParameters,
@@ -1406,11 +1398,6 @@ export function StrategyPage() {
                 <CardTitle className="flex min-h-5 items-baseline gap-1">
                   {hasSymbol ? (
                     <>
-                      {exchangeLabel ? (
-                        <h4 className="text-sm text-foreground-semimuted mr-2">
-                          {exchangeLabel}
-                        </h4>
-                      ) : null}
                       <h4 className="text-sm text-foreground-semimuted">
                         {symbolName}
                       </h4>

@@ -24,8 +24,14 @@ export function StrategyToolbar({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <StrategyHeader {...headerProps} />
         <form
-          className={`ml-auto flex w-full min-w-0 items-center gap-1 [&>span]:min-w-0 [&>span]:flex-1 ${
-            isHeaderVisible ? "sm:w-auto sm:max-w-full sm:[&>span]:w-64" : ""
+          className={`ml-auto flex items-center gap-1 ${
+            executionProps.showUpdateAndStopButtons
+              ? "w-auto shrink-0"
+              : `w-full min-w-0 [&>span]:min-w-0 [&>span]:flex-1 ${
+                  isHeaderVisible
+                    ? "sm:w-auto sm:max-w-full sm:[&>span]:w-64"
+                    : ""
+                }`
           }`}
           onSubmit={onConnectSubmit}
         >
