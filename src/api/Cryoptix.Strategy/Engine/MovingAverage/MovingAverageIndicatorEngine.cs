@@ -101,10 +101,17 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                             rsi = IndicatorCalculator.RsiUpdate(prev, kline);
                         }
 
-                        if(rsi != null)
+                        if (rsi != null)
                         {
-                            rsis.Add(rsi);
                             snapshots[kvp.Key] = rsi.Value;
+
+                            if (kline.Final)
+                            {
+                                // Only add to the list of RSIs if the kline is final,
+                                // to prevent caching live RSI calculation values and
+                                // avoid duplicates in the next computation.
+                                rsis.Add(rsi);
+                            }
                         }
                     }
                 }
