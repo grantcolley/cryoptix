@@ -1196,6 +1196,7 @@ export function StrategyPage() {
     chart
       .timeScale()
       .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+    chart.timeScale().subscribeSizeChange(updateChartSeriesLabelPositions);
 
     return () => {
       container.removeEventListener("pointerdown", handleChartInteraction);
@@ -1204,6 +1205,7 @@ export function StrategyPage() {
       chart
         .timeScale()
         .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      chart.timeScale().unsubscribeSizeChange(updateChartSeriesLabelPositions);
       signalMarkersRef.current?.detach();
       chartApiRef.current = null;
       candleSeriesRef.current = null;
@@ -1211,6 +1213,7 @@ export function StrategyPage() {
       signalMarkersRef.current = null;
       indicatorSeriesByKeyRef.current = new Map();
       setChartSeriesLabelPositions([]);
+      setChartRightScaleWidth(0);
       chart.remove();
     };
   }, [
