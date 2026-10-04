@@ -123,20 +123,20 @@ namespace Cryoptix.Strategy.Calculators
         /// using the provided latest <paramref name="kline"/>.
         ///
         /// The method applies Wilder smoothing to the average gain and loss values and
-        /// returns a new <see cref="Rsi"/> instance representing
-        /// the RSI state at the provided kline's close time.
+        /// returns a new <see cref="Rsi"/> instance representing the RSI state at the 
+        /// provided kline's close time.
         /// </summary>
         /// <param name="rsi">The previous RSI state to use as the basis for the update.</param>
         /// <param name="kline">The latest finalized kline used to update the RSI.</param>
         /// <returns>
         /// A new <see cref="Rsi"/> with updated averages and value, or the previous RSI if the 
-        /// provided kline is not finalized or is not newer than the existing RSI timestamp.
+        /// provided kline is not newer than the existing RSI timestamp.
         /// </returns>
         public static Rsi RsiUpdate(Rsi rsi, Kline kline)
         {
             // Calculate RSI using the most recent close and Wilder smoothing
 
-            if (!kline.Final || kline.CloseTime <= rsi.TimestampUtc)
+            if (kline.CloseTime <= rsi.TimestampUtc)
                 return rsi;
 
             decimal latest = kline.Close;
