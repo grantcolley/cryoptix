@@ -126,11 +126,15 @@ namespace Cryoptix.Strategy.Calculators
         /// returns a new <see cref="Rsi"/> instance representing the RSI state at the 
         /// provided kline's close time.
         /// </summary>
-        /// <param name="rsi">The previous RSI state to use as the basis for the update.</param>
-        /// <param name="kline">The latest finalized kline used to update the RSI.</param>
+        /// <param name="rsi">The RSI state calculated from the most recent finalized kline.</param>
+        /// <param name="kline">
+        /// The current kline used to calculate the RSI snapshot. 
+        /// The kline may be a live or finalized kline.
+        /// </param>
         /// <returns>
         /// A new <see cref="Rsi"/> with updated averages and value, or the previous RSI if the 
         /// provided kline is not newer than the existing RSI timestamp.
+        /// The caller should persist the returned state only when <paramref name="kline"/> is final.
         /// </returns>
         public static Rsi RsiUpdate(Rsi rsi, Kline kline)
         {
