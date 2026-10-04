@@ -126,7 +126,8 @@ namespace Cryoptix.Exchange.Binance
                               NumberOfTrades = k.TradeCount,
                               QuoteAssetVolume = k.QuoteVolume,
                               TakerBuyQuoteAssetVolume = k.TakerBuyQuoteVolume,
-                              TakerBuyBaseAssetVolume = k.TakerBuyBaseVolume
+                              TakerBuyBaseAssetVolume = k.TakerBuyBaseVolume,
+                              Final = k.CloseTime < endTime // If the close time is before the requested end time, it's final; otherwise, it's still open
                           }];
 
             return klines;
