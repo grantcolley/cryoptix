@@ -140,44 +140,6 @@ namespace Cryoptix.Strategy.Dispatcher
                 return;
             }
 
-            StrategyAnalysisContext context =
-                _strategyAnalysisContextFactory.CreateForTrade(session, marketEvent);
-
-            IStrategyEnginePair enginePair =
-                _strategyEnginePairFactory.Get(context.Strategy.StrategyEngineType);
-
-            IndicatorComputationResult indicatorsResult =
-                await enginePair.IndicatorEngine.ComputeAsync(context, cancellationToken);
-
-            if (indicatorsResult.Indicators.TimestampUtc != DateTime.MinValue)
-            {
-                // Upsert and broadcast indicators for trades as well
-                session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicatorsResult.Indicators);
-
-                if (indicatorsResult.Rsis != null && indicatorsResult.Rsis.Count > 0)
-                {
-                    session.Cache.UpsertRsis(context.Strategy.Symbol!, indicatorsResult.Rsis);
-                }
-
-                if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
-                {
-                    LogDebug.IndicatorsDropped(_logger, context.Strategy.Symbol!);
-                }
-            }
-
-            SignalEvaluationResult signal =
-                await enginePair.SignalEngine.EvaluateAsync(context, indicatorsResult, cancellationToken);
-
-            if (signal.Signal.SignalType != SignalType.None)
-            {
-                session.Cache.UpsertSignal(context.Strategy.Symbol!, signal.Signal);
-
-                if (!channels.SignalBroadcasts.Writer.TryWrite(signal.Signal))
-                {
-                    LogDebug.SignalDropped(_logger, context.Strategy.Symbol!);
-                }
-            }
-
             LogInformation.TradeProcessed(_logger,
                 marketEvent.Trade.Symbol!,
                 marketEvent.Trade.Id,
@@ -185,8 +147,6 @@ namespace Cryoptix.Strategy.Dispatcher
                 marketEvent.Trade.Price,
                 marketEvent.Trade.BaseQuantity,
                 marketEvent.Trade.QuoteQuantity);
-
-            await _strategySignalHandler.HandleAsync(context, signal, cancellationToken);
         }
     }
 }
