@@ -142,7 +142,7 @@ public sealed class IndicatorCalculatorTests
     }
 
     [TestMethod]
-    public void Rsi_UpdateWithNonFinalKline_ReturnsPrevious()
+    public void Rsi_UpdateWithNonFinalKline_ReturnsLiveRsi()
     {
         DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         List<Kline> mixed = [ Kline(start, 100m), Kline(start.AddMinutes(1), 102m), Kline(start.AddMinutes(2), 101m), Kline(start.AddMinutes(3), 103m) ];
@@ -152,11 +152,11 @@ public sealed class IndicatorCalculatorTests
         Kline nextUnfinal = new() { Symbol = "BTCUSDT", Interval = KlineInterval.Minute, OpenTime = start.AddMinutes(4), CloseTime = start.AddMinutes(5), Close = 105m, Final = false };
         Rsi? stayed = IndicatorCalculator.RsiUpdate(r4!, nextUnfinal);
         Assert.IsNotNull(stayed);
-        Assert.AreEqual(r4.Value, stayed.Value);
+        Assert.AreEqual(87.5m, stayed.Value);
     }
 
     [TestMethod]
-    public void Rsi_UpdateWithOldKline_ReturnsPrevious()
+    public void Rsi_UpdateWithOldKline_ReturnsPreviousRsi()
     {
         DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         List<Kline> mixed = [ Kline(start, 100m), Kline(start.AddMinutes(1), 102m), Kline(start.AddMinutes(2), 101m), Kline(start.AddMinutes(3), 103m) ];
