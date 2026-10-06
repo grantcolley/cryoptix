@@ -1,6 +1,5 @@
 using Cryoptix.Market.Data;
 using Cryoptix.Strategy.Indicators;
-using System.Linq;
 
 namespace Cryoptix.Strategy.Calculators
 {
@@ -41,11 +40,7 @@ namespace Cryoptix.Strategy.Calculators
                 return Sma(klines, period);
             }
 
-            decimal multiplier = 2m / (period + 1);
-            decimal latestClose = klines[^1].Close;
-            decimal prev = previousEma.Value;
-
-            return (latestClose - prev) * multiplier + prev;
+            return CalculateEma(klines[^1].Close, previousEma.Value, period);
         }
 
         /// <summary>
@@ -160,6 +155,13 @@ namespace Cryoptix.Strategy.Calculators
                 Value = CalculateRsi(newAvgGain, newAvgLoss),
                 TimestampUtc = kline.CloseTime
             };
+        }
+
+        private static decimal CalculateEma(decimal value, decimal previousEma, int period)
+        {
+            decimal multiplier = 2m / (period + 1);
+
+            return (value - previousEma) * multiplier + previousEma;
         }
 
         private static decimal CalculateRsi(decimal averageGain, decimal averageLoss)
