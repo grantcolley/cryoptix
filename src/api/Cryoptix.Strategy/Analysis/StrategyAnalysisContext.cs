@@ -38,6 +38,13 @@ namespace Cryoptix.Strategy.Analysis
         /// </summary>
         public IReadOnlyList<Indicators.Rsi> Rsis { get; init; } = [];
         /// <summary>
+        /// Gets or sets the latest computed MACD snapshots for the strategy symbol
+        /// across multiple periods. Each entry represents the most recent MACD state
+        /// for a particular period. The collection may be empty when no MACD data is
+        /// available for the symbol.
+        /// </summary>
+        public IReadOnlyList<Indicators.Macd> Macds { get; init; } = [];
+        /// <summary>
         /// Gets or sets the trades.
         /// </summary>
         public required IReadOnlyList<Trade> Trades { get; init; }
