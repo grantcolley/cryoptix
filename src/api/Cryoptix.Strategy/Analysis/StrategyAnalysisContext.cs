@@ -31,6 +31,13 @@ namespace Cryoptix.Strategy.Analysis
         /// </summary>
         public required IReadOnlyList<Market.Strategy.Indicators> Indicators { get; init; }
         /// <summary>
+        /// Gets or sets the latest computed EMA snapshots for the strategy symbol
+        /// across multiple periods. Each entry represents the most recent EMA state
+        /// for a particular period. The collection may be empty when no EMA data is
+        /// available for the symbol.
+        /// </summary>
+        public IReadOnlyList<Indicators.Ema> Emas { get; init; } = [];
+        /// <summary>
         /// Gets or sets the latest computed RSI snapshots for the strategy symbol
         /// across multiple periods. Each entry represents the most recent RSI state
         /// for a particular period. The collection may be empty when no RSI data is
