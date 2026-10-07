@@ -130,7 +130,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 Rsis = rsis,
                 Indicators = new Market.Strategy.Indicators
                 {
-                    TimestampUtc = kline.CloseTime,
+                    TimestampUtc = kline.OpenTime,
                     Series = series.ToImmutableDictionary(),
                     Snapshots = snapshots.ToImmutableDictionary(),
                 },
