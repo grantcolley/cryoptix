@@ -43,6 +43,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 return Task.FromResult(IndicatorComputationResult.Empty(DateTime.MinValue));
             }
 
+            List<Ema> emas = [];
             List<Rsi> rsis = [];
             Dictionary<string, decimal> series = [];
             Dictionary<string, decimal> snapshots = [];
@@ -50,11 +51,6 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             if (context.Strategy.Indicators != null)
             {
                 DateTime currentCloseTime = kline.CloseTime;
-
-                Market.Strategy.Indicators? previousIndicators = context.Indicators
-                    .Where(i => i.TimestampUtc < currentCloseTime)
-                    .OrderByDescending(i => i.TimestampUtc)
-                    .FirstOrDefault();
 
                 foreach (var kvp in context.Strategy.Indicators)
                 {
@@ -71,20 +67,29 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
-                        decimal? computed = null;
+                        Ema? ema;
+                        Ema? previousEma = context.Emas?.FirstOrDefault(x => x.Period == indicator.Value);
 
-                        if (previousIndicators?.Series.TryGetValue(kvp.Key, out decimal previousEma) == true)
+                        if (previousEma == null)
                         {
-                            computed = IndicatorCalculator.Ema(klines, indicator.Value, previousEma);
+                            ema = IndicatorCalculator.EmaInitialize(klines, indicator.Value);
                         }
                         else
                         {
-                            computed = IndicatorCalculator.Ema(klines, indicator.Value);
+                            ema = IndicatorCalculator.EmaUpdate(previousEma, kline);
                         }
 
-                        if (computed.HasValue)
+                        if (ema != null)
                         {
-                            series[kvp.Key] = computed.Value;
+                            series[kvp.Key] = ema.Value;
+
+                            if (kline.Final)
+                            {
+                                // Only add to the list of EMAs if the kline is final,
+                                // to prevent caching live EMA calculation values and
+                                // avoid duplicates in the next computation.
+                                emas.Add(ema);
+                            }
                         }
                     }
                     else if (indicator.IndicatorType == IndicatorType.Rsi)
@@ -121,6 +126,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             return Task.FromResult(new IndicatorComputationResult
             {
+                Emas = emas,
                 Rsis = rsis,
                 Indicators = new Market.Strategy.Indicators
                 {
