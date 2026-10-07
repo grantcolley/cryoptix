@@ -8,7 +8,6 @@ using Cryoptix.Strategy.Snapshot;
 using Cryoptix.Strategy.Indicators;
 using Cryoptix.Strategy.Calculators;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Collections.Immutable;
 
 namespace Cryoptix.Strategy.Tests;
 
@@ -54,7 +53,7 @@ public sealed class MovingAverageIndicatorEngineTests
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
         // Assert
-        Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
+        Assert.AreEqual(klines[^1].OpenTime, result.Indicators.TimestampUtc);
 
         Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Series["3 SMA"]);
         Assert.AreEqual(108.4m, result.Indicators.Series["5 SMA"]);
@@ -85,9 +84,14 @@ public sealed class MovingAverageIndicatorEngineTests
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
         // Assert
-        // No previous EMA exists, so EMA should be initialized with SMA for the period
-        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Series["3 EMA"]);
-        Assert.AreEqual(klines[^1].CloseTime, result.Indicators.TimestampUtc);
+        // EMA is seeded with the first-period SMA, then smoothed over remaining history.
+        Assert.AreEqual(
+            109.43229166666666666666666667m,
+            result.Indicators.Series["3 EMA"],
+            0.00000000000000000000000001m);
+        Assert.AreEqual(1, result.Emas.Count);
+        Assert.AreEqual(result.Indicators.Series["3 EMA"], result.Emas[0].Value);
+        Assert.AreEqual(klines[^1].OpenTime, result.Indicators.TimestampUtc);
     }
 
     [TestMethod]
@@ -107,18 +111,19 @@ public sealed class MovingAverageIndicatorEngineTests
             }
         };
 
-        // Provide a previous EMA value that occurred before the current close time
-        decimal previousEma = 108m;
-        List<Market.Strategy.Indicators> previousIndicators =
-        [
-            new() {
-                TimestampUtc = klines[^1].CloseTime.AddMinutes(-1),
-                Series = new Dictionary<string, decimal> { ["3 EMA"] = previousEma }.ToImmutableDictionary(),
-                Snapshots = new Dictionary<string, decimal>().ToImmutableDictionary()
-            }
-        ];
-
-        StrategyAnalysisContext context = StrategyAnalysisContext(klines, previousIndicators, klines[^1], strategy);
+        // Provide a previous EMA state before the current kline close time.
+        Ema previousEma = new()
+        {
+            Period = 3,
+            Value = 108m,
+            TimestampUtc = klines[^1].CloseTime.AddMinutes(-1)
+        };
+        StrategyAnalysisContext context = StrategyAnalysisContext(
+            klines,
+            [],
+            klines[^1],
+            strategy,
+            emas: [previousEma]);
 
         // Act
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
@@ -126,6 +131,8 @@ public sealed class MovingAverageIndicatorEngineTests
         // Assert
         // multiplier = 2/(3+1) = 0.5, latestClose = 110m => newEma = ((110 - 108) * 0.5) + 108 = 109m
         Assert.AreEqual(109m, result.Indicators.Series["3 EMA"]);
+        Assert.AreEqual(1, result.Emas.Count);
+        Assert.AreEqual(109m, result.Emas[0].Value);
     }
 
     [TestMethod]
@@ -174,7 +181,8 @@ public sealed class MovingAverageIndicatorEngineTests
         IReadOnlyList<Market.Strategy.Indicators> indicators,
         Kline? currentKline,
         Strategies.Strategy strategy,
-        MarketEventKind kind = MarketEventKind.Kline)
+        MarketEventKind kind = MarketEventKind.Kline,
+        IReadOnlyList<Ema>? emas = null)
     {
         return new StrategyAnalysisContext
         {
@@ -183,6 +191,7 @@ public sealed class MovingAverageIndicatorEngineTests
             Klines = klines,
             Trades = [],
             Indicators = indicators,
+            Emas = emas ?? [],
             CurrentEvent = new MarketEventEnvelope
             {
                 Kind = kind,
