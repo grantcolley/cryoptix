@@ -13,6 +13,13 @@ namespace Cryoptix.Strategy.Engine
         public required Market.Strategy.Indicators Indicators { get; init; }
 
         /// <summary>
+        /// Gets or sets the EMA (Exponential Moving Average) computation results for one
+        /// or more periods. Engines should populate this collection with the EMA
+        /// snapshots they computed during the indicator calculation pass.
+        /// </summary>
+        public required IReadOnlyList<Ema> Emas { get; init; }
+
+        /// <summary>
         /// Gets or sets the RSI (Relative Strength Index) computation results for one
         /// or more periods. Engines should populate this collection with the RSI
         /// snapshots they computed during the indicator calculation pass.
