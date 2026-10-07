@@ -34,16 +34,77 @@ public sealed class IndicatorCalculatorTests
     }
 
     [TestMethod]
-    public void CalculateEma_UsesPreviousEma()
+    public void EmaInitialize_SeedsAndSmoothsFinalizedHistory()
     {
         DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        List<Kline> klines = RealisticKlines(start);
+        List<Kline> klines = [
+            Kline(start, 100m),
+            Kline(start.AddMinutes(1), 102m),
+            Kline(start.AddMinutes(2), 104m)
+        ];
 
-        decimal previousEma = 108m;
-        decimal? ema = IndicatorCalculator.Ema(klines, 3, previousEma);
+        Ema? ema = IndicatorCalculator.EmaInitialize(klines, 2);
 
-        Assert.IsTrue(ema.HasValue);
-        Assert.AreEqual(109m, ema.Value);
+        Assert.IsNotNull(ema);
+        Assert.AreEqual(103m, ema!.Value);
+        Assert.AreEqual(klines[^1].CloseTime, ema.TimestampUtc);
+    }
+
+    [TestMethod]
+    public void EmaInitialize_IgnoresTrailingNonFinalKline()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = [
+            Kline(start, 100m),
+            Kline(start.AddMinutes(1), 102m),
+            Kline(start.AddMinutes(2), 104m),
+            new() { Symbol = "BTCUSDT", Interval = KlineInterval.Minute, OpenTime = start.AddMinutes(3), CloseTime = start.AddMinutes(4), Close = 500m, Final = false }
+        ];
+
+        Ema? ema = IndicatorCalculator.EmaInitialize(klines, 2);
+
+        Assert.IsNotNull(ema);
+        Assert.AreEqual(103m, ema!.Value);
+        Assert.AreEqual(klines[2].CloseTime, ema.TimestampUtc);
+    }
+
+    [TestMethod]
+    public void EmaInitialize_InvalidPeriodOrInsufficientFinalizedKlines_ReturnsNull()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = [Kline(start, 100m), Kline(start.AddMinutes(1), 102m)];
+
+        Assert.IsNull(IndicatorCalculator.EmaInitialize(klines, 0));
+        Assert.IsNull(IndicatorCalculator.EmaInitialize(klines, 3));
+    }
+
+    [TestMethod]
+    public void EmaUpdate_UsesPreviousStateAndNewKline()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> initialKlines = [Kline(start, 100m), Kline(start.AddMinutes(1), 102m)];
+        Ema? initial = IndicatorCalculator.EmaInitialize(initialKlines, 2);
+        Assert.IsNotNull(initial);
+
+        Kline next = Kline(start.AddMinutes(2), 104m);
+        Ema updated = IndicatorCalculator.EmaUpdate(initial!, next);
+
+        Assert.AreEqual(103m, updated.Value);
+        Assert.AreEqual(next.CloseTime, updated.TimestampUtc);
+        Assert.AreEqual(101m, initial.Value);
+    }
+
+    [TestMethod]
+    public void EmaUpdate_WithNonNewerKline_ReturnsPreviousState()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Ema? initial = IndicatorCalculator.EmaInitialize([Kline(start, 100m), Kline(start.AddMinutes(1), 102m)], 2);
+        Assert.IsNotNull(initial);
+
+        Ema updated = IndicatorCalculator.EmaUpdate(initial!, Kline(start.AddMinutes(1), 105m));
+
+        Assert.AreSame(initial, updated);
+        Assert.AreEqual(101m, updated.Value);
     }
 
     [TestMethod]
