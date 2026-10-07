@@ -29,14 +29,14 @@ public sealed class MarketDataCacheTests
         ]);
 
         // Act
-        Symbol? result = cache.GetSymbolForStrategy(" btcusdt ");
+        Symbol? result = cache.GetSymbol(" btcusdt ");
 
         // Assert
         Assert.IsNotNull(result);
         Assert.AreEqual("BTCUSDT", result.ExchangeSymbol);
         Assert.AreEqual("BTC", result.BaseAsset);
-        Assert.IsNull(cache.GetSymbolForStrategy("ethusdt"));
-        Assert.IsNull(cache.GetSymbolForStrategy(" "));
+        Assert.IsNull(cache.GetSymbol("ethusdt"));
+        Assert.IsNull(cache.GetSymbol(" "));
     }
 
     [TestMethod]
