@@ -34,6 +34,7 @@ namespace Cryoptix.Strategy.Engine
         public static IndicatorComputationResult Empty(DateTime timestampUtc) =>
             new()
             {
+                Emas = [],
                 Rsis = [],
                 Indicators = new Market.Strategy.Indicators
                 {
