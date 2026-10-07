@@ -31,6 +31,7 @@ namespace Cryoptix.Strategy.Analysis
                 Trades = session.Cache.GetTrades(session.Strategy.Symbol!),
                 Indicators = session.Cache.GetIndicators(session.Strategy.Symbol!),
                 Rsis = session.Cache.GetRsis(session.Strategy.Symbol!),
+                Macds = session.Cache.GetMacds(session.Strategy.Symbol!),
                 CurrentEvent = new MarketEventEnvelope
                 {
                     Kind = MarketEventKind.Kline,
@@ -62,6 +63,7 @@ namespace Cryoptix.Strategy.Analysis
                 Trades = session.Cache.GetTrades(session.Strategy.Symbol!),
                 Indicators = session.Cache.GetIndicators(session.Strategy.Symbol!),
                 Rsis = session.Cache.GetRsis(session.Strategy.Symbol!),
+                Macds = session.Cache.GetMacds(session.Strategy.Symbol!),
                 CurrentEvent = new MarketEventEnvelope
                 {
                     Kind = MarketEventKind.Trade,
