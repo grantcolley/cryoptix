@@ -26,24 +26,6 @@ namespace Cryoptix.Strategy.Calculators
         }
 
         /// <summary>
-        /// Calculates the exponential moving average using the latest close and an optional previous EMA.
-        /// If previousEma is null the EMA is initialized using the SMA. Returns null when period is invalid or not enough data.
-        /// </summary>
-        public static decimal? Ema(IReadOnlyList<Kline> klines, int period, decimal? previousEma = null)
-        {
-            if (period <= 0 || klines.Count < period)
-                return null;
-
-            // When no previous EMA is provided, initialize EMA with SMA
-            if (!previousEma.HasValue)
-            {
-                return Sma(klines, period);
-            }
-
-            return CalculateEma(klines[^1].Close, previousEma.Value, period);
-        }
-
-        /// <summary>
         /// Initializes an <see cref="Ema"/> state from historical klines for the specified
         /// <paramref name="period"/>.
         ///
