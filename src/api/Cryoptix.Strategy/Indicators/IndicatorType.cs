@@ -21,5 +21,9 @@ namespace Cryoptix.Strategy.Indicators
         /// Specifies the rsi value.
         /// </summary>
         Rsi,
+        /// <summary>
+        /// Specifies the macd value.
+        /// </summary>
+        Macd,
     }
 }

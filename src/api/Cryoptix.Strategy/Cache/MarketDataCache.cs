@@ -17,12 +17,14 @@ namespace Cryoptix.Strategy.Cache
         private readonly Lock _tradesGate = new();
         private readonly Lock _indicatorsGate = new();
         private readonly Lock _rsiGate = new();
+        private readonly Lock _macdGate = new();
         private readonly Lock _signalsGate = new();
 
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
         private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
         private readonly Dictionary<string, Dictionary<int, Indicators.Rsi>> _rsis = [];
+        private readonly Dictionary<string, Dictionary<(int FastPeriod, int SlowPeriod, int SignalPeriod), Indicators.Macd>> _macds = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Indicators>> _indicators = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Signal>> _signals = [];
         private readonly HashSet<Symbol> _symbols = new(SymbolComparer.Instance);
@@ -169,6 +171,7 @@ namespace Cryoptix.Strategy.Cache
                 string key = NormalizeSymbol(symbol);
 
                 var dict = new Dictionary<int, Indicators.Rsi>(rsis.Count);
+
                 foreach (var r in rsis)
                 {
                     if (r == null)
@@ -178,6 +181,42 @@ namespace Cryoptix.Strategy.Cache
                 }
 
                 _rsis[key] = dict;
+            }
+        }
+
+        /// <summary>
+        /// Replaces the cached MACDs for the specified symbol with the provided set.
+        /// This operation overwrites any previously cached MACDs for the symbol and
+        /// replaces them with the given collection. The provided collection may
+        /// contain multiple MACD snapshots with different fast, slow, and signal periods.
+        /// </summary>
+        /// <param name="symbol">The symbol whose cached MACDs are to be replaced.</param>
+        /// <param name="macds">Collection of MACD snapshots to cache for the symbol.</param>
+        public void UpsertMacds(string symbol, IReadOnlyCollection<Indicators.Macd> macds)
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNull(macds);
+
+            lock (_macdGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                var dict = new Dictionary<(int FastPeriod, int SlowPeriod, int SignalPeriod), Indicators.Macd>(macds.Count);
+
+                foreach (var macd in macds)
+                {
+                    if (macd == null)
+                        continue;
+
+                    var macdKey = (
+                        macd.FastPeriod,
+                        macd.SlowPeriod,
+                        macd.SignalPeriod);
+
+                    dict[macdKey] = CloneMacd(macd);
+                }
+
+                _macds[key] = dict;
             }
         }
 
@@ -197,6 +236,30 @@ namespace Cryoptix.Strategy.Cache
                     return [];
 
                 return [.. dict.Values.Select(CloneRsi)];
+            }
+        }
+
+        /// <summary>
+        /// Gets the latest cached MACDs for the specified symbol.
+        /// Returns an empty list when no MACDs are cached for the symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol whose cached MACDs are to be returned.</param>
+        /// <returns>
+        /// A read-only list containing copies of the latest cached MACD snapshots
+        /// for the specified symbol.
+        /// </returns>
+        public IReadOnlyList<Indicators.Macd> GetMacds(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_macdGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_macds.TryGetValue(key, out var dict))
+                    return [];
+
+                return [.. dict.Values.Select(CloneMacd)];
             }
         }
 
@@ -503,6 +566,22 @@ namespace Cryoptix.Strategy.Cache
                 AverageGain = source.AverageGain,
                 AverageLoss = source.AverageLoss,
                 Value = source.Value,
+                TimestampUtc = source.TimestampUtc
+            };
+        }
+
+        private static Indicators.Macd CloneMacd(Indicators.Macd source)
+        {
+            return new Indicators.Macd
+            {
+                FastPeriod = source.FastPeriod,
+                SlowPeriod = source.SlowPeriod,
+                SignalPeriod = source.SignalPeriod,
+                FastEma = source.FastEma,
+                SlowEma = source.SlowEma,
+                Value = source.Value,
+                Signal = source.Signal,
+                Histogram = source.Histogram,
                 TimestampUtc = source.TimestampUtc
             };
         }
