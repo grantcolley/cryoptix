@@ -43,7 +43,7 @@ namespace Cryoptix.Strategy.Cache
             {
                 Strategy = strategy,
                 SnapshotTimeUtc = _strategyClock.UtcNow,
-                Symbol = session.Cache.GetSymbolForStrategy(strategy.Symbol ?? string.Empty) ?? new Symbol(),
+                Symbol = session.Cache.GetSymbol(strategy.Symbol ?? string.Empty) ?? new Symbol(),
                 Klines = [.. session.Cache.GetKlines(strategy.Symbol ?? string.Empty, strategy.KlineInterval)],
                 Trades = [.. session.Cache.GetTrades(strategy.Symbol ?? string.Empty)],
                 Indicators = [.. session.Cache.GetIndicators(strategy.Symbol ?? string.Empty)],
