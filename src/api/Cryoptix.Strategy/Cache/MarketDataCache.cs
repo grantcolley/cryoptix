@@ -16,6 +16,7 @@ namespace Cryoptix.Strategy.Cache
         private readonly Lock _klinesGate = new();
         private readonly Lock _tradesGate = new();
         private readonly Lock _indicatorsGate = new();
+        private readonly Lock _emaGate = new();
         private readonly Lock _rsiGate = new();
         private readonly Lock _macdGate = new();
         private readonly Lock _signalsGate = new();
@@ -23,6 +24,7 @@ namespace Cryoptix.Strategy.Cache
         private readonly Dictionary<(string Symbol, KlineInterval Interval), SortedDictionary<DateTime, Kline>> _klines = [];
         private readonly Dictionary<string, LinkedList<Trade>> _trades = [];
         private readonly Dictionary<string, HashSet<long>> _tradeIds = [];
+        private readonly Dictionary<string, Dictionary<int, Indicators.Ema>> _emas = [];
         private readonly Dictionary<string, Dictionary<int, Indicators.Rsi>> _rsis = [];
         private readonly Dictionary<string, Dictionary<(int FastPeriod, int SlowPeriod, int SignalPeriod), Indicators.Macd>> _macds = [];
         private readonly Dictionary<string, SortedDictionary<DateTime, Market.Strategy.Indicators>> _indicators = [];
@@ -47,6 +49,218 @@ namespace Cryoptix.Strategy.Cache
             _maxKlinesPerSeries = maxKlinesPerSeries;
             _maxIndicatorsPerSeries = maxIndicatorsPerSeries;
             _maxSignalsPerSeries = maxSignalsPerSeries;
+        }
+
+        /// <summary>
+        /// Executes the add trade operation.
+        /// </summary>
+        /// <param name="trade">The trade value.</param>
+        /// <returns>The add trade result.</returns>
+        public bool AddTrade(Trade trade)
+        {
+            ArgumentNullException.ThrowIfNull(trade);
+
+            lock (_tradesGate)
+            {
+                string symbol = NormalizeSymbol(trade.Symbol!);
+
+                if (!_trades.TryGetValue(symbol, out var trades))
+                {
+                    trades = [];
+                    _trades[symbol] = trades;
+                }
+
+                if (!_tradeIds.TryGetValue(symbol, out var tradeIds))
+                {
+                    tradeIds = [];
+                    _tradeIds[symbol] = tradeIds;
+                }
+
+                if (!tradeIds.Add(trade.Id))
+                    return false;
+
+                trades.AddLast(CloneTrade(trade));
+
+                while (trades.Count > _maxTradesPerSymbol)
+                {
+                    LinkedListNode<Trade>? oldest = trades.First;
+
+                    if (oldest == null)
+                        break;
+
+                    trades.RemoveFirst();
+                    tradeIds.Remove(oldest.Value.Id);
+                }
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Executes the get trades operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get trades result.</returns>
+        public IReadOnlyList<Trade> GetTrades(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_tradesGate)
+            {
+                symbol = NormalizeSymbol(symbol);
+
+                if (!_trades.TryGetValue(symbol, out var trades))
+                    return [];
+
+                return [.. trades.Select(CloneTrade)];
+            }
+        }
+
+        /// <summary>
+        /// Executes the get symbol for strategy operation.
+        /// </summary>
+        /// <param name="strategySymbol">The strategy symbol value.</param>
+        /// <returns>The get symbol for strategy result.</returns>
+        public Symbol? GetSymbol(string strategySymbol)
+        {
+            if (string.IsNullOrWhiteSpace(strategySymbol))
+                return null;
+
+            string normalized = NormalizeSymbol(strategySymbol);
+
+            lock (_symbolsGate)
+            {
+                return _symbols.FirstOrDefault(s =>
+                    string.Equals(s.ExchangeSymbol, normalized, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        /// <summary>
+        /// Executes the get indicators operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get indicators result.</returns>
+        public IReadOnlyList<Market.Strategy.Indicators> GetIndicators(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_indicatorsGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_indicators.TryGetValue(key, out var indicators))
+                    return [];
+
+                return [.. indicators.Values.Select(CloneIndicators)];
+            }
+        }
+
+        /// <summary>
+        /// Executes the get signals operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <returns>The get signals result.</returns>
+        public IReadOnlyList<Market.Strategy.Signal> GetSignals(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_signalsGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_signals.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneSignal)];
+            }
+        }
+
+        /// <summary>
+        /// Gets the latest cached EMAs for the specified symbol.
+        /// Returns an empty list when no EMAs are cached for the symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol whose cached EMAs are to be returned.</param>
+        /// <returns>
+        /// A read-only list containing copies of the latest cached EMA snapshots
+        /// for the specified symbol.
+        /// </returns>
+        public IReadOnlyList<Indicators.Ema> GetEmas(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_emaGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_emas.TryGetValue(key, out var dict))
+                    return [];
+
+                return [.. dict.Values.Select(CloneEma)];
+            }
+        }
+
+        /// <summary>
+        /// Executes the get klines operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="interval">The interval value.</param>
+        /// <returns>The get klines result.</returns>
+        public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_klinesGate)
+            {
+                var key = (NormalizeSymbol(symbol), interval);
+
+                if (!_klines.TryGetValue(key, out var series))
+                    return [];
+
+                return [.. series.Values.Select(CloneKline)];
+            }
+        }
+
+        /// <summary>
+        /// Gets the latest cached RSIs for the specified symbol. Returns an empty list
+        /// when no RSIs are cached for the symbol.
+        /// </summary>
+        public IReadOnlyList<Indicators.Rsi> GetRsis(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_rsiGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_rsis.TryGetValue(key, out var dict))
+                    return [];
+
+                return [.. dict.Values.Select(CloneRsi)];
+            }
+        }
+
+        /// <summary>
+        /// Gets the latest cached MACDs for the specified symbol.
+        /// Returns an empty list when no MACDs are cached for the symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol whose cached MACDs are to be returned.</param>
+        /// <returns>
+        /// A read-only list containing copies of the latest cached MACD snapshots
+        /// for the specified symbol.
+        /// </returns>
+        public IReadOnlyList<Indicators.Macd> GetMacds(string symbol)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+
+            lock (_macdGate)
+            {
+                string key = NormalizeSymbol(symbol);
+
+                if (!_macds.TryGetValue(key, out var dict))
+                    return [];
+
+                return [.. dict.Values.Select(CloneMacd)];
+            }
         }
 
         /// <summary>
@@ -85,25 +299,6 @@ namespace Cryoptix.Strategy.Cache
         }
 
         /// <summary>
-        /// Executes the get symbol for strategy operation.
-        /// </summary>
-        /// <param name="strategySymbol">The strategy symbol value.</param>
-        /// <returns>The get symbol for strategy result.</returns>
-        public Symbol? GetSymbolForStrategy(string strategySymbol)
-        {
-            if (string.IsNullOrWhiteSpace(strategySymbol))
-                return null;
-
-            string normalized = NormalizeSymbol(strategySymbol);
-
-            lock (_symbolsGate)
-            {
-                return _symbols.FirstOrDefault(s =>
-                    string.Equals(s.ExchangeSymbol, normalized, StringComparison.OrdinalIgnoreCase));
-            }
-        }
-
-        /// <summary>
         /// Executes the upsert indicators operation.
         /// </summary>
         /// <param name="symbol">The symbol value.</param>
@@ -134,22 +329,33 @@ namespace Cryoptix.Strategy.Cache
         }
 
         /// <summary>
-        /// Executes the get indicators operation.
+        /// Replaces the cached EMAs for the specified symbol with the provided set.
+        /// This operation overwrites any previously cached EMAs for the symbol and
+        /// replaces them with the given collection. The provided collection may
+        /// contain multiple EMA snapshots for different periods.
         /// </summary>
-        /// <param name="symbol">The symbol value.</param>
-        /// <returns>The get indicators result.</returns>
-        public IReadOnlyList<Market.Strategy.Indicators> GetIndicators(string symbol)
+        /// <param name="symbol">The symbol whose cached EMAs are to be replaced.</param>
+        /// <param name="emas">Collection of EMA snapshots to cache for the symbol.</param>
+        public void UpsertEmas(string symbol, IReadOnlyCollection<Indicators.Ema> emas)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(symbol);
+            ArgumentNullException.ThrowIfNull(emas);
 
-            lock (_indicatorsGate)
+            lock (_emaGate)
             {
                 string key = NormalizeSymbol(symbol);
 
-                if (!_indicators.TryGetValue(key, out var indicators))
-                    return [];
+                var dict = new Dictionary<int, Indicators.Ema>(emas.Count);
 
-                return [.. indicators.Values.Select(CloneIndicators)];
+                foreach (var ema in emas)
+                {
+                    if (ema == null)
+                        continue;
+
+                    dict[ema.Period] = CloneEma(ema);
+                }
+
+                _emas[key] = dict;
             }
         }
 
@@ -221,49 +427,6 @@ namespace Cryoptix.Strategy.Cache
         }
 
         /// <summary>
-        /// Gets the latest cached RSIs for the specified symbol. Returns an empty list
-        /// when no RSIs are cached for the symbol.
-        /// </summary>
-        public IReadOnlyList<Indicators.Rsi> GetRsis(string symbol)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_rsiGate)
-            {
-                string key = NormalizeSymbol(symbol);
-
-                if (!_rsis.TryGetValue(key, out var dict))
-                    return [];
-
-                return [.. dict.Values.Select(CloneRsi)];
-            }
-        }
-
-        /// <summary>
-        /// Gets the latest cached MACDs for the specified symbol.
-        /// Returns an empty list when no MACDs are cached for the symbol.
-        /// </summary>
-        /// <param name="symbol">The symbol whose cached MACDs are to be returned.</param>
-        /// <returns>
-        /// A read-only list containing copies of the latest cached MACD snapshots
-        /// for the specified symbol.
-        /// </returns>
-        public IReadOnlyList<Indicators.Macd> GetMacds(string symbol)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_macdGate)
-            {
-                string key = NormalizeSymbol(symbol);
-
-                if (!_macds.TryGetValue(key, out var dict))
-                    return [];
-
-                return [.. dict.Values.Select(CloneMacd)];
-            }
-        }
-
-        /// <summary>
         /// Executes the upsert signal operation.
         /// </summary>
         /// <param name="symbol">The symbol value.</param>
@@ -290,26 +453,6 @@ namespace Cryoptix.Strategy.Cache
                     DateTime oldest = series.First().Key;
                     series.Remove(oldest);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Executes the get signals operation.
-        /// </summary>
-        /// <param name="symbol">The symbol value.</param>
-        /// <returns>The get signals result.</returns>
-        public IReadOnlyList<Market.Strategy.Signal> GetSignals(string symbol)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_signalsGate)
-            {
-                string key = NormalizeSymbol(symbol);
-
-                if (!_signals.TryGetValue(key, out var series))
-                    return [];
-
-                return [.. series.Values.Select(CloneSignal)];
             }
         }
 
@@ -359,92 +502,6 @@ namespace Cryoptix.Strategy.Cache
                     updated: updated,
                     previous: existing == null ? null : CloneKline(existing),
                     current: CloneKline(kline));
-            }
-        }
-
-        /// <summary>
-        /// Executes the get klines operation.
-        /// </summary>
-        /// <param name="symbol">The symbol value.</param>
-        /// <param name="interval">The interval value.</param>
-        /// <returns>The get klines result.</returns>
-        public IReadOnlyList<Kline> GetKlines(string symbol, KlineInterval interval)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_klinesGate)
-            {
-                var key = (NormalizeSymbol(symbol), interval);
-
-                if (!_klines.TryGetValue(key, out var series))
-                    return [];
-
-                return [.. series.Values.Select(CloneKline)];
-            }
-        }
-
-        /// <summary>
-        /// Executes the add trade operation.
-        /// </summary>
-        /// <param name="trade">The trade value.</param>
-        /// <returns>The add trade result.</returns>
-        public bool AddTrade(Trade trade)
-        {
-            ArgumentNullException.ThrowIfNull(trade);
-
-            lock (_tradesGate)
-            {
-                string symbol = NormalizeSymbol(trade.Symbol!);
-
-                if (!_trades.TryGetValue(symbol, out var trades))
-                {
-                    trades = [];
-                    _trades[symbol] = trades;
-                }
-
-                if (!_tradeIds.TryGetValue(symbol, out var tradeIds))
-                {
-                    tradeIds = [];
-                    _tradeIds[symbol] = tradeIds;
-                }
-
-                if (!tradeIds.Add(trade.Id))
-                    return false;
-
-                trades.AddLast(CloneTrade(trade));
-
-                while (trades.Count > _maxTradesPerSymbol)
-                {
-                    LinkedListNode<Trade>? oldest = trades.First;
-
-                    if (oldest == null)
-                        break;
-
-                    trades.RemoveFirst();
-                    tradeIds.Remove(oldest.Value.Id);
-                }
-
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Executes the get trades operation.
-        /// </summary>
-        /// <param name="symbol">The symbol value.</param>
-        /// <returns>The get trades result.</returns>
-        public IReadOnlyList<Trade> GetTrades(string symbol)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(symbol);
-
-            lock (_tradesGate)
-            {
-                symbol = NormalizeSymbol(symbol);
-
-                if (!_trades.TryGetValue(symbol, out var trades))
-                    return [];
-
-                return [.. trades.Select(CloneTrade)];
             }
         }
 
@@ -554,6 +611,16 @@ namespace Cryoptix.Strategy.Cache
                 TimestampUtc = source.TimestampUtc,
                 SignalType = source.SignalType,
                 Reason = source.Reason
+            };
+        }
+
+        private static Indicators.Ema CloneEma(Indicators.Ema source)
+        {
+            return new Indicators.Ema
+            {
+                Period = source.Period,
+                Value = source.Value,
+                TimestampUtc = source.TimestampUtc
             };
         }
 
