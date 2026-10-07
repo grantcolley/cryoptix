@@ -62,6 +62,7 @@ namespace Cryoptix.Strategy.Analysis
                 Klines = session.Cache.GetKlines(session.Strategy.Symbol!, session.Strategy.KlineInterval),
                 Trades = session.Cache.GetTrades(session.Strategy.Symbol!),
                 Indicators = session.Cache.GetIndicators(session.Strategy.Symbol!),
+                Emas = session.Cache.GetEmas(session.Strategy.Symbol!),
                 Rsis = session.Cache.GetRsis(session.Strategy.Symbol!),
                 Macds = session.Cache.GetMacds(session.Strategy.Symbol!),
                 CurrentEvent = new MarketEventEnvelope
