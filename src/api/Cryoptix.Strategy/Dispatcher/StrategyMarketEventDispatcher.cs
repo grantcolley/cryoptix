@@ -96,6 +96,11 @@ namespace Cryoptix.Strategy.Dispatcher
                     session.Cache.UpsertRsis(context.Strategy.Symbol!, indicatorsResult.Rsis);
                 }
 
+                if(indicatorsResult.Emas != null && indicatorsResult.Emas.Count > 0)
+                {
+                    session.Cache.UpsertEmas(context.Strategy.Symbol!, indicatorsResult.Emas);
+                }
+
                 if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))
                 {
                     LogDebug.IndicatorsDropped(_logger, context.Strategy.Symbol!);
