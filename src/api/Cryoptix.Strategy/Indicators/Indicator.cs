@@ -31,6 +31,6 @@ namespace Cryoptix.Strategy.Indicators
         /// The parameter types must exactly match the selected indicator type.
         /// An indicator of type None has no parameters.
         /// </remarks>
-        public List<IndicatorValue> Values { get; set; } = new();
+        public List<IndicatorValue> Values { get; set; } = [];
     }
 }
