@@ -5,6 +5,7 @@ export const IndicatorType = {
   Sma: 1,
   Ema: 2,
   Rsi: 3,
+  Macd: 4,
 } as const;
 
 export const IndicatorTypeSchema = z.enum(IndicatorType);
@@ -16,4 +17,5 @@ export const IndicatorTypeLabels: Record<IndicatorType, string> = {
   [IndicatorType.Sma]: "SMA",
   [IndicatorType.Ema]: "EMA",
   [IndicatorType.Rsi]: "RSI",
+  [IndicatorType.Macd]: "MACD",
 };

@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
 import {
@@ -27,6 +26,8 @@ import {
   StrategyEngineTypeLabels,
 } from "@/features/api/schema/strategy-engine-type";
 import { IndicatorType } from "@/features/api/schema/indicator-type";
+import { IndicatorValueType } from "@/features/api/schema/indicator-value-type";
+import { getDefaultIndicatorValues } from "@/features/api/schema/indicator-definitions";
 import {
   StrategyProcessorType,
   StrategyProcessorTypeLabels,
@@ -34,6 +35,7 @@ import {
 import {
   StrategySchema,
   type Strategy,
+  type StrategyFormValues,
 } from "@/features/api/schema/strategy-schema";
 import { Indicator } from "@/features/strategy/indicator";
 import {
@@ -55,8 +57,6 @@ import {
 
 import { enumToOptions } from "@/lib/enum-helper";
 import { cn } from "@/lib/utils";
-
-type StrategyFormValues = z.input<typeof StrategySchema>;
 
 type StrategyFormProps = {
   defaultValues?: Partial<Strategy>;
@@ -100,38 +100,54 @@ const fallbackDefaultValues: Strategy = {
   strategyProcessorType: StrategyProcessorType.None,
   strategyEngineType: StrategyEngineType.None,
   exchange: Exchange.None,
-  indicators: {
-    "9 EMA": {
+  indicators: [
+    {
+      id: "00000000-0000-4000-8000-000000000001",
       name: "9 EMA",
-      value: 9,
       indicatorType: IndicatorType.Ema,
+      values: [{ type: IndicatorValueType.Period, value: 9 }],
     },
-    "21 EMA": {
+    {
+      id: "00000000-0000-4000-8000-000000000002",
       name: "21 EMA",
-      value: 21,
       indicatorType: IndicatorType.Ema,
+      values: [{ type: IndicatorValueType.Period, value: 21 }],
     },
-    "50 EMA": {
+    {
+      id: "00000000-0000-4000-8000-000000000003",
       name: "50 EMA",
-      value: 50,
       indicatorType: IndicatorType.Ema,
+      values: [{ type: IndicatorValueType.Period, value: 50 }],
     },
-    "RSI 14": {
+    {
+      id: "00000000-0000-4000-8000-000000000004",
       name: "RSI 14",
-      value: 14,
       indicatorType: IndicatorType.Rsi,
+      values: [{ type: IndicatorValueType.Period, value: 14 }],
     },
-    "RSI 21": {
+    {
+      id: "00000000-0000-4000-8000-000000000005",
       name: "RSI 21",
-      value: 21,
       indicatorType: IndicatorType.Rsi,
+      values: [{ type: IndicatorValueType.Period, value: 21 }],
     },
-    "RSI 50": {
+    {
+      id: "00000000-0000-4000-8000-000000000006",
       name: "RSI 50",
-      value: 50,
       indicatorType: IndicatorType.Rsi,
+      values: [{ type: IndicatorValueType.Period, value: 50 }],
     },
-  },
+    {
+      id: "00000000-0000-4000-8000-000000000007",
+      name: "MACD (12, 26, 9)",
+      indicatorType: IndicatorType.Macd,
+      values: [
+        { type: IndicatorValueType.FastPeriod, value: 12 },
+        { type: IndicatorValueType.SlowPeriod, value: 26 },
+        { type: IndicatorValueType.SignalPeriod, value: 9 },
+      ],
+    },
+  ],
   klineInterval: KlineInterval.Minute,
   klineSeedSize: 1440,
   klineSeedLimit: 1000,
@@ -201,9 +217,14 @@ export function StrategyForm({
     resolver: zodResolver(StrategySchema),
     defaultValues: mergedDefaultValues,
   });
-  const indicators = useWatch({
+  const {
+    fields: indicatorFields,
+    append: appendIndicator,
+    remove: removeIndicator,
+  } = useFieldArray({
     control: form.control,
     name: "indicators",
+    keyName: "fieldId",
   });
 
   const [uncontrolledSubscriptionOpen, setUncontrolledSubscriptionOpen] =
@@ -241,23 +262,13 @@ export function StrategyForm({
   };
 
   const handleAddIndicator = () => {
-    const current = form.getValues("indicators") ?? {};
-
-    const base = "New Indicator";
-    let index = 1;
-    let key = `${base} ${index}`;
-    while (current[key]) {
-      index += 1;
-      key = `${base} ${index}`;
-    }
-
-    const indicator = {
-      name: key,
-      value: 9,
-      indicatorType: IndicatorType.Sma,
-    } as const;
-
-    form.setValue("indicators", { ...current, [key]: indicator });
+    const indicatorType = IndicatorType.Sma;
+    appendIndicator({
+      id: crypto.randomUUID(),
+      name: "New Indicator",
+      indicatorType,
+      values: getDefaultIndicatorValues(indicatorType),
+    });
   };
 
   React.useEffect(() => {
@@ -288,8 +299,6 @@ export function StrategyForm({
   }
 
   const renderParameterFields = () => {
-    const indicatorEntries = Object.entries(indicators ?? {});
-
     return (
       <div className="flex flex-col gap-3">
         {!isReadOnly ? (
@@ -312,18 +321,14 @@ export function StrategyForm({
           </div>
         ) : null}
 
-        {indicatorEntries.map(([key]) => (
+        {indicatorFields.map((indicator, index) => (
           <Indicator
-            key={key}
+            key={indicator.fieldId}
             control={form.control}
-            name={`indicators.${key}`}
+            setValue={form.setValue}
+            name={`indicators.${index}`}
             isReadOnly={isReadOnly}
-            onRemove={() => {
-              const current = form.getValues("indicators") ?? {};
-              const nextIndicators = { ...current };
-              delete nextIndicators[key];
-              form.setValue("indicators", nextIndicators);
-            }}
+            onRemove={() => removeIndicator(index)}
           />
         ))}
       </div>

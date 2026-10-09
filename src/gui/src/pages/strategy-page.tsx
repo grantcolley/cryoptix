@@ -85,8 +85,11 @@ const INDICATOR_SERIES_COLORS = [
 const getIndicatorSeriesColor = (index: number) =>
   INDICATOR_SERIES_COLORS[index % INDICATOR_SERIES_COLORS.length];
 
-const formatIndicatorLabel = (indicator: Strategy["indicators"][string]) => {
-  const generatedLabel = `${indicator.value} ${IndicatorTypeLabels[indicator.indicatorType]}`;
+const formatIndicatorLabel = (indicator: Strategy["indicators"][number]) => {
+  const generatedLabel = [
+    ...indicator.values.map(({ value }) => value),
+    IndicatorTypeLabels[indicator.indicatorType],
+  ].join(" ");
   const configuredName = indicator.name?.trim();
 
   if (
@@ -254,8 +257,8 @@ export function StrategyPage() {
       }
 
       const indicator =
-        indicators[key] ??
-        Object.values(indicators).find((indicator) => {
+        indicators.find((indicator) => indicator.id === key) ??
+        indicators.find((indicator) => {
           const configuredName = indicator.name?.trim();
 
           return (

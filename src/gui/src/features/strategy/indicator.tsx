@@ -1,4 +1,13 @@
-import type { Control, FieldPath, FieldValues, Path } from "react-hook-form";
+import { useWatch, type Control, type UseFormSetValue } from "react-hook-form";
+import type {
+  Strategy,
+  StrategyFormValues,
+} from "@/features/api/schema/strategy-schema";
+import {
+  IndicatorDefinitions,
+  getDefaultIndicatorValues,
+} from "@/features/api/schema/indicator-definitions";
+import { IndicatorValueTypeLabels } from "@/features/api/schema/indicator-value-type";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -20,21 +29,31 @@ import { enumToOptions } from "@/lib/enum-helper";
 
 const indicatorTypeOptions = enumToOptions(IndicatorType, IndicatorTypeLabels);
 
-type IndicatorProps<TFieldValues extends FieldValues> = {
-  control: Control<TFieldValues>;
-  name: FieldPath<TFieldValues>;
+type IndicatorPath = `indicators.${number}`;
+
+type IndicatorProps = {
+  control: Control<StrategyFormValues, unknown, Strategy>;
+  setValue: UseFormSetValue<StrategyFormValues>;
+  name: IndicatorPath;
   isReadOnly: boolean;
   isHorizontal?: boolean;
   onRemove?: () => void;
 };
 
-export function Indicator<TFieldValues extends FieldValues>({
+export function Indicator({
   control,
+  setValue,
   name,
   isReadOnly,
   isHorizontal = false,
   onRemove,
-}: IndicatorProps<TFieldValues>) {
+}: IndicatorProps) {
+  const indicatorType =
+    useWatch({
+      control,
+      name: `${name}.indicatorType`,
+    }) ?? IndicatorType.Sma;
+  const definition = IndicatorDefinitions[indicatorType];
   const handleRemove = () => {
     onRemove?.();
   };
@@ -61,24 +80,45 @@ export function Indicator<TFieldValues extends FieldValues>({
     <div className="flex flex-col gap-3 rounded-lg border p-3">
       <TextField
         control={control}
-        name={`${name}.name` as Path<TFieldValues>}
+        name={`${name}.name`}
         label="Name"
         isReadOnly={isReadOnly}
         isHorizontal={isHorizontal}
         labelAction={removeButton}
       />
-      <IntegerField
-        control={control}
-        name={`${name}.value` as Path<TFieldValues>}
-        label="Value"
-        isReadOnly={isReadOnly}
-        isHorizontal={isHorizontal}
-      />
+      {definition.values.map((valueDefinition, index) => (
+        <IntegerField
+          key={valueDefinition.type}
+          control={control}
+          name={`${name}.values.${index}.value`}
+          label={IndicatorValueTypeLabels[valueDefinition.type]}
+          isReadOnly={isReadOnly}
+          isHorizontal={isHorizontal}
+        />
+      ))}
       <EnumSelectField
         control={control}
-        name={`${name}.indicatorType` as Path<TFieldValues>}
+        name={`${name}.indicatorType`}
         label="Type"
         options={indicatorTypeOptions}
+        onValueChange={(newIndicatorType) => {
+          setValue(
+            `${name}.name`,
+            `New ${IndicatorTypeLabels[newIndicatorType]}`,
+            {
+              shouldDirty: true,
+              shouldValidate: true,
+            }
+          );
+          setValue(
+            `${name}.values`,
+            getDefaultIndicatorValues(newIndicatorType),
+            {
+              shouldDirty: true,
+              shouldValidate: true,
+            }
+          );
+        }}
         isReadOnly={isReadOnly}
         isHorizontal={isHorizontal}
       />

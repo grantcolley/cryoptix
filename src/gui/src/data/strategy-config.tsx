@@ -1,4 +1,6 @@
 import type { Strategy } from "@/features/api/schema/strategy-schema";
+import { IndicatorType } from "@/features/api/schema/indicator-type";
+import { IndicatorValueType } from "@/features/api/schema/indicator-value-type";
 
 export const STRATEGY_CONFIG: Strategy[] = [
   {
@@ -36,37 +38,53 @@ export const STRATEGY_CONFIG: Strategy[] = [
     signalBroadcastFullMode: 2,
     broadcastQueueCapacity: 10000,
     broadcastQueueFullMode: 2,
-    indicators: {
-      "9 EMA": {
+    indicators: [
+      {
+        id: "00000000-0000-4000-8000-000000000001",
         name: "9 EMA",
-        value: 9,
-        indicatorType: 2,
+        indicatorType: IndicatorType.Ema,
+        values: [{ type: IndicatorValueType.Period, value: 9 }],
       },
-      "21 EMA": {
+      {
+        id: "00000000-0000-4000-8000-000000000002",
         name: "21 EMA",
-        value: 21,
-        indicatorType: 2,
+        indicatorType: IndicatorType.Ema,
+        values: [{ type: IndicatorValueType.Period, value: 21 }],
       },
-      "50 EMA": {
+      {
+        id: "00000000-0000-4000-8000-000000000003",
         name: "50 EMA",
-        value: 50,
-        indicatorType: 2,
+        indicatorType: IndicatorType.Ema,
+        values: [{ type: IndicatorValueType.Period, value: 50 }],
       },
-      "RSI 14": {
+      {
+        id: "00000000-0000-4000-8000-000000000004",
         name: "RSI 14",
-        value: 14,
-        indicatorType: 3,
+        indicatorType: IndicatorType.Rsi,
+        values: [{ type: IndicatorValueType.Period, value: 14 }],
       },
-      "RSI 21": {
+      {
+        id: "00000000-0000-4000-8000-000000000005",
         name: "RSI 21",
-        value: 21,
-        indicatorType: 3,
+        indicatorType: IndicatorType.Rsi,
+        values: [{ type: IndicatorValueType.Period, value: 21 }],
       },
-      "RSI 50": {
+      {
+        id: "00000000-0000-4000-8000-000000000006",
         name: "RSI 50",
-        value: 50,
-        indicatorType: 3,
+        indicatorType: IndicatorType.Rsi,
+        values: [{ type: IndicatorValueType.Period, value: 50 }],
       },
-    },
+      {
+        id: "00000000-0000-4000-8000-000000000007",
+        name: "MACD (12, 26, 9)",
+        indicatorType: IndicatorType.Macd,
+        values: [
+          { type: IndicatorValueType.FastPeriod, value: 12 },
+          { type: IndicatorValueType.SlowPeriod, value: 26 },
+          { type: IndicatorValueType.SignalPeriod, value: 9 },
+        ],
+      },
+    ],
   },
 ];

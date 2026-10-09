@@ -247,10 +247,12 @@ export function EnumSelectField<
   name,
   label,
   options,
+  onValueChange,
   isReadOnly,
   isHorizontal = false,
 }: BaseFieldProps<TFieldValues> & {
   options: EnumOption<TValue>[];
+  onValueChange?: (value: TValue) => void;
 }) {
   return (
     <Controller
@@ -265,9 +267,11 @@ export function EnumSelectField<
           <FieldLabel>{label}</FieldLabel>
           <Select
             value={numberToSelectValue(field.value)}
-            onValueChange={(value) =>
-              field.onChange(selectValueToNumber(value))
-            }
+            onValueChange={(value) => {
+              const nextValue = selectValueToNumber<TValue>(value);
+              field.onChange(nextValue);
+              onValueChange?.(nextValue);
+            }}
             disabled={isReadOnly}
           >
             <SelectTrigger

@@ -21,7 +21,7 @@ export const StrategySchema = z.object({
   exchange: z.enum(Exchange).default(Exchange.None),
 
   // Parameters for strategy logic
-  indicators: z.record(z.string(), IndicatorSchema),
+  indicators: z.array(IndicatorSchema),
 
   // Subscription and caching fields
   klineInterval: z.enum(KlineInterval).default(KlineInterval.Minute),
@@ -73,3 +73,4 @@ export const StrategySchema = z.object({
 });
 
 export type Strategy = z.infer<typeof StrategySchema>;
+export type StrategyFormValues = z.input<typeof StrategySchema>;
