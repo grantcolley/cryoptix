@@ -129,7 +129,7 @@ namespace Cryoptix.Strategy.Calculators
         /// returned <see cref="Rsi"/> contains properly smoothed averages ready for incremental updates.
         /// </summary>
         /// <param name="initialKlines">A chronological list of klines that includes at least <c>period + 1</c> entries.</param>
-        /// <param name="period">The RSI period (must be &gt; 0).</param>
+        /// <param name="period">The RSI period (must be > 0).</param>
         /// <returns>
         /// A populated <see cref="Rsi"/> instance representing the RSI state at the latest kline,
         /// or <c>null</c> when <paramref name="period"/> is invalid or insufficient history is provided.
