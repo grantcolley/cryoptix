@@ -52,27 +52,25 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 DateTime currentCloseTime = kline.CloseTime;
 
-                foreach (var kvp in context.Strategy.Indicators)
+                foreach (Indicator indicator in context.Strategy.Indicators)
                 {
-                    Indicator indicator = kvp.Value;
-
                     if (indicator.IndicatorType == IndicatorType.Sma)
                     {
-                        decimal? computed = IndicatorCalculator.Sma(klines, indicator.Value);
+                        decimal? computed = IndicatorCalculator.Sma(klines, indicator.Values[0].Value);
 
                         if (computed.HasValue)
                         {
-                            series[kvp.Key] = computed.Value;
+                            series[indicator.Name!] = computed.Value;
                         }
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
                     {
                         Ema? ema;
-                        Ema? previousEma = context.Emas?.FirstOrDefault(x => x.Period == indicator.Value);
+                        Ema? previousEma = context.Emas?.FirstOrDefault(x => x.Period == indicator.Values[0].Value);
 
                         if (previousEma == null)
                         {
-                            ema = IndicatorCalculator.EmaInitialize(klines, indicator.Value);
+                            ema = IndicatorCalculator.EmaInitialize(klines, indicator.Values[0].Value);
                         }
                         else
                         {
@@ -81,7 +79,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                         if (ema != null)
                         {
-                            series[kvp.Key] = ema.Value;
+                            series[indicator.Name!] = ema.Value;
 
                             if (kline.Final)
                             {
@@ -95,11 +93,11 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                     else if (indicator.IndicatorType == IndicatorType.Rsi)
                     {
                         Rsi? rsi = null;
-                        Rsi? prev = context.Rsis?.FirstOrDefault(x => x.Period == indicator.Value);
+                        Rsi? prev = context.Rsis?.FirstOrDefault(x => x.Period == indicator.Values[0].Value);
 
                         if (prev == null)
                         {
-                            rsi = IndicatorCalculator.RsiInitialize(klines, indicator.Value);
+                            rsi = IndicatorCalculator.RsiInitialize(klines, indicator.Values[0].Value);
                         }
                         else
                         {
@@ -108,7 +106,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                         if (rsi != null)
                         {
-                            snapshots[kvp.Key] = rsi.Value;
+                            snapshots[indicator.Name!] = rsi.Value;
 
                             if (kline.Final)
                             {

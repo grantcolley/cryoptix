@@ -39,14 +39,14 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Indicators = new Dictionary<string, Indicator>
-            {
-                ["3 SMA"] = new Indicator { Name = "3 SMA", Value = 3, IndicatorType = IndicatorType.Sma },
-                ["5 SMA"] = new Indicator { Name = "5 SMA", Value = 5, IndicatorType = IndicatorType.Sma },
-                ["9 SMA"] = new Indicator { Name = "9 SMA", Value = 9, IndicatorType = IndicatorType.Sma },
-                ["too-long"] = new Indicator { Name = "too-long", Value = 20, IndicatorType = IndicatorType.Sma },
-                ["bad"] = new Indicator { Name = "bad", Value = 0, IndicatorType = IndicatorType.Sma }
-            }
+            Indicators =
+            [
+                new Indicator { Name = "3 SMA", IndicatorType = IndicatorType.Sma, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 3 }] },
+                new Indicator { Name = "5 SMA", IndicatorType = IndicatorType.Sma, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 5 }] },
+                new Indicator { Name = "9 SMA", IndicatorType = IndicatorType.Sma, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 9 }] },
+                new Indicator { Name = "too-long", IndicatorType = IndicatorType.Sma, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 20 }] },
+                new Indicator { Name = "bad", IndicatorType = IndicatorType.Sma, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 0 }] }
+            ]
         });
 
         // Act
@@ -74,10 +74,7 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Indicators = new Dictionary<string, Indicator>
-            {
-                ["3 EMA"] = new Indicator { Name = "3 EMA", Value = 3, IndicatorType = IndicatorType.Ema }
-            }
+            Indicators = [new Indicator { Name = "3 EMA", Values = [new IndicatorValue { Value = 3 }], IndicatorType = IndicatorType.Ema }]
         });
 
         // Act
@@ -89,7 +86,7 @@ public sealed class MovingAverageIndicatorEngineTests
             109.43229166666666666666666667m,
             result.Indicators.Series["3 EMA"],
             0.00000000000000000000000001m);
-        Assert.AreEqual(1, result.Emas.Count);
+        Assert.HasCount(1, result.Emas);
         Assert.AreEqual(result.Indicators.Series["3 EMA"], result.Emas[0].Value);
         Assert.AreEqual(klines[^1].OpenTime, result.Indicators.TimestampUtc);
     }
@@ -105,10 +102,7 @@ public sealed class MovingAverageIndicatorEngineTests
         Strategies.Strategy strategy = new()
         {
             Symbol = "BTCUSDT",
-            Indicators = new Dictionary<string, Indicator>
-            {
-                ["3 EMA"] = new Indicator { Name = "3 EMA", Value = 3, IndicatorType = IndicatorType.Ema }
-            }
+            Indicators = [new Indicator { Name = "3 EMA", IndicatorType = IndicatorType.Ema, Values = [new IndicatorValue { Type = IndicatorValueType.Period, Value = 3 }] }]
         };
 
         // Provide a previous EMA state before the current kline close time.
@@ -131,7 +125,7 @@ public sealed class MovingAverageIndicatorEngineTests
         // Assert
         // multiplier = 2/(3+1) = 0.5, latestClose = 110m => newEma = ((110 - 108) * 0.5) + 108 = 109m
         Assert.AreEqual(109m, result.Indicators.Series["3 EMA"]);
-        Assert.AreEqual(1, result.Emas.Count);
+        Assert.HasCount(1, result.Emas);
         Assert.AreEqual(109m, result.Emas[0].Value);
     }
 
@@ -158,10 +152,10 @@ public sealed class MovingAverageIndicatorEngineTests
         StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
         {
             Symbol = "BTCUSDT",
-            Indicators = new Dictionary<string, Indicator>
-            {
-                ["3 RSI"] = new Indicator { Name = "3 RSI", Value = 3, IndicatorType = IndicatorType.Rsi }
-            }
+            Indicators =
+            [
+                new Indicator { Name = "3 RSI", Values = [new IndicatorValue { Value = 3 }], IndicatorType = IndicatorType.Rsi }
+            ]
         });
 
         // Act

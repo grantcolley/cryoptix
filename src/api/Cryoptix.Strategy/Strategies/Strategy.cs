@@ -146,6 +146,6 @@ namespace Cryoptix.Strategy.Strategies
         /// <summary>
         /// Gets or sets the indicators.
         /// </summary>
-        public Dictionary<string, Indicator> Indicators { get; init; } = new Dictionary<string, Indicator>() { { "9 SMA", new Indicator { Name = "9 SMA", Value = 9, IndicatorType = IndicatorType.Sma } }, { "21 SMA", new Indicator { Name = "21 SMA", Value = 21, IndicatorType = IndicatorType.Sma } }, { "50 SMA", new Indicator { Name = "50 SMA", Value = 50, IndicatorType = IndicatorType.Sma } } };
+        public List<Indicator> Indicators { get; init; } = [];
     }
 }

@@ -1,23 +1,36 @@
 namespace Cryoptix.Strategy.Indicators
 {
     /// <summary>
-    /// Represents a configured indicator for a strategy (for example SMA or EMA).
+    /// Represents a configured strategy indicator.
     /// </summary>
     public class Indicator
     {
         /// <summary>
-        /// Gets or sets the display name for the indicator (for example "9 SMA").
+        /// Gets or sets the persistent identifier, independent of the display name.
+        /// </summary>
+        /// <remarks>
+        /// Preserve this identifier when renaming the indicator or changing its type.
+        /// Assign a new identifier when creating a new indicator.
+        /// </remarks>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the optional display name. Names do not need to be unique.
         /// </summary>
         public string? Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the numeric value for the indicator (typically the period).
+        /// Gets or sets the indicator type that determines its required parameters.
         /// </summary>
-        public int Value { get; set; }
+        public IndicatorType IndicatorType { get; set; }
 
         /// <summary>
-        /// Gets the type of the indicator (SMA, EMA, etc.).
+        /// Gets or sets the integer parameters in indicator definition order.
         /// </summary>
-        public IndicatorType IndicatorType { get; init; }
+        /// <remarks>
+        /// The parameter types must exactly match the selected indicator type.
+        /// An indicator of type None has no parameters.
+        /// </remarks>
+        public List<IndicatorValue> Values { get; set; } = new();
     }
 }
