@@ -45,6 +45,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
             List<Ema> emas = [];
             List<Rsi> rsis = [];
+            List<Macd> macds = [];
             Dictionary<string, decimal> series = [];
             Dictionary<string, decimal> snapshots = [];
 
@@ -117,6 +118,34 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                             }
                         }
                     }
+                    else if(indicator.IndicatorType == IndicatorType.Macd)
+                    {
+                        Macd? macd = null;
+                        Macd? prev = context.Macds?.FirstOrDefault(x => x.FastPeriod == indicator.Values[0].Value
+                            && x.SlowPeriod == indicator.Values[1].Value
+                            && x.SignalPeriod == indicator.Values[2].Value);
+
+                        if (prev == null)
+                        {
+                            macd = IndicatorCalculator.MacdInitialize(klines, indicator.Values[0].Value, indicator.Values[1].Value, indicator.Values[2].Value);
+                        }
+                        else
+                        {
+                            macd = IndicatorCalculator.MacdUpdate(prev, kline);
+                        }
+                        if (macd != null)
+                        {
+                            snapshots[indicator.Name!] = macd.Value;
+
+                            if (kline.Final)
+                            {
+                                // Only add to the list of MACDs if the kline is final,
+                                // to prevent caching live MACD calculation values and
+                                // avoid duplicates in the next computation.
+                                macds.Add(macd);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -126,6 +155,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             {
                 Emas = emas,
                 Rsis = rsis,
+                Macds = macds,
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = kline.OpenTime,

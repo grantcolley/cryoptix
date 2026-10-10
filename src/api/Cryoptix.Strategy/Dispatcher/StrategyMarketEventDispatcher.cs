@@ -91,14 +91,19 @@ namespace Cryoptix.Strategy.Dispatcher
             {
                 session.Cache.UpsertIndicators(context.Strategy.Symbol!, indicatorsResult.Indicators);
 
+                if (indicatorsResult.Emas != null && indicatorsResult.Emas.Count > 0)
+                {
+                    session.Cache.UpsertEmas(context.Strategy.Symbol!, indicatorsResult.Emas);
+                }
+
                 if (indicatorsResult.Rsis != null && indicatorsResult.Rsis.Count > 0)
                 {
                     session.Cache.UpsertRsis(context.Strategy.Symbol!, indicatorsResult.Rsis);
                 }
 
-                if(indicatorsResult.Emas != null && indicatorsResult.Emas.Count > 0)
+                if (indicatorsResult.Macds != null && indicatorsResult.Macds.Count > 0)
                 {
-                    session.Cache.UpsertEmas(context.Strategy.Symbol!, indicatorsResult.Emas);
+                    session.Cache.UpsertMacds(context.Strategy.Symbol!, indicatorsResult.Macds);
                 }
 
                 if (!channels.IndicatorsBroadcasts.Writer.TryWrite(indicatorsResult.Indicators))

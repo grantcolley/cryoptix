@@ -291,6 +291,118 @@ public sealed class IndicatorCalculatorTests
         Assert.IsLessThan(0.0000000000001m, diff, $"Expected approx {expected}, got {updated.Value}");
     }
 
+    [TestMethod]
+    public void MacdInitialize_SeedsAndSmoothsFinalizedHistory()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = MacdKlines(start);
+
+        Macd? macd = IndicatorCalculator.MacdInitialize(klines, fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+
+        Assert.IsNotNull(macd);
+        Assert.AreEqual(2, macd!.FastPeriod);
+        Assert.AreEqual(3, macd.SlowPeriod);
+        Assert.AreEqual(2, macd.SignalPeriod);
+        AssertApproximately(763m / 54m, macd.FastEma);
+        Assert.AreEqual(13.5m, macd.SlowEma);
+        AssertApproximately(17m / 27m, macd.Value);
+        AssertApproximately(44m / 81m, macd.Signal);
+        AssertApproximately(7m / 81m, macd.Histogram);
+        Assert.AreEqual(klines[^1].CloseTime, macd.TimestampUtc);
+    }
+
+    [TestMethod]
+    public void MacdInitialize_InvalidPeriodsOrInsufficientHistory_ReturnsNull()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = MacdKlines(start);
+
+        Assert.IsNull(IndicatorCalculator.MacdInitialize(klines, fastPeriod: 0, slowPeriod: 3, signalPeriod: 2));
+        Assert.IsNull(IndicatorCalculator.MacdInitialize(klines, fastPeriod: 3, slowPeriod: 3, signalPeriod: 2));
+        Assert.IsNull(IndicatorCalculator.MacdInitialize(klines, fastPeriod: 2, slowPeriod: 3, signalPeriod: 0));
+        Assert.IsNull(IndicatorCalculator.MacdInitialize(klines.Take(3).ToList(), fastPeriod: 2, slowPeriod: 3, signalPeriod: 2));
+    }
+
+    [TestMethod]
+    public void MacdInitialize_IgnoresTrailingNonFinalKline()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = MacdKlines(start);
+        List<Kline> withUnfinished =
+        [
+            .. klines,
+            new Kline
+            {
+                Symbol = "BTCUSDT",
+                Interval = KlineInterval.Minute,
+                OpenTime = start.AddMinutes(6),
+                CloseTime = start.AddMinutes(7),
+                Close = 1_000m,
+                Final = false
+            }
+        ];
+
+        Macd? expected = IndicatorCalculator.MacdInitialize(klines, fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+        Macd? actual = IndicatorCalculator.MacdInitialize(withUnfinished, fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+
+        Assert.IsNotNull(expected);
+        Assert.IsNotNull(actual);
+        Assert.AreEqual(expected!.TimestampUtc, actual!.TimestampUtc);
+        Assert.AreEqual(expected.FastEma, actual.FastEma);
+        Assert.AreEqual(expected.SlowEma, actual.SlowEma);
+        Assert.AreEqual(expected.Value, actual.Value);
+        Assert.AreEqual(expected.Signal, actual.Signal);
+        Assert.AreEqual(expected.Histogram, actual.Histogram);
+    }
+
+    [TestMethod]
+    public void MacdUpdate_UpdatesEmaSignalAndHistogram()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> history = MacdKlines(start).Take(4).ToList();
+        Macd? initial = IndicatorCalculator.MacdInitialize(history, fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+        Assert.IsNotNull(initial);
+
+        Kline next = Kline(start.AddMinutes(4), 13m);
+        Macd updated = IndicatorCalculator.MacdUpdate(initial!, next);
+
+        Assert.AreEqual(223m / 18m, updated.FastEma);
+        Assert.AreEqual(12m, updated.SlowEma);
+        AssertApproximately(7m / 18m, updated.Value);
+        AssertApproximately(10m / 27m, updated.Signal);
+        AssertApproximately(1m / 54m, updated.Histogram);
+        Assert.AreEqual(next.CloseTime, updated.TimestampUtc);
+        AssertApproximately(1m / 6m, initial.Value);
+    }
+
+    [TestMethod]
+    public void MacdUpdate_WithNonNewerKlineReturnsPreviousState()
+    {
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Macd? initial = IndicatorCalculator.MacdInitialize(MacdKlines(start), fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+        Assert.IsNotNull(initial);
+
+        Macd unchanged = IndicatorCalculator.MacdUpdate(initial!, Kline(start.AddMinutes(5), 500m));
+
+        Assert.AreSame(initial, unchanged);
+    }
+
+    private static List<Kline> MacdKlines(DateTime start) =>
+    [
+        Kline(start, 10m),
+        Kline(start.AddMinutes(1), 11m),
+        Kline(start.AddMinutes(2), 12m),
+        Kline(start.AddMinutes(3), 11m),
+        Kline(start.AddMinutes(4), 13m),
+        Kline(start.AddMinutes(5), 15m)
+    ];
+
+    private static void AssertApproximately(decimal expected, decimal actual)
+    {
+        const decimal tolerance = 0.00000000000000000000000001m;
+        Assert.IsTrue(Math.Abs(expected - actual) <= tolerance, $"Expected approximately {expected}, got {actual}.");
+    }
+
     private static Kline Kline(DateTime openTime, decimal close) => new()
     {
         Symbol = "BTCUSDT",

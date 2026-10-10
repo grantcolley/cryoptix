@@ -235,6 +235,181 @@ namespace Cryoptix.Strategy.Calculators
             };
         }
 
+        /// <summary>
+        /// Initializes a <see cref="Macd"/> state from historical klines using the specified
+        /// fast, slow, and signal periods.
+        ///
+        /// The fast and slow EMAs are seeded using simple moving averages and then processed
+        /// sequentially using standard EMA smoothing. Once both EMAs are available, MACD
+        /// values are calculated as the fast EMA minus the slow EMA. The signal line is
+        /// seeded using the simple moving average of the first <paramref name="signalPeriod"/>
+        /// MACD values and then processed using standard EMA smoothing for any remaining
+        /// finalized history.
+        /// </summary>
+        /// <param name="initialKlines">
+        /// A chronological list of klines containing sufficient finalized history.
+        /// All klines are expected to be final except potentially the last one.
+        /// </param>
+        /// <param name="fastPeriod">The fast EMA period (must be &gt; 0).</param>
+        /// <param name="slowPeriod">
+        /// The slow EMA period (must be greater than <paramref name="fastPeriod"/>).
+        /// </param>
+        /// <param name="signalPeriod">The signal EMA period (must be &gt; 0).</param>
+        /// <returns>
+        /// A populated <see cref="Macd"/> representing the MACD state at the latest
+        /// finalized kline, or <c>null</c> when the periods are invalid or insufficient
+        /// finalized history is provided.
+        /// </returns>
+        public static Macd? MacdInitialize(IReadOnlyList<Kline> initialKlines, int fastPeriod, int slowPeriod, int signalPeriod)
+        {
+            if (fastPeriod <= 0
+                || slowPeriod <= fastPeriod
+                || signalPeriod <= 0)
+            {
+                return null;
+            }
+
+            // Cache invariant:
+            // all klines are final except potentially the last one.
+            // Build a usable history that excludes any trailing non-final kline.
+            var usable = initialKlines.ToList();
+
+            while (usable.Count > 0 && !usable[^1].Final)
+                usable.RemoveAt(usable.Count - 1);
+
+            // The first MACD value becomes available when the slow EMA is seeded.
+            // We then need signalPeriod MACD values to seed the signal EMA.
+            int requiredCount = slowPeriod + signalPeriod - 1;
+
+            if (usable.Count < requiredCount)
+                return null;
+
+            // Seed the fast EMA using the first fastPeriod closes.
+            decimal fastSum = 0m;
+
+            for (int i = 0; i < fastPeriod; i++)
+                fastSum += usable[i].Close;
+
+            decimal fastEma = fastSum / fastPeriod;
+
+            // Advance the fast EMA up to the point where the slow EMA becomes available.
+            for (int i = fastPeriod; i < slowPeriod; i++)
+                fastEma = CalculateEma(usable[i].Close, fastEma, fastPeriod);
+
+            // Seed the slow EMA using the first slowPeriod closes.
+            decimal slowSum = 0m;
+
+            for (int i = 0; i < slowPeriod; i++)
+                slowSum += usable[i].Close;
+
+            decimal slowEma = slowSum / slowPeriod;
+
+            // The first MACD value is available at slowPeriod - 1.
+            decimal value = fastEma - slowEma;
+            decimal signalSum = value;
+
+            // Generate the remaining MACD values needed to seed the signal EMA.
+            int signalSeedEnd = slowPeriod + signalPeriod - 1;
+
+            for (int i = slowPeriod; i < signalSeedEnd; i++)
+            {
+                fastEma = CalculateEma(usable[i].Close, fastEma, fastPeriod);
+
+                slowEma = CalculateEma(usable[i].Close, slowEma, slowPeriod);
+
+                value = fastEma - slowEma;
+                signalSum += value;
+            }
+
+            // Seed the signal EMA using the SMA of the first signalPeriod MACD values.
+            decimal signal = signalSum / signalPeriod;
+
+            // Process any remaining finalized history.
+            for (int i = signalSeedEnd; i < usable.Count; i++)
+            {
+                fastEma = CalculateEma(usable[i].Close, fastEma, fastPeriod);
+
+                slowEma = CalculateEma(usable[i].Close, slowEma, slowPeriod);
+
+                value = fastEma - slowEma;
+
+                signal = CalculateEma(value, signal, signalPeriod);
+            }
+
+            decimal histogram = value - signal;
+            Kline latest = usable[^1];
+
+            return new Macd
+            {
+                FastPeriod = fastPeriod,
+                SlowPeriod = slowPeriod,
+                SignalPeriod = signalPeriod,
+
+                FastEma = fastEma,
+                SlowEma = slowEma,
+
+                Value = value,
+                Signal = signal,
+                Histogram = histogram,
+
+                TimestampUtc = latest.CloseTime
+            };
+        }
+
+        /// <summary>
+        /// Calculates an updated <see cref="Macd"/> snapshot from an existing MACD state
+        /// using the provided latest <paramref name="kline"/>.
+        ///
+        /// The method updates the fast and slow EMAs using the current kline close,
+        /// calculates the MACD value as the fast EMA minus the slow EMA, updates the
+        /// signal EMA from the new MACD value, and calculates the histogram as the
+        /// MACD value minus the signal line.
+        /// </summary>
+        /// <param name="macd">
+        /// The MACD state calculated from the most recent finalized kline.
+        /// </param>
+        /// <param name="kline">
+        /// The current kline used to calculate the MACD snapshot.
+        /// The kline may be a live or finalized kline.
+        /// </param>
+        /// <returns>
+        /// A new <see cref="Macd"/> with updated EMA, MACD, signal, and histogram values,
+        /// or the previous MACD if the provided kline is not newer than the existing
+        /// MACD timestamp. The caller should persist the returned state only when
+        /// <paramref name="kline"/> is final.
+        /// </returns>
+        public static Macd MacdUpdate(Macd macd, Kline kline)
+        {
+            if (kline.CloseTime <= macd.TimestampUtc)
+                return macd;
+
+            decimal fastEma = CalculateEma(kline.Close, macd.FastEma, macd.FastPeriod);
+
+            decimal slowEma = CalculateEma(kline.Close, macd.SlowEma, macd.SlowPeriod);
+
+            decimal value = fastEma - slowEma;
+
+            decimal signal = CalculateEma(value, macd.Signal, macd.SignalPeriod);
+
+            decimal histogram = value - signal;
+
+            return new Macd
+            {
+                FastPeriod = macd.FastPeriod,
+                SlowPeriod = macd.SlowPeriod,
+                SignalPeriod = macd.SignalPeriod,
+
+                FastEma = fastEma,
+                SlowEma = slowEma,
+
+                Value = value,
+                Signal = signal,
+                Histogram = histogram,
+
+                TimestampUtc = kline.CloseTime
+            };
+        }
+
         private static decimal CalculateEma(decimal value, decimal previousEma, int period)
         {
             decimal multiplier = 2m / (period + 1);

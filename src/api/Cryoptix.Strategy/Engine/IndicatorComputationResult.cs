@@ -27,6 +27,13 @@ namespace Cryoptix.Strategy.Engine
         public required IReadOnlyList<Rsi> Rsis { get; init; }
 
         /// <summary>
+        /// Gets or sets the MACD (Moving Average Convergence Divergence) computation results for one
+        /// or more periods. Engines should populate this collection with the MACD
+        /// snapshots they computed during the indicator calculation pass.
+        /// </summary>
+        public required IReadOnlyList<Macd> Macds { get; init; }
+
+        /// <summary>
         /// Executes the empty operation.
         /// </summary>
         /// <param name="timestampUtc">The timestamp utc value.</param>
@@ -36,6 +43,7 @@ namespace Cryoptix.Strategy.Engine
             {
                 Emas = [],
                 Rsis = [],
+                Macds = [],
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = timestampUtc,
