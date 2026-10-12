@@ -14,14 +14,17 @@ export interface KlineChartController {
   applyKline(kline: Kline): void;
   applyIndicator(indicator: Indicators): void;
   applySignal(signal: Signal): void;
+  getKline(time: number): Kline | undefined;
   reset(): void;
 }
+
+type KlineChartTarget = Omit<KlineChartController, "getKline">;
 
 interface RetainedChart {
   klines: Map<number, Kline>;
   indicators: Map<string, Map<number, Indicators>>;
   signals: Signal[];
-  target?: KlineChartController;
+  target?: KlineChartTarget;
 }
 
 const charts = new WeakMap<KlineChartController, RetainedChart>();
@@ -80,6 +83,9 @@ export function createKlineChartController(): KlineChartController {
       state.signals.push(signal);
       state.target?.applySignal(signal);
     },
+    getKline(time) {
+      return state.klines.get(time);
+    },
     reset() {
       state.klines.clear();
       state.indicators.clear();
@@ -94,7 +100,7 @@ export function createKlineChartController(): KlineChartController {
 /** Internal mount adapter; StrategyPage only sees the command interface. */
 export function attachKlineChart(
   controller: KlineChartController,
-  target: KlineChartController
+  target: KlineChartTarget
 ): () => void {
   const state = charts.get(controller);
   if (!state)

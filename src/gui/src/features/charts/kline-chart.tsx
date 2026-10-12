@@ -49,6 +49,8 @@ const PRICE_SERIES_COLOR = PRICE_SERIES_UP_COLOR;
 const VOLUME_SERIES_UP_COLOR = "rgba(22, 163, 74, 0.28)";
 const VOLUME_SERIES_DOWN_COLOR = "rgba(220, 38, 38, 0.28)";
 const VOLUME_SERIES_COLOR = "rgba(71, 85, 105, 0.32)";
+const LIGHT_GRID_COLOR = "#e2e8f0";
+const DARK_GRID_COLOR = "#273449";
 const INITIAL_VISIBLE_KLINE_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
@@ -166,6 +168,13 @@ export function KlineChart({
     });
   const [chartSeriesLabelPositions, setChartSeriesLabelPositions] =
     React.useState<ChartSeriesLabelPosition[]>([]);
+  const [hoveredKline, setHoveredKline] = React.useState<Kline | null>(null);
+  const [hoveredKlinePosition, setHoveredKlinePosition] = React.useState({
+    x: 8,
+    y: 8,
+  });
+  const hoveredKlineTooltipRef = React.useRef<HTMLDListElement | null>(null);
+  const hoveredKlineTimeRef = React.useRef<number | null>(null);
 
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const chartApiRef = React.useRef<IChartApi | null>(null);
@@ -501,6 +510,10 @@ export function KlineChart({
       volumeDataByTimeRef.current.set(volume.time, volume);
     }
 
+    if (hoveredKlineTimeRef.current !== null) {
+      setHoveredKline(controller.getKline(hoveredKlineTimeRef.current) ?? null);
+    }
+
     if (!replace && candleSeries && volumeSeries) {
       preserveVisibleLogicalRange(() => {
         for (const candle of nextCandles) {
@@ -626,6 +639,8 @@ export function KlineChart({
     volumeDataByTimeRef.current = new Map();
     indicatorSeriesDataRef.current = [];
     signalMarkersDataRef.current = [];
+    hoveredKlineTimeRef.current = null;
+    setHoveredKline(null);
     hasAppliedInitialVisibleKlineRangeRef.current = false;
     hasUserInteractedWithChartRef.current = false;
     chartSeriesVisibilityRef.current = {
@@ -684,6 +699,9 @@ export function KlineChart({
     hasAppliedInitialVisibleKlineRangeRef.current = false;
     hasUserInteractedWithChartRef.current = false;
 
+    const gridColor = document.documentElement.classList.contains("dark")
+      ? DARK_GRID_COLOR
+      : LIGHT_GRID_COLOR;
     const chart = createChart(container, {
       autoSize: true,
       layout: {
@@ -692,8 +710,8 @@ export function KlineChart({
         textColor: "#475569",
       },
       grid: {
-        vertLines: { color: "#e2e8f0", style: 2 },
-        horzLines: { color: "#e2e8f0", style: 2 },
+        vertLines: { color: gridColor, style: 2 },
+        horzLines: { color: gridColor, style: 2 },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
@@ -796,6 +814,60 @@ export function KlineChart({
       .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
     chart.timeScale().subscribeSizeChange(updateChartSeriesLabelPositions);
 
+    const themeObserver = new MutationObserver(() => {
+      const nextGridColor = document.documentElement.classList.contains("dark")
+        ? DARK_GRID_COLOR
+        : LIGHT_GRID_COLOR;
+      chart.applyOptions({
+        grid: {
+          vertLines: { color: nextGridColor, style: 2 },
+          horzLines: { color: nextGridColor, style: 2 },
+        },
+      });
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    const handleCrosshairMove = (
+      param: import("lightweight-charts").MouseEventParams<Time>
+    ) => {
+      if (param.time === undefined || !param.point) {
+        hoveredKlineTimeRef.current = null;
+        setHoveredKline(null);
+        return;
+      }
+
+      const container = chartRef.current;
+      if (container) {
+        const tooltip = hoveredKlineTooltipRef.current;
+        const tooltipWidth = tooltip?.offsetWidth ?? 190;
+        const tooltipHeight = tooltip?.offsetHeight ?? 32;
+        const gap = 12;
+        const x = Math.min(
+          Math.max(4, param.point.x + gap),
+          Math.max(4, container.clientWidth - tooltipWidth - 4)
+        );
+        const belowY = param.point.y + gap;
+        const y = Math.min(
+          Math.max(
+            4,
+            belowY + tooltipHeight <= container.clientHeight
+              ? belowY
+              : param.point.y - tooltipHeight - gap
+          ),
+          Math.max(4, container.clientHeight - tooltipHeight - 4)
+        );
+        setHoveredKlinePosition({ x, y });
+      }
+
+      const time = Number(param.time);
+      hoveredKlineTimeRef.current = time;
+      setHoveredKline(controller.getKline(time) ?? null);
+    };
+    chart.subscribeCrosshairMove(handleCrosshairMove);
+
     return () => {
       detachController();
       for (const frame of pendingFrames) cancelAnimationFrame(frame);
@@ -807,6 +879,10 @@ export function KlineChart({
         .timeScale()
         .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
       chart.timeScale().unsubscribeSizeChange(updateChartSeriesLabelPositions);
+      themeObserver.disconnect();
+      chart.unsubscribeCrosshairMove(handleCrosshairMove);
+      hoveredKlineTimeRef.current = null;
+      setHoveredKline(null);
       signalMarkersRef.current?.detach();
       chartApiRef.current = null;
       candleSeriesRef.current = null;
@@ -868,6 +944,34 @@ export function KlineChart({
         ))}
       </div>
       <div className="relative min-h-0 flex-1 w-full">
+        {hoveredKline ? (
+          <dl
+            ref={hoveredKlineTooltipRef}
+            className="pointer-events-none absolute z-20 flex flex-wrap gap-x-3 gap-y-1 rounded-md border bg-background/90 px-2 py-1 text-xs tabular-nums shadow-sm"
+            aria-label="Hovered candle values"
+            style={{
+              left: hoveredKlinePosition.x,
+              top: hoveredKlinePosition.y,
+            }}
+          >
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">O</dt>
+              <dd>{hoveredKline.open}</dd>
+            </div>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">H</dt>
+              <dd>{hoveredKline.high}</dd>
+            </div>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">L</dt>
+              <dd>{hoveredKline.low}</dd>
+            </div>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">C</dt>
+              <dd>{hoveredKline.close}</dd>
+            </div>
+          </dl>
+        ) : null}
         {chartSeriesLabelPositions.map((series) => (
           <div
             key={series.key}
