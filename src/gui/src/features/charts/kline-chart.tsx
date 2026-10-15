@@ -991,14 +991,6 @@ export function KlineChart({
         ))}
         <div ref={chartRef} className="h-full w-full" />
       </div>
-      <a
-        href="https://www.tradingview.com/"
-        target="_blank"
-        rel="noreferrer"
-        className="mt-1 text-left text-[10px] leading-none text-muted-foreground hover:text-foreground"
-      >
-        Charting by TradingView
-      </a>
     </>
   );
 }

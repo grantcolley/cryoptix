@@ -26,6 +26,7 @@ import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
 import {
   KlineChart,
+  MacdChart,
   createKlineChartController,
   type KlineChartController,
 } from "@/features/charts";
@@ -47,6 +48,8 @@ export function StrategyPage() {
     createKlineChartController
   );
   const [chartRightScaleWidth, setChartRightScaleWidth] = React.useState(0);
+  const [macdIndicators, setMacdIndicators] = React.useState<Indicators[]>([]);
+  const macdIndicatorsRef = React.useRef<Map<number, Indicators>>(new Map());
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [strategyStatus, setStrategyStatus] =
@@ -103,9 +106,26 @@ export function StrategyPage() {
 
   const resetChartData = () => {
     chartController.reset();
+    macdIndicatorsRef.current.clear();
+    setMacdIndicators([]);
     indicatorSnapshotsRef.current = new Map();
     setIndicatorSnapshots([]);
     setShowChart(false);
+  };
+  const retainMacdIndicators = (indicators: Indicators[]) => {
+    for (const indicator of indicators) {
+      if (Object.keys(indicator.macds).length > 0) {
+        macdIndicatorsRef.current.set(
+          indicator.timestampUtc.getTime(),
+          indicator
+        );
+      }
+    }
+    setMacdIndicators(
+      [...macdIndicatorsRef.current.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([, indicator]) => indicator)
+    );
   };
   const applySymbol = (nextSymbol: ApiSymbol | null) => {
     setSymbol(nextSymbol);
@@ -209,6 +229,8 @@ export function StrategyPage() {
           applyRunningStrategyStatus(payload.strategy, null);
           applySymbol(payload.symbol);
           chartController.replaceSnapshot(payload);
+          macdIndicatorsRef.current.clear();
+          retainMacdIndicators(payload.indicators);
           if (payload.klines.length > 0) {
             setShowChart(true);
           }
@@ -241,6 +263,7 @@ export function StrategyPage() {
 
         if (payload) {
           chartController.applyIndicator(payload);
+          retainMacdIndicators([payload]);
           retainIndicatorSnapshots([payload]);
         }
 
@@ -666,12 +689,23 @@ export function StrategyPage() {
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col">
                 {showChart ? (
-                  <KlineChart
-                    controller={chartController}
-                    indicators={strategy?.indicators}
-                    priceLabel={symbolName ?? "Price"}
-                    onRightScaleWidthChange={setChartRightScaleWidth}
-                  />
+                  <>
+                    <KlineChart
+                      controller={chartController}
+                      indicators={strategy?.indicators}
+                      priceLabel={symbolName ?? "Price"}
+                      onRightScaleWidthChange={setChartRightScaleWidth}
+                    />
+                    <MacdChart indicators={macdIndicators} />
+                    <a
+                      href="https://www.tradingview.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 text-right text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                    >
+                      Charting by TradingView
+                    </a>
+                  </>
                 ) : (
                   <div
                     className="flex min-h-0 flex-1 items-center justify-center"
