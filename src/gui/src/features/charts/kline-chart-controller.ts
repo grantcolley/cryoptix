@@ -38,6 +38,7 @@ function retainIndicator(state: RetainedChart, indicator: Indicators) {
       ...indicator,
       series: [item],
       snapshots: [],
+      macds: {},
     });
     state.indicators.set(item.key, points);
   }

@@ -600,7 +600,8 @@ namespace Cryoptix.Strategy.Cache
             {
                 TimestampUtc = source.TimestampUtc,
                 Series = new Dictionary<string, decimal>(source.Series),
-                Snapshots = new Dictionary<string, decimal>(source.Snapshots)
+                Snapshots = new Dictionary<string, decimal>(source.Snapshots),
+                Macds = new Dictionary<string, Market.Strategy.MacdValue>(source.Macds)
             };
         }
 

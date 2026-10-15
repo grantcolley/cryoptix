@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MacdValueSchema } from "./macdvalue-schema";
 
 export const IndicatorValueSchema = z.object({
   key: z.string(),
@@ -17,6 +18,7 @@ export const IndicatorsSchema = z.object({
   timestampUtc: z.coerce.date(),
   series: IndicatorValuesSchema,
   snapshots: IndicatorValuesSchema,
+  macds: z.record(z.string(), MacdValueSchema),
 });
 
 export type IndicatorValue = z.infer<typeof IndicatorValueSchema>;

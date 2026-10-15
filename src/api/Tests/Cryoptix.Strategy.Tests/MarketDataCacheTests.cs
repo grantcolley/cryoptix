@@ -92,8 +92,24 @@ public sealed class MarketDataCacheTests
         MarketDataCache cache = new(maxTradesPerSymbol: 5, maxKlinesPerSeries: 5, maxIndicatorsPerSeries: 1, maxSignalsPerSeries: 1);
         DateTime t0 = DateTime.UtcNow;
 
-        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0, Series = new Dictionary<string, decimal> { ["fast"] = 1m }, Snapshots = new Dictionary<string, decimal> { ["fast"] = 10m } });
-        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators { TimestampUtc = t0.AddMinutes(1), Series = new Dictionary<string, decimal> { ["fast"] = 2m }, Snapshots = new Dictionary<string, decimal> { ["fast"] = 20m } });
+        Market.Strategy.MacdValue macdValue = new() { Name = "MACD(2,3,2)", Value = 1m, Signal = 2m, Histogram = -1m };
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators
+        {
+            TimestampUtc = t0,
+            Series = new Dictionary<string, decimal> { ["fast"] = 1m },
+            Snapshots = new Dictionary<string, decimal> { ["fast"] = 10m },
+            Macds = new Dictionary<string, Market.Strategy.MacdValue> { ["MACD(2,3,2)"] = macdValue }
+        });
+        macdValue.Value = 999m;
+        Market.Strategy.MacdValue latestMacdValue = new() { Name = "MACD(2,3,2)", Value = 3m, Signal = 4m, Histogram = -1m };
+        cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators
+        {
+            TimestampUtc = t0.AddMinutes(1),
+            Series = new Dictionary<string, decimal> { ["fast"] = 2m },
+            Snapshots = new Dictionary<string, decimal> { ["fast"] = 20m },
+            Macds = new Dictionary<string, Market.Strategy.MacdValue> { ["MACD(2,3,2)"] = latestMacdValue }
+        });
+        latestMacdValue.Value = 999m;
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0, SignalType = SignalType.Buy, Reason = "old" });
         cache.UpsertSignal("btcusdt", new Market.Strategy.Signal { TimestampUtc = t0.AddMinutes(1), SignalType = SignalType.Sell, Reason = "new" });
 
@@ -103,6 +119,8 @@ public sealed class MarketDataCacheTests
         Assert.HasCount(1, indicators);
         Assert.AreEqual(2m, indicators[0].Series["fast"]);
         Assert.AreEqual(20m, indicators[0].Snapshots["fast"]);
+        Assert.AreEqual(3m, indicators[0].Macds["MACD(2,3,2)"].Value);
+        Assert.AreEqual(4m, indicators[0].Macds["MACD(2,3,2)"].Signal);
         Assert.HasCount(1, signals);
         Assert.AreEqual(SignalType.Sell, signals[0].SignalType);
         Assert.AreEqual("new", signals[0].Reason);

@@ -17,5 +17,9 @@ namespace Cryoptix.Market.Strategy
         /// Gets or sets the indicator snapshots.
         /// </summary>
         public required IReadOnlyDictionary<string, decimal> Snapshots { get; init; }
+        /// <summary>
+        /// Gets or sets the calculated MACD values by indicator name.
+        /// </summary>
+        public required IReadOnlyDictionary<string, MacdValue> Macds { get; init; }
     }
 }

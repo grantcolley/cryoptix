@@ -139,6 +139,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
         Assert.AreEqual(DateTime.MinValue, result.Indicators.TimestampUtc);
         Assert.IsEmpty(result.Indicators.Series);
+        Assert.IsEmpty(result.Indicators.Macds);
     }
 
     [TestMethod]
@@ -168,6 +169,45 @@ public sealed class MovingAverageIndicatorEngineTests
         Assert.IsNotNull(expected);
         Assert.AreEqual(expected!.Value, result.Rsis[0].Value);
         Assert.AreEqual(expected.Value, result.Indicators.Snapshots["3 RSI"]);
+    }
+
+    [TestMethod]
+    public async Task ComputesMacdValuesByNameWithoutAddingThemToSnapshots()
+    {
+        MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
+        DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        List<Kline> klines = RealisticKlines(start);
+        const string name = "MACD(2,3,2)";
+
+        StrategyAnalysisContext context = StrategyAnalysisContext(klines, [], klines[^1], new Strategies.Strategy
+        {
+            Symbol = "BTCUSDT",
+            Indicators =
+            [
+                new Indicator
+                {
+                    Name = name,
+                    Values =
+                    [
+                        new IndicatorValue { Value = 2 },
+                        new IndicatorValue { Value = 3 },
+                        new IndicatorValue { Value = 2 }
+                    ],
+                    IndicatorType = IndicatorType.Macd
+                }
+            ]
+        });
+
+        IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
+
+        Assert.HasCount(1, result.Macds);
+        Assert.IsTrue(result.Indicators.Macds.ContainsKey(name));
+        Market.Strategy.MacdValue value = result.Indicators.Macds[name];
+        Assert.AreEqual(name, value.Name);
+        Assert.AreEqual(result.Macds[0].Value, value.Value);
+        Assert.AreEqual(result.Macds[0].Signal, value.Signal);
+        Assert.AreEqual(result.Macds[0].Histogram, value.Histogram);
+        Assert.IsFalse(result.Indicators.Snapshots.ContainsKey(name));
     }
 
     private static StrategyAnalysisContext StrategyAnalysisContext(

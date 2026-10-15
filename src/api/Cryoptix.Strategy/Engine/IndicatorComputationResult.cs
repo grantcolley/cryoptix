@@ -48,7 +48,8 @@ namespace Cryoptix.Strategy.Engine
                 {
                     TimestampUtc = timestampUtc,
                     Series = new Dictionary<string, decimal>(),
-                    Snapshots = new Dictionary<string, decimal>()
+                    Snapshots = new Dictionary<string, decimal>(),
+                    Macds = new Dictionary<string, Market.Strategy.MacdValue>()
                 }
             };
     }
