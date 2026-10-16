@@ -88,9 +88,8 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     const container = chartRef.current;
     if (!container) return;
 
-    const gridColor = document.documentElement.classList.contains("dark")
-      ? DARK_GRID_COLOR
-      : LIGHT_GRID_COLOR;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+    const gridColor = isDarkMode ? DARK_GRID_COLOR : LIGHT_GRID_COLOR;
     const chart = createChart(container, {
       autoSize: true,
       layout: {
@@ -103,7 +102,10 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
         horzLines: { color: gridColor, style: 2 },
       },
       crosshair: { mode: CrosshairMode.Normal },
+      rightPriceScale: { borderVisible: isDarkMode, borderColor: gridColor },
       timeScale: {
+        borderVisible: isDarkMode,
+        borderColor: gridColor,
         timeVisible: true,
         secondsVisible: false,
         tickMarkFormatter: (time: Time) =>
@@ -118,13 +120,17 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
       color: MACD_SERIES[0].color,
       lineWidth: 2,
       title: "MACD",
-      priceLineVisible: false,
+      priceLineColor: MACD_SERIES[0].color,
+      priceLineVisible: true,
+      lastValueVisible: true,
     });
     const signal = chart.addSeries(LineSeries, {
       color: MACD_SERIES[1].color,
       lineWidth: 2,
       title: "Signal",
-      priceLineVisible: false,
+      priceLineColor: MACD_SERIES[1].color,
+      priceLineVisible: true,
+      lastValueVisible: true,
     });
     const histogram = chart.addSeries(HistogramSeries, {
       title: "Histogram",
@@ -178,6 +184,8 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
           vertLines: { color: gridColor, style: 2 },
           horzLines: { color: gridColor, style: 2 },
         },
+        rightPriceScale: { borderVisible: isDarkMode, borderColor: gridColor },
+        timeScale: { borderVisible: isDarkMode, borderColor: gridColor },
       });
     });
     themeObserver.observe(document.documentElement, {
