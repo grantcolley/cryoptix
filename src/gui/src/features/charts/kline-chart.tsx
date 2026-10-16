@@ -699,9 +699,8 @@ export function KlineChart({
     hasAppliedInitialVisibleKlineRangeRef.current = false;
     hasUserInteractedWithChartRef.current = false;
 
-    const gridColor = document.documentElement.classList.contains("dark")
-      ? DARK_GRID_COLOR
-      : LIGHT_GRID_COLOR;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+    const gridColor = isDarkMode ? DARK_GRID_COLOR : LIGHT_GRID_COLOR;
     const chart = createChart(container, {
       autoSize: true,
       layout: {
@@ -721,7 +720,8 @@ export function KlineChart({
           formatChartLocalTime(time, chartTimeCrosshairFormatter),
       },
       rightPriceScale: {
-        borderColor: "#cbd5e1",
+        borderVisible: isDarkMode,
+        borderColor: gridColor,
         scaleMargins: {
           top: 0.05,
           bottom: 0.26,
@@ -732,7 +732,7 @@ export function KlineChart({
         visible: false,
       },
       timeScale: {
-        borderColor: "#cbd5e1",
+        borderVisible: false,
         timeVisible: true,
         secondsVisible: true,
         tickMarkFormatter: (time: Time) =>
@@ -815,13 +815,16 @@ export function KlineChart({
     chart.timeScale().subscribeSizeChange(updateChartSeriesLabelPositions);
 
     const themeObserver = new MutationObserver(() => {
-      const nextGridColor = document.documentElement.classList.contains("dark")
-        ? DARK_GRID_COLOR
-        : LIGHT_GRID_COLOR;
+      const isDarkMode = document.documentElement.classList.contains("dark");
+      const nextGridColor = isDarkMode ? DARK_GRID_COLOR : LIGHT_GRID_COLOR;
       chart.applyOptions({
         grid: {
           vertLines: { color: nextGridColor, style: 2 },
           horzLines: { color: nextGridColor, style: 2 },
+        },
+        rightPriceScale: {
+          borderVisible: isDarkMode,
+          borderColor: nextGridColor,
         },
       });
     });
