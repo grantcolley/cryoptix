@@ -947,7 +947,7 @@ export function KlineChart({
         {hoveredKline ? (
           <dl
             ref={hoveredKlineTooltipRef}
-            className="pointer-events-none absolute z-20 flex flex-wrap gap-x-3 gap-y-1 rounded-md border bg-background/90 px-2 py-1 text-xs tabular-nums shadow-sm"
+            className="pointer-events-none absolute z-20 flex flex-col gap-y-1 rounded-md border bg-background/90 px-2 py-1 text-xs tabular-nums shadow-sm"
             aria-label="Hovered candle values"
             style={{
               left: hoveredKlinePosition.x,

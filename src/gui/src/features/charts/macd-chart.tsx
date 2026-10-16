@@ -16,6 +16,7 @@ import type { Indicators } from "@/features/api/schema/indicators-schema";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type MacdPoint = {
+  name: string;
   time: UTCTimestamp;
   value: number;
   signal: number;
@@ -35,8 +36,9 @@ function toMacdPoints(indicators: Indicators[]): MacdPoint[] {
 
   for (const indicator of indicators) {
     const time = Math.floor(indicator.timestampUtc.getTime() / 1000);
-    for (const macd of Object.values(indicator.macds)) {
+    for (const [key, macd] of Object.entries(indicator.macds)) {
       points.set(String(time), {
+        name: macd.name ?? key,
         time: time as UTCTimestamp,
         value: macd.value,
         signal: macd.signal,
@@ -50,6 +52,12 @@ function toMacdPoints(indicators: Indicators[]): MacdPoint[] {
 
 export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   const chartRef = React.useRef<HTMLDivElement>(null);
+  const tooltipRef = React.useRef<HTMLDListElement>(null);
+  const pointsByTimeRef = React.useRef(new Map<number, MacdPoint>());
+  const [hoveredPoint, setHoveredPoint] = React.useState<MacdPoint | null>(
+    null
+  );
+  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 8, y: 8 });
   const seriesRef = React.useRef<{
     chart: IChartApi;
     macd: ISeriesApi<"Line">;
@@ -80,6 +88,9 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     const container = chartRef.current;
     if (!container) return;
 
+    const gridColor = document.documentElement.classList.contains("dark")
+      ? DARK_GRID_COLOR
+      : LIGHT_GRID_COLOR;
     const chart = createChart(container, {
       autoSize: true,
       layout: {
@@ -88,8 +99,8 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: LIGHT_GRID_COLOR, style: 2 },
-        horzLines: { color: LIGHT_GRID_COLOR, style: 2 },
+        vertLines: { color: gridColor, style: 2 },
+        horzLines: { color: gridColor, style: 2 },
       },
       crosshair: { mode: CrosshairMode.Normal },
       timeScale: {
@@ -123,6 +134,41 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     });
     seriesRef.current = { chart, macd, signal, histogram };
 
+    const handleCrosshairMove = (
+      param: import("lightweight-charts").MouseEventParams<Time>
+    ) => {
+      if (param.time === undefined || !param.point) {
+        setHoveredPoint(null);
+        return;
+      }
+
+      const container = chartRef.current;
+      if (container) {
+        const tooltip = tooltipRef.current;
+        const tooltipWidth = tooltip?.offsetWidth ?? 190;
+        const tooltipHeight = tooltip?.offsetHeight ?? 76;
+        const gap = 12;
+        const x = Math.min(
+          Math.max(4, param.point.x + gap),
+          Math.max(4, container.clientWidth - tooltipWidth - 4)
+        );
+        const belowY = param.point.y + gap;
+        const y = Math.min(
+          Math.max(
+            4,
+            belowY + tooltipHeight <= container.clientHeight
+              ? belowY
+              : param.point.y - tooltipHeight - gap
+          ),
+          Math.max(4, container.clientHeight - tooltipHeight - 4)
+        );
+        setTooltipPosition({ x, y });
+      }
+
+      setHoveredPoint(pointsByTimeRef.current.get(Number(param.time)) ?? null);
+    };
+    chart.subscribeCrosshairMove(handleCrosshairMove);
+
     const themeObserver = new MutationObserver(() => {
       const gridColor = document.documentElement.classList.contains("dark")
         ? DARK_GRID_COLOR
@@ -141,6 +187,7 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
     return () => {
       themeObserver.disconnect();
+      chart.unsubscribeCrosshairMove(handleCrosshairMove);
       seriesRef.current = null;
       chart.remove();
     };
@@ -162,6 +209,9 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
         color:
           value >= 0 ? "rgba(22, 163, 74, 0.55)" : "rgba(220, 38, 38, 0.55)",
       })
+    );
+    pointsByTimeRef.current = new Map(
+      points.map((point) => [point.time, point])
     );
     series.macd.setData(macdData);
     series.signal.setData(signalData);
@@ -196,7 +246,31 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
           </label>
         ))}
       </div>
-      <div ref={chartRef} className="min-h-0 flex-1" />
+      <div className="relative min-h-0 flex-1">
+        {hoveredPoint ? (
+          <dl
+            ref={tooltipRef}
+            className="pointer-events-none absolute z-20 flex flex-col gap-y-1 rounded-md border bg-background/90 px-2 py-1 text-xs tabular-nums shadow-sm"
+            aria-label="Hovered MACD values"
+            style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
+          >
+            <dt className="font-medium">{hoveredPoint.name}</dt>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">MACD</dt>
+              <dd>{hoveredPoint.value.toFixed(2)}</dd>
+            </div>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">Signal</dt>
+              <dd>{hoveredPoint.signal.toFixed(2)}</dd>
+            </div>
+            <div className="flex gap-1">
+              <dt className="text-muted-foreground">Hist</dt>
+              <dd>{hoveredPoint.histogram.toFixed(2)}</dd>
+            </div>
+          </dl>
+        ) : null}
+        <div ref={chartRef} className="h-full w-full" />
+      </div>
     </section>
   );
 }
