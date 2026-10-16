@@ -13,6 +13,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { Indicators } from "@/features/api/schema/indicators-schema";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type MacdPoint = {
   time: UTCTimestamp;
@@ -23,6 +24,11 @@ type MacdPoint = {
 
 const LIGHT_GRID_COLOR = "#e2e8f0";
 const DARK_GRID_COLOR = "#273449";
+const MACD_SERIES = [
+  { key: "macd", label: "MACD", color: "#2563eb" },
+  { key: "signal", label: "Signal", color: "#f97316" },
+  { key: "histogram", label: "Histogram", color: "#64748b" },
+] as const;
 
 function toMacdPoints(indicators: Indicators[]): MacdPoint[] {
   const points = new Map<string, MacdPoint>();
@@ -51,6 +57,24 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     histogram: ISeriesApi<"Histogram">;
   } | null>(null);
   const points = React.useMemo(() => toMacdPoints(indicators), [indicators]);
+  const [visibility, setVisibility] = React.useState<Record<string, boolean>>({
+    macd: true,
+    signal: true,
+    histogram: true,
+  });
+
+  const handleVisibilityChange = (
+    key: string,
+    checked: boolean | "indeterminate"
+  ) => {
+    const visible = checked === true;
+    setVisibility((current) => ({ ...current, [key]: visible }));
+    const series = seriesRef.current;
+    if (!series) return;
+    if (key === "macd" || key === "signal" || key === "histogram") {
+      series[key].applyOptions({ visible });
+    }
+  };
 
   React.useEffect(() => {
     const container = chartRef.current;
@@ -80,13 +104,13 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     });
 
     const macd = chart.addSeries(LineSeries, {
-      color: "#2563eb",
+      color: MACD_SERIES[0].color,
       lineWidth: 2,
       title: "MACD",
       priceLineVisible: false,
     });
     const signal = chart.addSeries(LineSeries, {
-      color: "#f97316",
+      color: MACD_SERIES[1].color,
       lineWidth: 2,
       title: "Signal",
       priceLineVisible: false,
@@ -95,6 +119,7 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
       title: "Histogram",
       priceLineVisible: false,
       base: 0,
+      color: MACD_SERIES[2].color,
     });
     seriesRef.current = { chart, macd, signal, histogram };
 
@@ -124,13 +149,20 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   React.useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
-    const macdData: LineData<UTCTimestamp>[] = points.map(({ time, value }) => ({ time, value }));
-    const signalData: LineData<UTCTimestamp>[] = points.map(({ time, signal }) => ({ time, value: signal }));
-    const histogramData: HistogramData<UTCTimestamp>[] = points.map(({ time, histogram: value }) => ({
-      time,
-      value,
-      color: value >= 0 ? "rgba(22, 163, 74, 0.55)" : "rgba(220, 38, 38, 0.55)",
-    }));
+    const macdData: LineData<UTCTimestamp>[] = points.map(
+      ({ time, value }) => ({ time, value })
+    );
+    const signalData: LineData<UTCTimestamp>[] = points.map(
+      ({ time, signal }) => ({ time, value: signal })
+    );
+    const histogramData: HistogramData<UTCTimestamp>[] = points.map(
+      ({ time, histogram: value }) => ({
+        time,
+        value,
+        color:
+          value >= 0 ? "rgba(22, 163, 74, 0.55)" : "rgba(220, 38, 38, 0.55)",
+      })
+    );
     series.macd.setData(macdData);
     series.signal.setData(signalData);
     series.histogram.setData(histogramData);
@@ -139,10 +171,30 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
   return (
     <section className="flex min-h-64 flex-col" aria-label="MACD chart">
-      <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="text-blue-600">MACD</span>
-        <span className="text-orange-500">Signal</span>
-        <span>Histogram</span>
+      <div
+        className="mb-2 flex min-h-7 flex-wrap items-center gap-x-4 gap-y-2"
+        aria-label="Chart series visibility"
+      >
+        {MACD_SERIES.map((item) => (
+          <label
+            key={item.key}
+            className="flex min-w-0 cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground"
+          >
+            <Checkbox
+              checked={visibility[item.key]}
+              onCheckedChange={(checked) =>
+                handleVisibilityChange(item.key, checked)
+              }
+              aria-label={`Show ${item.label} series`}
+            />
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: item.color }}
+              aria-hidden="true"
+            />
+            <span className="truncate">{item.label}</span>
+          </label>
+        ))}
       </div>
       <div ref={chartRef} className="min-h-0 flex-1" />
     </section>
