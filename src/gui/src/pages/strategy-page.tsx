@@ -6,6 +6,7 @@ import type { Strategy } from "@/features/api/schema/strategy-schema";
 import { StrategyToolbar } from "@/features/strategy/strategy-toolbar";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { IndicatorSnapshot } from "@/features/strategy/indicator-snapshot";
+import { MacdSnapshot } from "@/features/strategy/macd-snapshot";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
 import type { Indicators } from "@/features/api/schema/indicators-schema";
@@ -70,6 +71,12 @@ export function StrategyPage() {
     Indicators["snapshots"]
   >([]);
   const indicatorSnapshotsRef = React.useRef<Map<string, number>>(new Map());
+  const [latestMacds, setLatestMacds] = React.useState<
+    Array<{ key: string; name: string; value: number; signal: number; histogram: number }>
+  >([]);
+  const latestMacdsRef = React.useRef<
+    Map<string, { name: string; value: number; signal: number; histogram: number }>
+  >(new Map());
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
   const previousPriceRef = React.useRef<number | null>(null);
@@ -110,6 +117,8 @@ export function StrategyPage() {
     setMacdIndicators([]);
     indicatorSnapshotsRef.current = new Map();
     setIndicatorSnapshots([]);
+    latestMacdsRef.current.clear();
+    setLatestMacds([]);
     setShowChart(false);
   };
   const retainMacdIndicators = (indicators: Indicators[]) => {
@@ -220,6 +229,24 @@ export function StrategyPage() {
     );
   };
 
+  const retainLatestMacds = (indicators: Indicators[]) => {
+    for (const indicator of indicators) {
+      for (const [key, macd] of Object.entries(indicator.macds)) {
+        latestMacdsRef.current.set(key, {
+          name: macd.name ?? key,
+          value: macd.value,
+          signal: macd.signal,
+          histogram: macd.histogram,
+        });
+      }
+    }
+    setLatestMacds(
+      [...latestMacdsRef.current.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, macd]) => ({ key, ...macd }))
+    );
+  };
+
   const handleNotification = (envelope: NotificationEnvelope) => {
     switch (envelope.messageType) {
       case MessageType.MarketDataSnapshot: {
@@ -231,6 +258,12 @@ export function StrategyPage() {
           chartController.replaceSnapshot(payload);
           macdIndicatorsRef.current.clear();
           retainMacdIndicators(payload.indicators);
+          latestMacdsRef.current.clear();
+          retainLatestMacds(
+            [...payload.indicators].sort(
+              (a, b) => a.timestampUtc.getTime() - b.timestampUtc.getTime()
+            )
+          );
           if (payload.klines.length > 0) {
             setShowChart(true);
           }
@@ -264,6 +297,7 @@ export function StrategyPage() {
         if (payload) {
           chartController.applyIndicator(payload);
           retainMacdIndicators([payload]);
+          retainLatestMacds([payload]);
           retainIndicatorSnapshots([payload]);
         }
 
@@ -681,6 +715,9 @@ export function StrategyPage() {
                     aria-label="Indicator snapshots"
                     style={{ marginRight: chartRightScaleWidth }}
                   >
+                    {latestMacds.map((macd) => (
+                      <MacdSnapshot key={macd.key} {...macd} />
+                    ))}
                     {indicatorSnapshots.map(({ key, value }) => (
                       <IndicatorSnapshot key={key} name={key} value={value} />
                     ))}
