@@ -715,8 +715,8 @@ export function StrategyPage() {
                     aria-label="Indicator snapshots"
                     style={{ marginRight: chartRightScaleWidth }}
                   >
-                    {latestMacds.map((macd) => (
-                      <MacdSnapshot key={macd.key} {...macd} />
+                    {latestMacds.map(({ key, ...props }) => (
+                      <MacdSnapshot key={key} {...props} />
                     ))}
                     {indicatorSnapshots.map(({ key, value }) => (
                       <IndicatorSnapshot key={key} name={key} value={value} />
