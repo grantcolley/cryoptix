@@ -601,7 +601,15 @@ namespace Cryoptix.Strategy.Cache
                 TimestampUtc = source.TimestampUtc,
                 Series = new Dictionary<string, decimal>(source.Series),
                 Snapshots = new Dictionary<string, decimal>(source.Snapshots),
-                Macds = new Dictionary<string, Market.Strategy.MacdValue>(source.Macds)
+                Macds = source.Macds.ToDictionary(
+                    entry => entry.Key,
+                    entry => new Market.Strategy.MacdValue
+                    {
+                        Name = entry.Value.Name,
+                        Value = entry.Value.Value,
+                        Signal = entry.Value.Signal,
+                        Histogram = entry.Value.Histogram
+                    })
             };
         }
 
