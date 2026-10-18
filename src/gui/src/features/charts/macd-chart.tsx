@@ -30,6 +30,14 @@ const MACD_SERIES = [
   { key: "signal", label: "Signal", color: "#f97316" },
   { key: "histogram", label: "Histogram", color: "#64748b" },
 ] as const;
+type MacdSeriesKey = (typeof MACD_SERIES)[number]["key"];
+type MacdSeriesLabelPosition = {
+  key: MacdSeriesKey;
+  label: string;
+  color: string;
+  x: number;
+  y: number;
+};
 
 function toMacdPoints(indicators: Indicators[]): MacdPoint[] {
   const points = new Map<string, MacdPoint>();
@@ -53,6 +61,9 @@ function toMacdPoints(indicators: Indicators[]): MacdPoint[] {
 export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   const chartRef = React.useRef<HTMLDivElement>(null);
   const tooltipRef = React.useRef<HTMLDListElement>(null);
+  const [seriesLabelPositions, setSeriesLabelPositions] = React.useState<
+    MacdSeriesLabelPosition[]
+  >([]);
   const pointsByTimeRef = React.useRef(new Map<number, MacdPoint>());
   const [hoveredPoint, setHoveredPoint] = React.useState<MacdPoint | null>(
     null
@@ -65,22 +76,29 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     histogram: ISeriesApi<"Histogram">;
   } | null>(null);
   const points = React.useMemo(() => toMacdPoints(indicators), [indicators]);
+  const macdDataRef = React.useRef<LineData<UTCTimestamp>[]>([]);
+  const signalDataRef = React.useRef<LineData<UTCTimestamp>[]>([]);
+  const histogramDataRef = React.useRef<HistogramData<UTCTimestamp>[]>([]);
   const [visibility, setVisibility] = React.useState<Record<string, boolean>>({
     macd: true,
     signal: true,
     histogram: true,
   });
+  const visibilityRef = React.useRef(visibility);
+  const updateSeriesLabelPositionsRef = React.useRef<(() => void) | null>(null);
 
   const handleVisibilityChange = (
     key: string,
     checked: boolean | "indeterminate"
   ) => {
     const visible = checked === true;
+    visibilityRef.current = { ...visibilityRef.current, [key]: visible };
     setVisibility((current) => ({ ...current, [key]: visible }));
     const series = seriesRef.current;
     if (!series) return;
     if (key === "macd" || key === "signal" || key === "histogram") {
       series[key].applyOptions({ visible });
+      updateSeriesLabelPositionsRef.current?.();
     }
   };
 
@@ -119,7 +137,6 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     const macd = chart.addSeries(LineSeries, {
       color: MACD_SERIES[0].color,
       lineWidth: 2,
-      title: "MACD",
       priceLineColor: MACD_SERIES[0].color,
       priceLineVisible: true,
       lastValueVisible: true,
@@ -127,18 +144,68 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     const signal = chart.addSeries(LineSeries, {
       color: MACD_SERIES[1].color,
       lineWidth: 2,
-      title: "Signal",
       priceLineColor: MACD_SERIES[1].color,
       priceLineVisible: true,
       lastValueVisible: true,
     });
     const histogram = chart.addSeries(HistogramSeries, {
-      title: "Histogram",
       priceLineVisible: false,
       base: 0,
       color: MACD_SERIES[2].color,
     });
     seriesRef.current = { chart, macd, signal, histogram };
+
+    const updateSeriesLabelPositions = () => {
+      const timeScale = chart.timeScale();
+      const visibleRange = timeScale.getVisibleRange();
+      const from = visibleRange ? Number(visibleRange.from) : null;
+      const to = visibleRange ? Number(visibleRange.to) : null;
+      const maxX = Math.max(8, container.clientWidth - 160);
+      const maxY = Math.max(6, container.clientHeight - 22);
+      const nextPositions = MACD_SERIES.flatMap((item) => {
+        if (!visibilityRef.current[item.key]) return [];
+
+        const isVisibleTime = (time: UTCTimestamp) => {
+          const timestamp = Number(time);
+          return (
+            (from === null || timestamp >= from) &&
+            (to === null || timestamp <= to)
+          );
+        };
+        const point =
+          item.key === "macd"
+            ? macdDataRef.current.find(({ time }) => isVisibleTime(time)) ??
+              macdDataRef.current[0]
+            : item.key === "signal"
+              ? signalDataRef.current.find(({ time }) => isVisibleTime(time)) ??
+                signalDataRef.current[0]
+              : histogramDataRef.current.find(({ time }) =>
+                  isVisibleTime(time)
+                ) ?? histogramDataRef.current[0];
+
+        if (!point) return [];
+        const x = timeScale.timeToCoordinate(point.time);
+        const y =
+          item.key === "macd"
+            ? macd.priceToCoordinate(point.value)
+            : item.key === "signal"
+              ? signal.priceToCoordinate(point.value)
+              : histogram.priceToCoordinate(point.value);
+        if (x === null || y === null) return [];
+
+        return [{
+          key: item.key,
+          label: item.label,
+          color: item.color,
+          x: Math.min(maxX, Math.max(8, x + 8)),
+          y: Math.min(maxY, Math.max(6, y - 10)),
+        }];
+      });
+      setSeriesLabelPositions(nextPositions);
+    };
+    updateSeriesLabelPositionsRef.current = updateSeriesLabelPositions;
+    chart.timeScale().subscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+    chart.timeScale().subscribeSizeChange(updateSeriesLabelPositions);
 
     const handleCrosshairMove = (
       param: import("lightweight-charts").MouseEventParams<Time>
@@ -195,6 +262,10 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
     return () => {
       themeObserver.disconnect();
+      chart.timeScale().unsubscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+      chart.timeScale().unsubscribeSizeChange(updateSeriesLabelPositions);
+      updateSeriesLabelPositionsRef.current = null;
+      setSeriesLabelPositions([]);
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
       seriesRef.current = null;
       chart.remove();
@@ -218,6 +289,9 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
           value >= 0 ? "rgba(22, 163, 74, 0.55)" : "rgba(220, 38, 38, 0.55)",
       })
     );
+    macdDataRef.current = macdData;
+    signalDataRef.current = signalData;
+    histogramDataRef.current = histogramData;
     pointsByTimeRef.current = new Map(
       points.map((point) => [point.time, point])
     );
@@ -225,6 +299,7 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     series.signal.setData(signalData);
     series.histogram.setData(histogramData);
     if (points.length > 0) series.chart.timeScale().fitContent();
+    updateSeriesLabelPositionsRef.current?.();
   }, [points]);
 
   return (
@@ -277,6 +352,20 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
             </div>
           </dl>
         ) : null}
+        {seriesLabelPositions.map((series) => (
+          <div
+            key={series.key}
+            className="pointer-events-none absolute z-10 flex max-w-36 items-center gap-1.5 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground shadow-sm"
+            style={{ left: series.x, top: series.y }}
+          >
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: series.color }}
+              aria-hidden="true"
+            />
+            <span className="truncate">{series.label}</span>
+          </div>
+        ))}
         <div ref={chartRef} className="h-full w-full" />
       </div>
     </section>
