@@ -25,6 +25,9 @@ type MacdPoint = {
 
 const LIGHT_GRID_COLOR = "#e2e8f0";
 const DARK_GRID_COLOR = "#273449";
+const INITIAL_VISIBLE_POINT_LIMIT = 120;
+const MIN_INITIAL_BAR_SPACING = 3;
+const MAX_INITIAL_BAR_SPACING = 12;
 const MACD_SERIES = [
   { key: "macd", label: "MACD", color: "#2563eb" },
   { key: "signal", label: "Signal", color: "#f97316" },
@@ -298,7 +301,23 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
     series.macd.setData(macdData);
     series.signal.setData(signalData);
     series.histogram.setData(histogramData);
-    if (points.length > 0) series.chart.timeScale().fitContent();
+    if (points.length > 0) {
+      const container = chartRef.current;
+      const visiblePointCount = Math.min(
+        points.length,
+        INITIAL_VISIBLE_POINT_LIMIT
+      );
+      const initialBarSpacing = Math.max(
+        MIN_INITIAL_BAR_SPACING,
+        Math.min(
+          MAX_INITIAL_BAR_SPACING,
+          (container?.clientWidth ?? 0) / visiblePointCount
+        )
+      );
+
+      series.chart.timeScale().applyOptions({ barSpacing: initialBarSpacing });
+      series.chart.timeScale().scrollToPosition(0, false);
+    }
     updateSeriesLabelPositionsRef.current?.();
   }, [points]);
 
