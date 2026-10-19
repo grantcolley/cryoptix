@@ -93,6 +93,9 @@ const chartTimeAxisFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const chartTimeCrosshairFormatter = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit",
@@ -957,6 +960,7 @@ export function KlineChart({
               top: hoveredKlinePosition.y,
             }}
           >
+            <dt className="font-medium">{chartTimeCrosshairFormatter.format(hoveredKline.openTime)}</dt>
             <div className="flex gap-1">
               <dt className="text-muted-foreground">O</dt>
               <dd>{hoveredKline.open}</dd>
