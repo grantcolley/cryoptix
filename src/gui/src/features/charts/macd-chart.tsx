@@ -357,7 +357,8 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
             aria-label="Hovered MACD values"
             style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
           >
-            <dt className="font-medium">{hoveredPoint.name}</dt>
+            <dt className="font-medium">{new Intl.DateTimeFormat(undefined, { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(Number(hoveredPoint.time) * 1000))}</dt>
+            <dt className="text-muted-foreground">{hoveredPoint.name}</dt>
             <div className="flex gap-1">
               <dt className="text-muted-foreground">MACD</dt>
               <dd>{hoveredPoint.value.toFixed(2)}</dd>
