@@ -323,6 +323,7 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
   return (
     <section className="flex min-h-64 flex-col" aria-label="MACD chart">
+      <h3 className="mb-1 text-xs font-semibold text-muted-foreground">{points[0]?.name ?? "MACD"}</h3>
       <div
         className="mb-2 flex min-h-7 flex-wrap items-center gap-x-4 gap-y-2"
         aria-label="Chart series visibility"
