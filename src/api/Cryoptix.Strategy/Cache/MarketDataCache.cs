@@ -599,7 +599,7 @@ namespace Cryoptix.Strategy.Cache
             return new Market.Strategy.Indicators
             {
                 TimestampUtc = source.TimestampUtc,
-                Series = new Dictionary<string, decimal>(source.Series),
+                Mas = new Dictionary<string, decimal>(source.Mas),
                 Rsis = new Dictionary<string, decimal>(source.Rsis),
                 Macds = source.Macds.ToDictionary(
                     entry => entry.Key,

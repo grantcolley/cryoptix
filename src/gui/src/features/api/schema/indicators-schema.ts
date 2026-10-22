@@ -16,7 +16,7 @@ const IndicatorValuesSchema = z
 
 export const IndicatorsSchema = z.object({
   timestampUtc: z.coerce.date(),
-  series: IndicatorValuesSchema,
+  mas: IndicatorValuesSchema,
   rsis: IndicatorValuesSchema,
   macds: z.record(z.string(), MacdValueSchema),
 });

@@ -290,7 +290,7 @@ export function KlineChart({
     for (const indicator of indicators) {
       const time = toChartTime(indicator.timestampUtc);
 
-      for (const item of indicator.series) {
+      for (const item of indicator.mas) {
         const dataByTime =
           seriesByKey.get(item.key) ??
           new Map<number, LineData<UTCTimestamp>>();
@@ -596,7 +596,7 @@ export function KlineChart({
       indicatorSeriesDataRef.current.map(({ key, data }) => [key, data])
     );
 
-    for (const item of indicator.series) {
+    for (const item of indicator.mas) {
       const data = seriesByKey.get(item.key) ?? [];
       const nextData = data.filter((point) => point.time !== time);
 
@@ -960,7 +960,9 @@ export function KlineChart({
               top: hoveredKlinePosition.y,
             }}
           >
-            <dt className="font-medium">{chartTimeCrosshairFormatter.format(hoveredKline.openTime)}</dt>
+            <dt className="font-medium">
+              {chartTimeCrosshairFormatter.format(hoveredKline.openTime)}
+            </dt>
             <div className="flex gap-1">
               <dt className="text-muted-foreground">O</dt>
               <dd>{hoveredKline.open}</dd>

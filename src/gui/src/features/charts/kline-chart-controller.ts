@@ -31,12 +31,12 @@ const charts = new WeakMap<KlineChartController, RetainedChart>();
 const timestamp = (date: Date) => Math.floor(date.getTime() / 1000);
 
 function retainIndicator(state: RetainedChart, indicator: Indicators) {
-  for (const item of indicator.series) {
+  for (const item of indicator.mas) {
     const points =
       state.indicators.get(item.key) ?? new Map<number, Indicators>();
     points.set(timestamp(indicator.timestampUtc), {
       ...indicator,
-      series: [item],
+      mas: [item],
       rsis: [],
       macds: {},
     });

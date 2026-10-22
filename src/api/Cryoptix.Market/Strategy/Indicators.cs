@@ -10,9 +10,9 @@ namespace Cryoptix.Market.Strategy
         /// </summary>
         public required DateTime TimestampUtc { get; init; }
         /// <summary>
-        /// Gets or sets the indicator series.
+        /// Gets or sets the calculated moving average values by indicator name.
         /// </summary>
-        public required IReadOnlyDictionary<string, decimal> Series { get; init; }
+        public required IReadOnlyDictionary<string, decimal> Mas { get; init; }
         /// <summary>
         /// Gets or sets the calculated RSI values by indicator name.
         /// </summary>

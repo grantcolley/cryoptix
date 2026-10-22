@@ -55,12 +55,12 @@ public sealed class MovingAverageIndicatorEngineTests
         // Assert
         Assert.AreEqual(klines[^1].OpenTime, result.Indicators.TimestampUtc);
 
-        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Series["3 SMA"]);
-        Assert.AreEqual(108.4m, result.Indicators.Series["5 SMA"]);
-        Assert.AreEqual(105.77777777777777777777777778m, result.Indicators.Series["9 SMA"]);
+        Assert.AreEqual(109.66666666666666666666666667m, result.Indicators.Mas["3 SMA"]);
+        Assert.AreEqual(108.4m, result.Indicators.Mas["5 SMA"]);
+        Assert.AreEqual(105.77777777777777777777777778m, result.Indicators.Mas["9 SMA"]);
 
-        Assert.IsFalse(result.Indicators.Series.ContainsKey("too-long"));
-        Assert.IsFalse(result.Indicators.Series.ContainsKey("bad"));
+        Assert.IsFalse(result.Indicators.Mas.ContainsKey("too-long"));
+        Assert.IsFalse(result.Indicators.Mas.ContainsKey("bad"));
     }
 
     [TestMethod]
@@ -84,10 +84,10 @@ public sealed class MovingAverageIndicatorEngineTests
         // EMA is seeded with the first-period SMA, then smoothed over remaining history.
         Assert.AreEqual(
             109.43229166666666666666666667m,
-            result.Indicators.Series["3 EMA"],
+            result.Indicators.Mas["3 EMA"],
             0.00000000000000000000000001m);
         Assert.HasCount(1, result.Emas);
-        Assert.AreEqual(result.Indicators.Series["3 EMA"], result.Emas[0].Value);
+        Assert.AreEqual(result.Indicators.Mas["3 EMA"], result.Emas[0].Value);
         Assert.AreEqual(klines[^1].OpenTime, result.Indicators.TimestampUtc);
     }
 
@@ -124,7 +124,7 @@ public sealed class MovingAverageIndicatorEngineTests
 
         // Assert
         // multiplier = 2/(3+1) = 0.5, latestClose = 110m => newEma = ((110 - 108) * 0.5) + 108 = 109m
-        Assert.AreEqual(109m, result.Indicators.Series["3 EMA"]);
+        Assert.AreEqual(109m, result.Indicators.Mas["3 EMA"]);
         Assert.HasCount(1, result.Emas);
         Assert.AreEqual(109m, result.Emas[0].Value);
     }
@@ -138,7 +138,7 @@ public sealed class MovingAverageIndicatorEngineTests
         IndicatorComputationResult result = await engine.ComputeAsync(context, CancellationToken.None);
 
         Assert.AreEqual(DateTime.MinValue, result.Indicators.TimestampUtc);
-        Assert.IsEmpty(result.Indicators.Series);
+        Assert.IsEmpty(result.Indicators.Mas);
         Assert.IsEmpty(result.Indicators.Macds);
     }
 

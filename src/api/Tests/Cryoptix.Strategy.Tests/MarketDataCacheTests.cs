@@ -96,7 +96,7 @@ public sealed class MarketDataCacheTests
         cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators
         {
             TimestampUtc = t0,
-            Series = new Dictionary<string, decimal> { ["fast"] = 1m },
+            Mas = new Dictionary<string, decimal> { ["fast"] = 1m },
             Rsis = new Dictionary<string, decimal> { ["fast"] = 10m },
             Macds = new Dictionary<string, Market.Strategy.MacdValue> { ["MACD(2,3,2)"] = macdValue }
         });
@@ -105,7 +105,7 @@ public sealed class MarketDataCacheTests
         cache.UpsertIndicators("btcusdt", new Market.Strategy.Indicators
         {
             TimestampUtc = t0.AddMinutes(1),
-            Series = new Dictionary<string, decimal> { ["fast"] = 2m },
+            Mas = new Dictionary<string, decimal> { ["fast"] = 2m },
             Rsis = new Dictionary<string, decimal> { ["fast"] = 20m },
             Macds = new Dictionary<string, Market.Strategy.MacdValue> { ["MACD(2,3,2)"] = latestMacdValue }
         });
@@ -117,7 +117,7 @@ public sealed class MarketDataCacheTests
         IReadOnlyList<Market.Strategy.Signal> signals = cache.GetSignals("BTCUSDT");
 
         Assert.HasCount(1, indicators);
-        Assert.AreEqual(2m, indicators[0].Series["fast"]);
+        Assert.AreEqual(2m, indicators[0].Mas["fast"]);
         Assert.AreEqual(20m, indicators[0].Rsis["fast"]);
         Assert.AreEqual(3m, indicators[0].Macds["MACD(2,3,2)"].Value);
         Assert.AreEqual(4m, indicators[0].Macds["MACD(2,3,2)"].Signal);

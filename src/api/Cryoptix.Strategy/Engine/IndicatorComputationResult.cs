@@ -47,7 +47,7 @@ namespace Cryoptix.Strategy.Engine
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = timestampUtc,
-                    Series = new Dictionary<string, decimal>(),
+                    Mas = new Dictionary<string, decimal>(),
                     Rsis = new Dictionary<string, decimal>(),
                     Macds = new Dictionary<string, Market.Strategy.MacdValue>()
                 }

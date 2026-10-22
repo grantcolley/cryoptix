@@ -47,7 +47,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             List<Rsi> rsis = [];
             List<Macd> macds = [];
             Dictionary<string, Market.Strategy.MacdValue> macdsValues = [];
-            Dictionary<string, decimal> series = [];
+            Dictionary<string, decimal> mas = [];
             Dictionary<string, decimal> rsiValues = [];
 
             if (context.Strategy.Indicators != null)
@@ -62,7 +62,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                         if (computed.HasValue)
                         {
-                            series[indicator.Name!] = computed.Value;
+                            mas[indicator.Name!] = computed.Value;
                         }
                     }
                     else if (indicator.IndicatorType == IndicatorType.Ema)
@@ -81,7 +81,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                         if (ema != null)
                         {
-                            series[indicator.Name!] = ema.Value;
+                            mas[indicator.Name!] = ema.Value;
 
                             if (kline.Final)
                             {
@@ -156,7 +156,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 }
             }
 
-            LogDebug.IndicatorsComputed(_logger, context.Strategy.Symbol!, series);
+            LogDebug.IndicatorsComputed(_logger, context.Strategy.Symbol!, mas);
 
             return Task.FromResult(new IndicatorComputationResult
             {
@@ -166,7 +166,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 Indicators = new Market.Strategy.Indicators
                 {
                     TimestampUtc = kline.OpenTime,
-                    Series = series.ToImmutableDictionary(),
+                    Mas = mas.ToImmutableDictionary(),
                     Rsis = rsiValues.ToImmutableDictionary(),
                     Macds = macdsValues.ToImmutableDictionary(),
                 },
