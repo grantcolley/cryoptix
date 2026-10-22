@@ -177,14 +177,15 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
         };
         const point =
           item.key === "macd"
-            ? macdDataRef.current.find(({ time }) => isVisibleTime(time)) ??
-              macdDataRef.current[0]
+            ? (macdDataRef.current.find(({ time }) => isVisibleTime(time)) ??
+              macdDataRef.current[0])
             : item.key === "signal"
-              ? signalDataRef.current.find(({ time }) => isVisibleTime(time)) ??
-                signalDataRef.current[0]
-              : histogramDataRef.current.find(({ time }) =>
+              ? (signalDataRef.current.find(({ time }) =>
                   isVisibleTime(time)
-                ) ?? histogramDataRef.current[0];
+                ) ?? signalDataRef.current[0])
+              : (histogramDataRef.current.find(({ time }) =>
+                  isVisibleTime(time)
+                ) ?? histogramDataRef.current[0]);
 
         if (!point) return [];
         const x = timeScale.timeToCoordinate(point.time);
@@ -196,18 +197,22 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
               : histogram.priceToCoordinate(point.value);
         if (x === null || y === null) return [];
 
-        return [{
-          key: item.key,
-          label: item.label,
-          color: item.color,
-          x: Math.min(maxX, Math.max(8, x + 8)),
-          y: Math.min(maxY, Math.max(6, y - 10)),
-        }];
+        return [
+          {
+            key: item.key,
+            label: item.label,
+            color: item.color,
+            x: Math.min(maxX, Math.max(8, x + 8)),
+            y: Math.min(maxY, Math.max(6, y - 10)),
+          },
+        ];
       });
       setSeriesLabelPositions(nextPositions);
     };
     updateSeriesLabelPositionsRef.current = updateSeriesLabelPositions;
-    chart.timeScale().subscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+    chart
+      .timeScale()
+      .subscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
     chart.timeScale().subscribeSizeChange(updateSeriesLabelPositions);
 
     const handleCrosshairMove = (
@@ -265,7 +270,9 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
     return () => {
       themeObserver.disconnect();
-      chart.timeScale().unsubscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+      chart
+        .timeScale()
+        .unsubscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
       chart.timeScale().unsubscribeSizeChange(updateSeriesLabelPositions);
       updateSeriesLabelPositionsRef.current = null;
       setSeriesLabelPositions([]);
@@ -323,7 +330,9 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
   return (
     <section className="flex min-h-64 flex-col" aria-label="MACD chart">
-      <h3 className="mb-1 text-xs font-semibold text-muted-foreground">{points[0]?.name ?? "MACD"}</h3>
+      <h3 className="mb-1 text-xs font-semibold text-muted-foreground">
+        {points[0]?.name ?? "MACD"}
+      </h3>
       <div
         className="mb-2 flex min-h-7 flex-wrap items-center gap-x-4 gap-y-2"
         aria-label="Chart series visibility"
@@ -357,7 +366,16 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
             aria-label="Hovered MACD values"
             style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
           >
-            <dt className="font-medium">{new Intl.DateTimeFormat(undefined, { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(Number(hoveredPoint.time) * 1000))}</dt>
+            <dt className="font-medium">
+              {new Intl.DateTimeFormat(undefined, {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }).format(new Date(Number(hoveredPoint.time) * 1000))}
+            </dt>
             <dt className="text-muted-foreground">{hoveredPoint.name}</dt>
             <div className="flex gap-1">
               <dt className="text-muted-foreground">MACD</dt>

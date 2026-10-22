@@ -14,9 +14,9 @@ namespace Cryoptix.Market.Strategy
         /// </summary>
         public required IReadOnlyDictionary<string, decimal> Series { get; init; }
         /// <summary>
-        /// Gets or sets the indicator snapshots.
+        /// Gets or sets the calculated RSI values by indicator name.
         /// </summary>
-        public required IReadOnlyDictionary<string, decimal> Snapshots { get; init; }
+        public required IReadOnlyDictionary<string, decimal> Rsis { get; init; }
         /// <summary>
         /// Gets or sets the calculated MACD values by indicator name.
         /// </summary>

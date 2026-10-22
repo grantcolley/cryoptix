@@ -67,15 +67,24 @@ export function StrategyPage() {
     React.useState<PriceDirection>("flat");
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
   const [symbolName, setSymbolName] = React.useState<string | null>(null);
-  const [indicatorSnapshots, setIndicatorSnapshots] = React.useState<
-    Indicators["snapshots"]
-  >([]);
-  const indicatorSnapshotsRef = React.useRef<Map<string, number>>(new Map());
+  const [indicatorRsis, setIndicatorRsis] = React.useState<Indicators["rsis"]>(
+    []
+  );
+  const indicatorRsisRef = React.useRef<Map<string, number>>(new Map());
   const [latestMacds, setLatestMacds] = React.useState<
-    Array<{ key: string; name: string; value: number; signal: number; histogram: number }>
+    Array<{
+      key: string;
+      name: string;
+      value: number;
+      signal: number;
+      histogram: number;
+    }>
   >([]);
   const latestMacdsRef = React.useRef<
-    Map<string, { name: string; value: number; signal: number; histogram: number }>
+    Map<
+      string,
+      { name: string; value: number; signal: number; histogram: number }
+    >
   >(new Map());
 
   const latestStrategyRef = React.useRef<Strategy | null>(null);
@@ -115,8 +124,8 @@ export function StrategyPage() {
     chartController.reset();
     macdIndicatorsRef.current.clear();
     setMacdIndicators([]);
-    indicatorSnapshotsRef.current = new Map();
-    setIndicatorSnapshots([]);
+    indicatorRsisRef.current = new Map();
+    setIndicatorRsis([]);
     latestMacdsRef.current.clear();
     setLatestMacds([]);
     setShowChart(false);
@@ -213,17 +222,17 @@ export function StrategyPage() {
     }
   }, []);
 
-  const retainIndicatorSnapshots = (indicators: Indicators[]) => {
+  const retainIndicatorRsis = (indicators: Indicators[]) => {
     for (const indicator of indicators) {
-      for (const { key, value } of indicator.snapshots) {
-        indicatorSnapshotsRef.current.set(key, value);
+      for (const { key, value } of indicator.rsis) {
+        indicatorRsisRef.current.set(key, value);
       }
     }
   };
 
-  const applyIndicatorSnapshots = () => {
-    setIndicatorSnapshots(
-      [...indicatorSnapshotsRef.current.entries()]
+  const applyIndicatorRsis = () => {
+    setIndicatorRsis(
+      [...indicatorRsisRef.current.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => ({ key, value }))
     );
@@ -267,12 +276,12 @@ export function StrategyPage() {
           if (payload.klines.length > 0) {
             setShowChart(true);
           }
-          retainIndicatorSnapshots(
+          retainIndicatorRsis(
             [...payload.indicators].sort(
               (a, b) => a.timestampUtc.getTime() - b.timestampUtc.getTime()
             )
           );
-          applyIndicatorSnapshots();
+          applyIndicatorRsis();
 
           setNotificationMessage(null);
         }
@@ -284,7 +293,7 @@ export function StrategyPage() {
 
         if (payload) {
           chartController.applyKline(payload);
-          applyIndicatorSnapshots();
+          applyIndicatorRsis();
           setShowChart(true);
         }
 
@@ -298,7 +307,7 @@ export function StrategyPage() {
           chartController.applyIndicator(payload);
           retainMacdIndicators([payload]);
           retainLatestMacds([payload]);
-          retainIndicatorSnapshots([payload]);
+          retainIndicatorRsis([payload]);
         }
 
         setNotificationMessage(null);
@@ -712,13 +721,13 @@ export function StrategyPage() {
                   ) : null}
                   <dl
                     className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
-                    aria-label="Indicator snapshots"
+                    aria-label="Indicator RSIs"
                     style={{ marginRight: chartRightScaleWidth }}
                   >
                     {latestMacds.map(({ key, ...props }) => (
                       <MacdSnapshot key={key} {...props} />
                     ))}
-                    {indicatorSnapshots.map(({ key, value }) => (
+                    {indicatorRsis.map(({ key, value }) => (
                       <IndicatorSnapshot key={key} name={key} value={value} />
                     ))}
                   </dl>

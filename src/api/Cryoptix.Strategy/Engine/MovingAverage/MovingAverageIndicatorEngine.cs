@@ -48,7 +48,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
             List<Macd> macds = [];
             Dictionary<string, Market.Strategy.MacdValue> macdsValues = [];
             Dictionary<string, decimal> series = [];
-            Dictionary<string, decimal> snapshots = [];
+            Dictionary<string, decimal> rsiValues = [];
 
             if (context.Strategy.Indicators != null)
             {
@@ -108,7 +108,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
 
                         if (rsi != null)
                         {
-                            snapshots[indicator.Name!] = rsi.Value;
+                            rsiValues[indicator.Name!] = rsi.Value;
 
                             if (kline.Final)
                             {
@@ -167,7 +167,7 @@ namespace Cryoptix.Strategy.Engine.MovingAverage
                 {
                     TimestampUtc = kline.OpenTime,
                     Series = series.ToImmutableDictionary(),
-                    Snapshots = snapshots.ToImmutableDictionary(),
+                    Rsis = rsiValues.ToImmutableDictionary(),
                     Macds = macdsValues.ToImmutableDictionary(),
                 },
             });

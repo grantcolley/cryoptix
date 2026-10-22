@@ -37,7 +37,7 @@ function retainIndicator(state: RetainedChart, indicator: Indicators) {
     points.set(timestamp(indicator.timestampUtc), {
       ...indicator,
       series: [item],
-      snapshots: [],
+      rsis: [],
       macds: {},
     });
     state.indicators.set(item.key, points);

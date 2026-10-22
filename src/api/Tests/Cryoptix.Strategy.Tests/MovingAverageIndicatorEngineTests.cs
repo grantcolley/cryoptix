@@ -168,11 +168,11 @@ public sealed class MovingAverageIndicatorEngineTests
         Rsi? expected = IndicatorCalculator.RsiInitialize(klines, 3);
         Assert.IsNotNull(expected);
         Assert.AreEqual(expected!.Value, result.Rsis[0].Value);
-        Assert.AreEqual(expected.Value, result.Indicators.Snapshots["3 RSI"]);
+        Assert.AreEqual(expected.Value, result.Indicators.Rsis["3 RSI"]);
     }
 
     [TestMethod]
-    public async Task ComputesMacdValuesByNameWithoutAddingThemToSnapshots()
+    public async Task ComputesMacdValuesByNameWithoutAddingThemToRsis()
     {
         MovingAverageIndicatorEngine engine = new(NullLogger<MovingAverageIndicatorEngine>.Instance);
         DateTime start = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -207,7 +207,7 @@ public sealed class MovingAverageIndicatorEngineTests
         Assert.AreEqual(result.Macds[0].Value, value.Value);
         Assert.AreEqual(result.Macds[0].Signal, value.Signal);
         Assert.AreEqual(result.Macds[0].Histogram, value.Histogram);
-        Assert.IsFalse(result.Indicators.Snapshots.ContainsKey(name));
+        Assert.IsFalse(result.Indicators.Rsis.ContainsKey(name));
     }
 
     private static StrategyAnalysisContext StrategyAnalysisContext(
