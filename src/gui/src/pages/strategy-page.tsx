@@ -28,6 +28,7 @@ import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 import {
   KlineChart,
   MacdChart,
+  RsiChart,
   createKlineChartController,
   type KlineChartController,
 } from "@/features/charts";
@@ -51,6 +52,8 @@ export function StrategyPage() {
   const [chartRightScaleWidth, setChartRightScaleWidth] = React.useState(0);
   const [macdIndicators, setMacdIndicators] = React.useState<Indicators[]>([]);
   const macdIndicatorsRef = React.useRef<Map<number, Indicators>>(new Map());
+  const [rsiIndicators, setRsiIndicators] = React.useState<Indicators[]>([]);
+  const rsiIndicatorsRef = React.useRef<Map<number, Indicators>>(new Map());
   const [serverUrl, setServerUrl] = React.useState("");
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [strategyStatus, setStrategyStatus] =
@@ -124,6 +127,8 @@ export function StrategyPage() {
     chartController.reset();
     macdIndicatorsRef.current.clear();
     setMacdIndicators([]);
+    rsiIndicatorsRef.current.clear();
+    setRsiIndicators([]);
     indicatorRsisRef.current = new Map();
     setIndicatorRsis([]);
     latestMacdsRef.current.clear();
@@ -141,6 +146,18 @@ export function StrategyPage() {
     }
     setMacdIndicators(
       [...macdIndicatorsRef.current.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([, indicator]) => indicator)
+    );
+  };
+  const retainRsiIndicators = (indicators: Indicators[]) => {
+    for (const indicator of indicators) {
+      if (indicator.rsis.length > 0) {
+        rsiIndicatorsRef.current.set(indicator.timestampUtc.getTime(), indicator);
+      }
+    }
+    setRsiIndicators(
+      [...rsiIndicatorsRef.current.entries()]
         .sort(([a], [b]) => a - b)
         .map(([, indicator]) => indicator)
     );
@@ -266,7 +283,9 @@ export function StrategyPage() {
           applySymbol(payload.symbol);
           chartController.replaceSnapshot(payload);
           macdIndicatorsRef.current.clear();
+          rsiIndicatorsRef.current.clear();
           retainMacdIndicators(payload.indicators);
+          retainRsiIndicators(payload.indicators);
           latestMacdsRef.current.clear();
           retainLatestMacds(
             [...payload.indicators].sort(
@@ -306,6 +325,7 @@ export function StrategyPage() {
         if (payload) {
           chartController.applyIndicator(payload);
           retainMacdIndicators([payload]);
+          retainRsiIndicators([payload]);
           retainLatestMacds([payload]);
           retainIndicatorRsis([payload]);
         }
@@ -743,6 +763,7 @@ export function StrategyPage() {
                       onRightScaleWidthChange={setChartRightScaleWidth}
                     />
                     <MacdChart indicators={macdIndicators} />
+                    <RsiChart indicators={rsiIndicators} />
                     <a
                       href="https://www.tradingview.com/"
                       target="_blank"
