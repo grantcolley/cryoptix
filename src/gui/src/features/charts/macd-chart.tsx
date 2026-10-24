@@ -283,6 +283,16 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   }, []);
 
   React.useEffect(() => {
+    const chart = seriesRef.current?.chart;
+    if (!chart) return;
+    const frame = requestAnimationFrame(() => chart.resize(
+      chartRef.current?.clientWidth ?? 0,
+      chartRef.current?.clientHeight ?? 0
+    ));
+    return () => cancelAnimationFrame(frame);
+  });
+
+  React.useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
     const macdData: LineData<UTCTimestamp>[] = points.map(

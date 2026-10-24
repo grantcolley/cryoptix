@@ -22,6 +22,12 @@ import {
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { useSidebar } from "@/components/ui/sidebar";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
@@ -46,6 +52,7 @@ export function StrategyPage() {
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
   const [showStartButton, setShowStartButton] = React.useState(false);
   const [showChart, setShowChart] = React.useState(false);
+  const [selectedIndicatorTab, setSelectedIndicatorTab] = React.useState("macd");
   const [chartController] = React.useState<KlineChartController>(
     createKlineChartController
   );
@@ -762,8 +769,28 @@ export function StrategyPage() {
                       priceLabel={symbolName ?? "Price"}
                       onRightScaleWidthChange={setChartRightScaleWidth}
                     />
-                    <MacdChart indicators={macdIndicators} />
-                    <RsiChart indicators={rsiIndicators} />
+                    <Tabs
+                      value={selectedIndicatorTab}
+                      onValueChange={setSelectedIndicatorTab}
+                      className="flex min-h-0 flex-1 flex-col"
+                    >
+                      <TabsList aria-label="Indicator charts">
+                        <TabsTrigger value="macd">MACD</TabsTrigger>
+                        <TabsTrigger value="rsi">RSI</TabsTrigger>
+                      </TabsList>
+                      <TabsContent
+                        value="macd"
+                        className="flex min-h-0 flex-1 flex-col"
+                      >
+                        <MacdChart indicators={macdIndicators} />
+                      </TabsContent>
+                      <TabsContent
+                        value="rsi"
+                        className="flex min-h-0 flex-1 flex-col"
+                      >
+                        <RsiChart indicators={rsiIndicators} />
+                      </TabsContent>
+                    </Tabs>
                     <a
                       href="https://www.tradingview.com/"
                       target="_blank"
