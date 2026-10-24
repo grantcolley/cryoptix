@@ -21,13 +21,9 @@ import {
   type StrategyStatus,
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Item } from "@/components/ui/item";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSidebar } from "@/components/ui/sidebar";
 import type { Symbol as ApiSymbol } from "@/features/api/schema/symbol-schema";
 
@@ -52,7 +48,8 @@ export function StrategyPage() {
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
   const [showStartButton, setShowStartButton] = React.useState(false);
   const [showChart, setShowChart] = React.useState(false);
-  const [selectedIndicatorTab, setSelectedIndicatorTab] = React.useState("macd");
+  const [selectedIndicatorTab, setSelectedIndicatorTab] =
+    React.useState("macd");
   const [chartController] = React.useState<KlineChartController>(
     createKlineChartController
   );
@@ -160,7 +157,10 @@ export function StrategyPage() {
   const retainRsiIndicators = (indicators: Indicators[]) => {
     for (const indicator of indicators) {
       if (indicator.rsis.length > 0) {
-        rsiIndicatorsRef.current.set(indicator.timestampUtc.getTime(), indicator);
+        rsiIndicatorsRef.current.set(
+          indicator.timestampUtc.getTime(),
+          indicator
+        );
       }
     }
     setRsiIndicators(
@@ -728,9 +728,8 @@ export function StrategyPage() {
 
         {showStrategyRunning ? (
           <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
-            <Card className="flex min-h-0 flex-1 flex-col">
-              <CardHeader>
-                <CardTitle className="flex min-h-5 flex-wrap items-baseline justify-start gap-1 text-left">
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <Item className="min-h-5 flex-wrap items-baseline justify-start gap-1 rounded-xl bg-card px-4 text-left ring-1 ring-foreground/10">
                   {hasSymbol ? (
                     <>
                       <h4 className="text-sm text-foreground-semimuted">
@@ -758,8 +757,8 @@ export function StrategyPage() {
                       <IndicatorSnapshot key={key} name={key} value={value} />
                     ))}
                   </dl>
-                </CardTitle>
-              </CardHeader>
+              </Item>
+              <Card className="flex min-h-0 flex-1 flex-col">
               <CardContent className="flex min-h-0 flex-1 flex-col">
                 {showChart ? (
                   <>
@@ -811,6 +810,7 @@ export function StrategyPage() {
                 )}
               </CardContent>
             </Card>
+            </div>
           </div>
         ) : null}
       </div>
