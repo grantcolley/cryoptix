@@ -146,21 +146,17 @@ interface KlineChartProps {
   controller: KlineChartController;
   indicators?: Strategy["indicators"];
   priceLabel?: string;
-  onRightScaleWidthChange?: (width: number) => void;
 }
 
 export function KlineChart({
   controller,
   indicators,
   priceLabel = "Price",
-  onRightScaleWidthChange,
 }: KlineChartProps) {
   const indicatorsRef = React.useRef(indicators);
-  const onRightScaleWidthChangeRef = React.useRef(onRightScaleWidthChange);
   React.useLayoutEffect(() => {
     indicatorsRef.current = indicators;
-    onRightScaleWidthChangeRef.current = onRightScaleWidthChange;
-  }, [indicators, onRightScaleWidthChange]);
+  }, [indicators]);
   const [indicatorSeriesKeys, setIndicatorSeriesKeys] = React.useState<
     string[]
   >([]);
@@ -338,10 +334,6 @@ export function KlineChart({
   const updateChartSeriesLabelPositions = React.useCallback(() => {
     const chart = chartApiRef.current;
     const container = chartRef.current;
-
-    onRightScaleWidthChangeRef.current?.(
-      chart?.priceScale("right").width() ?? 0
-    );
 
     if (!chart || !container) {
       setChartSeriesLabelPositions([]);
@@ -896,7 +888,6 @@ export function KlineChart({
       signalMarkersRef.current = null;
       indicatorSeriesByKeyRef.current = new Map();
       setChartSeriesLabelPositions([]);
-      onRightScaleWidthChangeRef.current?.(0);
       chart.remove();
     };
     // Chart lifetime follows the controller, not presentation metadata.
