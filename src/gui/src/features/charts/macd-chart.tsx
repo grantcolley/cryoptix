@@ -28,6 +28,7 @@ const DARK_GRID_COLOR = "#273449";
 const INITIAL_VISIBLE_POINT_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
+const MANUAL_SCROLL_THRESHOLD = 0.5;
 const MACD_SERIES = [
   { key: "macd", label: "MACD", color: "#2563eb" },
   { key: "signal", label: "Signal", color: "#f97316" },
@@ -89,6 +90,7 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   });
   const visibilityRef = React.useRef(visibility);
   const updateSeriesLabelPositionsRef = React.useRef<(() => void) | null>(null);
+  const hasUserInteractedWithChartRef = React.useRef(false);
 
   const handleVisibilityChange = (
     key: string,
@@ -210,9 +212,27 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
       setSeriesLabelPositions(nextPositions);
     };
     updateSeriesLabelPositionsRef.current = updateSeriesLabelPositions;
+    const handleChartInteraction = () => {
+      hasUserInteractedWithChartRef.current = true;
+    };
+    const handleVisibleTimeRangeChange = () => {
+      if (
+        Math.abs(chart.timeScale().scrollPosition()) <= MANUAL_SCROLL_THRESHOLD
+      ) {
+        hasUserInteractedWithChartRef.current = false;
+      }
+      updateSeriesLabelPositions();
+    };
+    container.addEventListener("pointerdown", handleChartInteraction);
+    container.addEventListener("wheel", handleChartInteraction, {
+      passive: true,
+    });
+    container.addEventListener("touchstart", handleChartInteraction, {
+      passive: true,
+    });
     chart
       .timeScale()
-      .subscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+      .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
     chart.timeScale().subscribeSizeChange(updateSeriesLabelPositions);
 
     const handleCrosshairMove = (
@@ -270,9 +290,12 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
 
     return () => {
       themeObserver.disconnect();
+      container.removeEventListener("pointerdown", handleChartInteraction);
+      container.removeEventListener("wheel", handleChartInteraction);
+      container.removeEventListener("touchstart", handleChartInteraction);
       chart
         .timeScale()
-        .unsubscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+        .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
       chart.timeScale().unsubscribeSizeChange(updateSeriesLabelPositions);
       updateSeriesLabelPositionsRef.current = null;
       setSeriesLabelPositions([]);
@@ -295,6 +318,13 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
   React.useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
+    const timeScale = series.chart.timeScale();
+    const shouldPreserveVisibleRange =
+      hasUserInteractedWithChartRef.current &&
+      Math.abs(timeScale.scrollPosition()) > MANUAL_SCROLL_THRESHOLD;
+    const visibleLogicalRange = shouldPreserveVisibleRange
+      ? timeScale.getVisibleLogicalRange()
+      : null;
     const macdData: LineData<UTCTimestamp>[] = points.map(
       ({ time, value }) => ({ time, value })
     );
@@ -332,8 +362,12 @@ export function MacdChart({ indicators }: { indicators: Indicators[] }) {
         )
       );
 
-      series.chart.timeScale().applyOptions({ barSpacing: initialBarSpacing });
-      series.chart.timeScale().scrollToPosition(0, false);
+      if (visibleLogicalRange) {
+        timeScale.setVisibleLogicalRange(visibleLogicalRange);
+      } else {
+        timeScale.applyOptions({ barSpacing: initialBarSpacing });
+        timeScale.scrollToPosition(0, false);
+      }
     }
     updateSeriesLabelPositionsRef.current?.();
   }, [points]);
