@@ -23,6 +23,7 @@ const DARK_GRID_COLOR = "#273449";
 const INITIAL_VISIBLE_POINT_LIMIT = 120;
 const MIN_INITIAL_BAR_SPACING = 3;
 const MAX_INITIAL_BAR_SPACING = 12;
+const MANUAL_SCROLL_THRESHOLD = 0.5;
 const RSI_COLORS = ["#2563eb", "#f97316", "#16a34a", "#a855f7", "#db2777"];
 
 type RsiSeries = { key: string; label: string; color: string };
@@ -66,6 +67,7 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
   );
   const visibilityRef = React.useRef(visibility);
   const updateSeriesLabelPositionsRef = React.useRef<(() => void) | null>(null);
+  const hasUserInteractedWithChartRef = React.useRef(false);
   const rsiSeries = React.useMemo<RsiSeries[]>(() => {
     const keys = [
       ...new Set(points.flatMap((point) => Object.keys(point.values))),
@@ -76,6 +78,11 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
       color: RSI_COLORS[index % RSI_COLORS.length],
     }));
   }, [points]);
+  const rsiSeriesRef = React.useRef(rsiSeries);
+
+  React.useEffect(() => {
+    rsiSeriesRef.current = rsiSeries;
+  }, [rsiSeries]);
 
   React.useEffect(() => {
     visibilityRef.current = visibility;
@@ -133,7 +140,7 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
       const to = visibleRange ? Number(visibleRange.to) : null;
       const maxX = Math.max(8, container.clientWidth - 160);
       const maxY = Math.max(6, container.clientHeight - 22);
-      const nextPositions = rsiSeries.flatMap((item) => {
+      const nextPositions = rsiSeriesRef.current.flatMap((item) => {
         if (visibilityRef.current[item.key] === false) return [];
         const point =
           seriesDataRef.current.get(item.key)?.find(({ time }) => {
@@ -159,9 +166,27 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
       setSeriesLabelPositions(nextPositions);
     };
     updateSeriesLabelPositionsRef.current = updateSeriesLabelPositions;
+    const handleChartInteraction = () => {
+      hasUserInteractedWithChartRef.current = true;
+    };
+    const handleVisibleTimeRangeChange = () => {
+      if (
+        Math.abs(chart.timeScale().scrollPosition()) <= MANUAL_SCROLL_THRESHOLD
+      ) {
+        hasUserInteractedWithChartRef.current = false;
+      }
+      updateSeriesLabelPositions();
+    };
+    container.addEventListener("pointerdown", handleChartInteraction);
+    container.addEventListener("wheel", handleChartInteraction, {
+      passive: true,
+    });
+    container.addEventListener("touchstart", handleChartInteraction, {
+      passive: true,
+    });
     chart
       .timeScale()
-      .subscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+      .subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
     chart.timeScale().subscribeSizeChange(updateSeriesLabelPositions);
 
     const handleCrosshairMove = (
@@ -220,9 +245,12 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
 
     return () => {
       themeObserver.disconnect();
+      container.removeEventListener("pointerdown", handleChartInteraction);
+      container.removeEventListener("wheel", handleChartInteraction);
+      container.removeEventListener("touchstart", handleChartInteraction);
       chart
         .timeScale()
-        .unsubscribeVisibleTimeRangeChange(updateSeriesLabelPositions);
+        .unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
       chart.timeScale().unsubscribeSizeChange(updateSeriesLabelPositions);
       updateSeriesLabelPositionsRef.current = null;
       setSeriesLabelPositions([]);
@@ -230,7 +258,7 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
       seriesRef.current = null;
       chart.remove();
     };
-  }, [rsiSeries]);
+  }, []);
 
   React.useEffect(() => {
     const chart = seriesRef.current?.chart;
@@ -247,6 +275,13 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
   React.useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
+    const timeScale = series.chart.timeScale();
+    const shouldPreserveVisibleRange =
+      hasUserInteractedWithChartRef.current &&
+      Math.abs(timeScale.scrollPosition()) > MANUAL_SCROLL_THRESHOLD;
+    const visibleLogicalRange = shouldPreserveVisibleRange
+      ? timeScale.getVisibleLogicalRange()
+      : null;
     const activeKeys = new Set(rsiSeries.map(({ key }) => key));
     for (const [key, line] of series.lines) {
       if (!activeKeys.has(key)) {
@@ -301,8 +336,12 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
           (chartContainer?.clientWidth ?? 0) / visiblePointCount
         )
       );
-      series.chart.timeScale().applyOptions({ barSpacing: initialBarSpacing });
-      series.chart.timeScale().scrollToPosition(0, false);
+      if (visibleLogicalRange) {
+        timeScale.setVisibleLogicalRange(visibleLogicalRange);
+      } else {
+        timeScale.applyOptions({ barSpacing: initialBarSpacing });
+        timeScale.scrollToPosition(0, false);
+      }
     }
     updateSeriesLabelPositionsRef.current?.();
   }, [points, rsiSeries]);
