@@ -53,7 +53,6 @@ export function StrategyPage() {
   const [chartController] = React.useState<KlineChartController>(
     createKlineChartController
   );
-  const [chartRightScaleWidth, setChartRightScaleWidth] = React.useState(0);
   const [macdIndicators, setMacdIndicators] = React.useState<Indicators[]>([]);
   const macdIndicatorsRef = React.useRef<Map<number, Indicators>>(new Map());
   const [rsiIndicators, setRsiIndicators] = React.useState<Indicators[]>([]);
@@ -748,7 +747,6 @@ export function StrategyPage() {
                   <dl
                     className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
                     aria-label="Indicator RSIs"
-                    style={{ marginRight: chartRightScaleWidth }}
                   >
                     {latestMacds.map(({ key, ...props }) => (
                       <MacdSnapshot key={key} {...props} />
@@ -766,7 +764,6 @@ export function StrategyPage() {
                       controller={chartController}
                       indicators={strategy?.indicators}
                       priceLabel={symbolName ?? "Price"}
-                      onRightScaleWidthChange={setChartRightScaleWidth}
                     />
                     <Tabs
                       value={selectedIndicatorTab}
