@@ -14,7 +14,6 @@ import type { Indicators } from "@/features/api/schema/indicators-schema";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type RsiPoint = {
-  name: string;
   time: UTCTimestamp;
   values: Record<string, number>;
 };
@@ -35,7 +34,6 @@ function toRsiPoints(indicators: Indicators[]): RsiPoint[] {
   for (const indicator of indicators) {
     const time = Math.floor(indicator.timestampUtc.getTime() / 1000);
     const point = points.get(time) ?? {
-      name: indicator.rsis[0]?.key ?? "RSI",
       time: time as UTCTimestamp,
       values: {},
     };
@@ -237,10 +235,12 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
   React.useEffect(() => {
     const chart = seriesRef.current?.chart;
     if (!chart) return;
-    const frame = requestAnimationFrame(() => chart.resize(
-      chartRef.current?.clientWidth ?? 0,
-      chartRef.current?.clientHeight ?? 0
-    ));
+    const frame = requestAnimationFrame(() =>
+      chart.resize(
+        chartRef.current?.clientWidth ?? 0,
+        chartRef.current?.clientHeight ?? 0
+      )
+    );
     return () => cancelAnimationFrame(frame);
   });
 
@@ -353,7 +353,6 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
                 second: "2-digit",
               }).format(new Date(Number(hoveredPoint.time) * 1000))}
             </dt>
-            <dt className="text-muted-foreground">{hoveredPoint.name}</dt>
             {rsiSeries.flatMap((item) =>
               hoveredPoint.values[item.key] === undefined ? (
                 []
