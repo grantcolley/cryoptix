@@ -32,6 +32,8 @@ export const STRATEGY_CONFIG: Strategy[] = [
     klineBroadcastFullMode: 2,
     tradeBroadcastCapacity: 10000,
     tradeBroadcastFullMode: 2,
+    orderBookBroadcastCapacity: 5000,
+    orderBookBroadcastFullMode: 2,
     indicatorsBroadcastCapacity: 5000,
     indicatorsBroadcastFullMode: 2,
     signalBroadcastCapacity: 5000,

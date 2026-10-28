@@ -18,6 +18,11 @@ namespace Cryoptix.Observer.Metrics
         /// </summary>
         /// <param name="symbol">The symbol.</param>
         void RecordBroadcastDropTrade(string? symbol);
+        /// <summary>
+        /// Records the broadcast drop order book.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        void RecordBroadcastDropOrderBook(string? symbol);
 
         /// <summary>
         /// Records the publish failure kline.
@@ -32,6 +37,12 @@ namespace Cryoptix.Observer.Metrics
         /// <param name="symbol">The symbol.</param>
         /// <param name="exception">The exception.</param>
         void RecordPublishFailureTrade(string? symbol, Exception exception);
+        /// <summary>
+        /// Records the publish failure order book.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="exception">The exception.</param>
+        void RecordPublishFailureOrderBook(string? symbol, Exception exception);
         /// <summary>
         /// Records the publish failure indicator.
         /// </summary>
@@ -58,6 +69,12 @@ namespace Cryoptix.Observer.Metrics
         /// <param name="symbol">The symbol.</param>
         /// <param name="lag">The lag.</param>
         void RecordNotificationLagTrade(string? symbol, TimeSpan lag);
+        /// <summary>
+        /// Records the notification lag order book.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="lag">The lag.</param>
+        void RecordNotificationLagOrderBook(string? symbol, TimeSpan lag);
 
         /// <summary>
         /// Records the publish duration kline.
@@ -72,6 +89,12 @@ namespace Cryoptix.Observer.Metrics
         /// <param name="symbol">The symbol.</param>
         /// <param name="duration">The duration.</param>
         void RecordPublishDurationTrade(string? symbol, TimeSpan duration);
+        /// <summary>
+        /// Records the publish duration order book.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="duration">The duration.</param>
+        void RecordPublishDurationOrderBook(string? symbol, TimeSpan duration);
         /// <summary>
         /// Records the publish duration indicator.
         /// </summary>

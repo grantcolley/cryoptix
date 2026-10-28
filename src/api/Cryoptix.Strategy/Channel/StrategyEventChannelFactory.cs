@@ -28,6 +28,8 @@ namespace Cryoptix.Strategy.Channel
                 _options.KlineBroadcastFullMode, 
                 _options.TradeBroadcastCapacity,
                 _options.TradeBroadcastFullMode,
+                _options.OrderBookBroadcastCapacity,
+                _options.OrderBookBroadcastFullMode,
                 _options.IndicatorsBroadcastCapacity,
                 _options.IndicatorsBroadcastFullMode, 
                 _options.SignalBroadcastCapacity, 
@@ -58,6 +60,9 @@ namespace Cryoptix.Strategy.Channel
             int tradeBroadcastCapacity = strategy.TradeBroadcastCapacity > 0 ? strategy.TradeBroadcastCapacity : _options.TradeBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode = strategy.TradeBroadcastFullMode;
 
+            int orderBookBroadcastCapacity = strategy.OrderBookBroadcastCapacity > 0 ? strategy.OrderBookBroadcastCapacity : _options.OrderBookBroadcastCapacity;
+            System.Threading.Channels.BoundedChannelFullMode orderBookBroadcastFullMode = strategy.OrderBookBroadcastFullMode;
+
             int indicatorsBroadcastCapacity = strategy.IndicatorsBroadcastCapacity > 0 ? strategy.IndicatorsBroadcastCapacity : _options.IndicatorsBroadcastCapacity;
             System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode = strategy.IndicatorsBroadcastFullMode;
 
@@ -78,6 +83,8 @@ namespace Cryoptix.Strategy.Channel
                 klineBroadcastFullMode, 
                 tradeBroadcastCapacity, 
                 tradeBroadcastFullMode,
+                orderBookBroadcastCapacity,
+                orderBookBroadcastFullMode,
                 indicatorsBroadcastCapacity, 
                 indicatorsBroadcastFullMode, 
                 signalBroadcastCapacity, 
@@ -99,6 +106,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="klineBroadcastFullMode">The kline broadcast full mode value.</param>
         /// <param name="tradeBroadcastCapacity">The trade broadcast capacity value.</param>
         /// <param name="tradeBroadcastFullMode">The trade broadcast full mode value.</param>
+        /// <param name="orderBookBroadcastCapacity">The order book broadcast capacity value.</param>
+        /// <param name="orderBookBroadcastFullMode">The order book broadcast full mode value.</param>
         /// <param name="indicatorsBroadcastCapacity">The indicators broadcast capacity value.</param>
         /// <param name="indicatorsBroadcastFullMode">The indicators broadcast full mode value.</param>
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity value.</param>
@@ -116,7 +125,9 @@ namespace Cryoptix.Strategy.Channel
             int klineBroadcastCapacity, 
             System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, 
             int tradeBroadcastCapacity, 
-            System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode, 
+            System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode,
+            int orderBookBroadcastCapacity,
+            System.Threading.Channels.BoundedChannelFullMode orderBookBroadcastFullMode,
             int indicatorsBroadcastCapacity, 
             System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode, 
             int signalBroadcastCapacity, 
@@ -169,6 +180,15 @@ namespace Cryoptix.Strategy.Channel
                     FullMode = tradeBroadcastFullMode
                 });
 
+            System.Threading.Channels.Channel<OrderBook> orderBookBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<OrderBook>(
+                new System.Threading.Channels.BoundedChannelOptions(orderBookBroadcastCapacity)
+                {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false,
+                    FullMode = orderBookBroadcastFullMode
+                });
+
             System.Threading.Channels.Channel<Market.Strategy.Indicators> indicatorsBroadcastChannel = System.Threading.Channels.Channel.CreateBounded<Market.Strategy.Indicators>(
                 new System.Threading.Channels.BoundedChannelOptions(indicatorsBroadcastCapacity)
                 {
@@ -203,6 +223,7 @@ namespace Cryoptix.Strategy.Channel
                 MarketEventDispatcher = marketEventDispatcherChannel,
                 KlineBroadcasts = klineBroadcastChannel,
                 TradeBroadcasts = tradeBroadcastChannel,
+                OrderBookBroadcasts = orderBookBroadcastChannel,
                 IndicatorsBroadcasts = indicatorsBroadcastChannel,
                 SignalBroadcasts = signalBroadcastChannel,
                 BroadcastQueue = broadcastQueueChannel

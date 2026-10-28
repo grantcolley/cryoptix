@@ -7,6 +7,8 @@ import { StrategyToolbar } from "@/features/strategy/strategy-toolbar";
 import { StrategySelect } from "@/features/strategy/strategy-select";
 import { IndicatorSnapshot } from "@/features/strategy/indicator-snapshot";
 import { MacdSnapshot } from "@/features/strategy/macd-snapshot";
+import { OrderBook } from "@/features/strategy/order-book";
+import type { OrderBook as OrderBookData } from "@/features/api/schema/order-book-schema";
 import { createSignalRConnection } from "@/signalr/signalRConnection";
 import type { MarketDataSnapshot } from "@/features/api/messages/market-data-snapshot-schema";
 import type { Indicators } from "@/features/api/schema/indicators-schema";
@@ -21,7 +23,6 @@ import {
   type StrategyStatus,
 } from "@/features/api/schema/strategy-status";
 import { StrategyState } from "@/features/api/schema/strategy-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Item } from "@/components/ui/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -69,6 +70,7 @@ export function StrategyPage() {
     string | null
   >(null);
   const [price, setPrice] = React.useState<string | null>(null);
+  const [orderBook, setOrderBook] = React.useState<OrderBookData | null>(null);
   const [priceDirection, setPriceDirection] =
     React.useState<PriceDirection>("flat");
   const [symbol, setSymbol] = React.useState<ApiSymbol | null>(null);
@@ -127,6 +129,7 @@ export function StrategyPage() {
   const valueWidthCh = Math.max(14, valuePrecision + 10);
 
   const resetChartData = () => {
+    setOrderBook(null);
     chartController.reset();
     macdIndicatorsRef.current.clear();
     setMacdIndicators([]);
@@ -325,7 +328,11 @@ export function StrategyPage() {
         setNotificationMessage(null);
         break;
       }
-      case MessageType.Indicator: {
+      case MessageType.OrderBook: {
+        setOrderBook(envelope.payload);
+        break;
+      }
+      case MessageType.Indicators: {
         const payload = envelope.payload as Indicators | undefined;
 
         if (payload) {
@@ -726,87 +733,90 @@ export function StrategyPage() {
         />
 
         {showStrategyRunning ? (
-          <div className="flex min-h-0 flex-1 rounded-xl px-4 py-2">
-            <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:flex-row">
+            <Item className="min-h-0 items-start self-start rounded-xl border-0 bg-card p-4 text-card-foreground ring-1 ring-foreground/10 md:max-h-full md:w-64 md:shrink-0 md:overflow-y-auto">
+              <OrderBook orderBook={orderBook} price={price} priceClassName={priceClassName} />
+            </Item>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
               <Item className="min-h-5 flex-wrap items-baseline justify-start gap-1 rounded-xl bg-card px-4 text-left ring-1 ring-foreground/10">
-                  {hasSymbol ? (
-                    <>
-                      <h4 className="text-sm text-foreground-semimuted">
-                        {symbolName}
-                      </h4>
-                    </>
-                  ) : null}
-                  {price ? (
-                    <p
-                      className={`px-4 text-left text-sm tabular-nums ${priceClassName}`}
-                      style={{ width: `${valueWidthCh}ch` }}
-                    >
-                      {price}
-                    </p>
-                  ) : null}
-                  <dl
-                    className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
-                    aria-label="Indicator RSIs"
-                  >
-                    {latestMacds.map(({ key, ...props }) => (
-                      <MacdSnapshot key={key} {...props} />
-                    ))}
-                    {indicatorRsis.map(({ key, value }) => (
-                      <IndicatorSnapshot key={key} name={key} value={value} />
-                    ))}
-                  </dl>
-              </Item>
-              <Card className="flex min-h-0 flex-1 flex-col">
-              <CardContent className="flex min-h-0 flex-1 flex-col">
-                {showChart ? (
+                {hasSymbol ? (
                   <>
-                    <KlineChart
-                      controller={chartController}
-                      indicators={strategy?.indicators}
-                      priceLabel={symbolName ?? "Price"}
-                    />
-                    <Tabs
-                      value={selectedIndicatorTab}
-                      onValueChange={setSelectedIndicatorTab}
-                      className="flex min-h-0 flex-1 flex-col"
-                    >
-                      <TabsList aria-label="Indicator charts">
-                        <TabsTrigger value="macd">MACD</TabsTrigger>
-                        <TabsTrigger value="rsi">RSI</TabsTrigger>
-                      </TabsList>
-                      <TabsContent
-                        value="macd"
-                        className="flex min-h-0 flex-1 flex-col"
-                      >
-                        <MacdChart indicators={macdIndicators} />
-                      </TabsContent>
-                      <TabsContent
-                        value="rsi"
-                        className="flex min-h-0 flex-1 flex-col"
-                      >
-                        <RsiChart indicators={rsiIndicators} />
-                      </TabsContent>
-                    </Tabs>
-                    <a
-                      href="https://www.tradingview.com/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 text-right text-[10px] leading-none text-muted-foreground hover:text-foreground"
-                    >
-                      Charting by TradingView
-                    </a>
+                    <h4 className="text-sm text-foreground-semimuted">
+                      {symbolName}
+                    </h4>
                   </>
-                ) : (
-                  <div
-                    className="flex min-h-0 flex-1 items-center justify-center"
-                    aria-label="Waiting for chart data"
-                    role="status"
+                ) : null}
+                {price ? (
+                  <p
+                    className={`px-4 text-left text-sm tabular-nums ${priceClassName}`}
+                    style={{ width: `${valueWidthCh}ch` }}
                   >
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    {price}
+                  </p>
+                ) : null}
+                <dl
+                  className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
+                  aria-label="Indicator RSIs"
+                >
+                  {latestMacds.map(({ key, ...props }) => (
+                    <MacdSnapshot key={key} {...props} />
+                  ))}
+                  {indicatorRsis.map(({ key, value }) => (
+                    <IndicatorSnapshot key={key} name={key} value={value} />
+                  ))}
+                </dl>
+              </Item>
+              <Item className="min-h-0 flex-1 flex-col flex-nowrap items-stretch gap-4 overflow-hidden rounded-xl border-0 bg-card px-0 py-4 text-card-foreground ring-1 ring-foreground/10">
+                <div className="flex min-h-0 flex-1 flex-col px-4">
+                  {showChart ? (
+                    <>
+                      <KlineChart
+                        controller={chartController}
+                        indicators={strategy?.indicators}
+                        priceLabel={symbolName ?? "Price"}
+                      />
+                      <Tabs
+                        value={selectedIndicatorTab}
+                        onValueChange={setSelectedIndicatorTab}
+                        className="flex min-h-0 flex-1 flex-col"
+                      >
+                        <TabsList aria-label="Indicator charts">
+                          <TabsTrigger value="macd">MACD</TabsTrigger>
+                          <TabsTrigger value="rsi">RSI</TabsTrigger>
+                        </TabsList>
+                        <TabsContent
+                          value="macd"
+                          className="flex min-h-0 flex-1 flex-col"
+                        >
+                          <MacdChart indicators={macdIndicators} />
+                        </TabsContent>
+                        <TabsContent
+                          value="rsi"
+                          className="flex min-h-0 flex-1 flex-col"
+                        >
+                          <RsiChart indicators={rsiIndicators} />
+                        </TabsContent>
+                      </Tabs>
+                      <a
+                        href="https://www.tradingview.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 text-right text-[10px] leading-none text-muted-foreground hover:text-foreground"
+                      >
+                        Charting by TradingView
+                      </a>
+                    </>
+                  ) : (
+                    <div
+                      className="flex min-h-0 flex-1 items-center justify-center"
+                      aria-label="Waiting for chart data"
+                      role="status"
+                    >
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                    </div>
+                  )}
+                </div>
+              </Item>
             </div>
           </div>
         ) : null}

@@ -58,6 +58,10 @@ export const StrategySchema = z.object({
   tradeBroadcastFullMode: z
     .enum(BoundedChannelFullMode)
     .default(BoundedChannelFullMode.DropOldest),
+  orderBookBroadcastCapacity: z.number().int().default(5000),
+  orderBookBroadcastFullMode: z
+    .enum(BoundedChannelFullMode)
+    .default(BoundedChannelFullMode.DropOldest),
   indicatorsBroadcastCapacity: z.number().int().default(5000),
   indicatorsBroadcastFullMode: z
     .enum(BoundedChannelFullMode)

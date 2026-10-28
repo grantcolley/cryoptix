@@ -168,6 +168,8 @@ const fallbackDefaultValues: Strategy = {
   klineBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   tradeBroadcastCapacity: 10000,
   tradeBroadcastFullMode: BoundedChannelFullMode.DropOldest,
+  orderBookBroadcastCapacity: 5000,
+  orderBookBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   indicatorsBroadcastCapacity: 5000,
   indicatorsBroadcastFullMode: BoundedChannelFullMode.DropOldest,
   signalBroadcastCapacity: 5000,
@@ -716,6 +718,21 @@ export function StrategyForm({
                       control={form.control}
                       name="tradeBroadcastFullMode"
                       label="Trade broadcast full mode"
+                      options={boundedChannelFullModeOptions}
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <IntegerField
+                      control={form.control}
+                      name="orderBookBroadcastCapacity"
+                      label="Order book broadcast capacity"
+                      isReadOnly={isReadOnly}
+                    />
+
+                    <EnumSelectField
+                      control={form.control}
+                      name="orderBookBroadcastFullMode"
+                      label="Order book broadcast full mode"
                       options={boundedChannelFullModeOptions}
                       isReadOnly={isReadOnly}
                     />

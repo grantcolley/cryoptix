@@ -78,6 +78,21 @@ namespace Cryoptix.Observer.Metrics
         }
 
         /// <summary>
+        /// Executes the record broadcast drop order book operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        public void RecordBroadcastDropOrderBook(string? symbol)
+        {
+            _broadcastDropCounter.Add(
+                1,
+                new TagList
+                {
+                { "event_type", "order_book" },
+                { "symbol", Normalize(symbol) }
+                });
+        }
+
+        /// <summary>
         /// Executes the record publish failure kline operation.
         /// </summary>
         /// <param name="symbol">The symbol value.</param>
@@ -108,6 +123,23 @@ namespace Cryoptix.Observer.Metrics
                 new TagList
                 {
                 { "event_type", "trade" },
+                { "symbol", Normalize(symbol) },
+                { "exception_type", exception.GetType().Name }
+                });
+        }
+
+        /// <summary>
+        /// Executes the record publish failure order book operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="exception">The exception value.</param>
+        public void RecordPublishFailureOrderBook(string? symbol, Exception exception)
+        {
+            _publishFailureCounter.Add(
+                1,
+                new TagList
+                {
+                { "event_type", "order_book" },
                 { "symbol", Normalize(symbol) },
                 { "exception_type", exception.GetType().Name }
                 });
@@ -182,6 +214,22 @@ namespace Cryoptix.Observer.Metrics
         }
 
         /// <summary>
+        /// Executes the record notification lag order book operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="lag">The lag value.</param>
+        public void RecordNotificationLagOrderBook(string? symbol, TimeSpan lag)
+        {
+            _notificationLagMs.Record(
+                lag.TotalMilliseconds,
+                new TagList
+                {
+                { "event_type", "order_book" },
+                { "symbol", Normalize(symbol) }
+                });
+        }
+
+        /// <summary>
         /// Executes the record publish duration kline operation.
         /// </summary>
         /// <param name="symbol">The symbol value.</param>
@@ -211,6 +259,22 @@ namespace Cryoptix.Observer.Metrics
                 new TagList
                 {
                 { "event_type", "trade" },
+                { "symbol", Normalize(symbol) }
+                });
+        }
+
+        /// <summary>
+        /// Executes the record publish duration order book operation.
+        /// </summary>
+        /// <param name="symbol">The symbol value.</param>
+        /// <param name="duration">The duration value.</param>
+        public void RecordPublishDurationOrderBook(string? symbol, TimeSpan duration)
+        {
+            _publishDurationMs.Record(
+                duration.TotalMilliseconds,
+                new TagList
+                {
+                { "event_type", "order_book" },
                 { "symbol", Normalize(symbol) }
                 });
         }

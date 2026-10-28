@@ -30,6 +30,10 @@ namespace Cryoptix.Strategy.Channel
         /// </summary>
         public required Channel<Trade> TradeBroadcasts { get; init; }
         /// <summary>
+        /// Gets or sets the order book broadcasts.
+        /// </summary>
+        public required Channel<OrderBook> OrderBookBroadcasts { get; init; }
+        /// <summary>
         /// Gets or sets the indicators broadcasts.
         /// </summary>
         public required Channel<Market.Strategy.Indicators> IndicatorsBroadcasts { get; init; }
@@ -53,6 +57,7 @@ namespace Cryoptix.Strategy.Channel
             MarketEventDispatcher.Writer.TryComplete(error);
             KlineBroadcasts.Writer.TryComplete(error);
             TradeBroadcasts.Writer.TryComplete(error);
+            OrderBookBroadcasts.Writer.TryComplete(error);
             IndicatorsBroadcasts.Writer.TryComplete(error);
             SignalBroadcasts.Writer.TryComplete(error);
             BroadcastQueue.Writer.TryComplete(error);

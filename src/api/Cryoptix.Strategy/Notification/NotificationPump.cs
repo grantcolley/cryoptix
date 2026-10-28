@@ -40,10 +40,11 @@ namespace Cryoptix.Strategy.Notification
         /// Fan-in pattern is used to merge multiple concurrent broadcast channels into a single serialized publish loop,
         /// ensuring that notifications are published in the order they are received from the channels.
         /// 
-        /// KlineBroadcasts ─────┐
-        /// TradeBroadcasts ─────┤
-        /// IndicatorsBroadcasts ├──> merged broadcast channel ──> ONE PublishAsync loop
-        /// SignalBroadcasts ────┘
+        /// KlineBroadcasts ──────┐
+        /// TradeBroadcasts ──────┤
+        /// OrderBookBroadcasts ──┤──> merged broadcast channel ──> ONE PublishAsync loop
+        /// IndicatorsBroadcasts ─┤     
+        /// SignalBroadcasts ─────┘
         /// 
         /// </summary>
         /// <param name="strategy">The strategy for which to publish notifications.</param>
@@ -68,6 +69,11 @@ namespace Cryoptix.Strategy.Notification
                 channels.BroadcastQueue.Writer,
                 cancellationToken);
 
+            Task orderBookTask = ReadAsync(
+                channels.OrderBookBroadcasts.Reader,
+                channels.BroadcastQueue.Writer,
+                cancellationToken);
+
             Task indicatorsTask = ReadAsync(
                 channels.IndicatorsBroadcasts.Reader,
                 channels.BroadcastQueue.Writer,
@@ -87,6 +93,7 @@ namespace Cryoptix.Strategy.Notification
                 await Task.WhenAll(
                     klineTask,
                     tradeTask,
+                    orderBookTask,
                     indicatorsTask,
                     signalTask);
 
@@ -126,6 +133,10 @@ namespace Cryoptix.Strategy.Notification
 
                     case Trade trade:
                         await PublishTradeAsync(trade, cancellationToken);
+                        break;
+
+                    case OrderBook orderBook:
+                        await PublishOrderBookAsync(orderBook, cancellationToken);
                         break;
 
                     case Market.Strategy.Indicators indicators:
@@ -209,6 +220,38 @@ namespace Cryoptix.Strategy.Notification
 
                 _notificationMetrics.RecordPublishFailureTrade(
                     trade.Symbol,
+                    ex);
+            }
+        }
+
+        private async Task PublishOrderBookAsync(
+            OrderBook orderBook,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _notificationDispatcher.PublishAsync(
+                    orderBook,
+                    cancellationToken);
+
+                _notificationMetrics.RecordNotificationLagOrderBook(
+                    orderBook.Symbol,
+                    DateTime.UtcNow - orderBook.UpdateTime);
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to publish order book notification for {Symbol}",
+                    orderBook.Symbol);
+
+                _notificationMetrics.RecordPublishFailureOrderBook(
+                    orderBook.Symbol,
                     ex);
             }
         }

@@ -29,6 +29,8 @@ namespace Cryoptix.Strategy.Channel
         /// <param name="klineBroadcastFullMode">The kline broadcast full mode.</param>
         /// <param name="tradeBroadcastCapacity">The trade broadcast capacity.</param>
         /// <param name="tradeBroadcastFullMode">The trade broadcast full mode.</param>
+        /// <param name="orderBookBroadcastCapacity">The order book broadcast capacity.</param>
+        /// <param name="orderBookBroadcastFullMode">The order book broadcast full mode.</param>
         /// <param name="indicatorsBroadcastCapacity">The indicators broadcast capacity.</param>
         /// <param name="indicatorsBroadcastFullMode">The indicators broadcast full mode.</param>
         /// <param name="signalBroadcastCapacity">The signal broadcast capacity.</param>
@@ -47,6 +49,8 @@ namespace Cryoptix.Strategy.Channel
             System.Threading.Channels.BoundedChannelFullMode klineBroadcastFullMode, 
             int tradeBroadcastCapacity,
             System.Threading.Channels.BoundedChannelFullMode tradeBroadcastFullMode,
+            int orderBookBroadcastCapacity,
+            System.Threading.Channels.BoundedChannelFullMode orderBookBroadcastFullMode,
             int indicatorsBroadcastCapacity,
             System.Threading.Channels.BoundedChannelFullMode indicatorsBroadcastFullMode,
             int signalBroadcastCapacity,

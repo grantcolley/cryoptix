@@ -120,6 +120,14 @@ namespace Cryoptix.Strategy.Strategies
         /// </summary>
         public BoundedChannelFullMode TradeBroadcastFullMode { get; init; } = BoundedChannelFullMode.DropOldest;
         /// <summary>
+        /// Gets or sets the order book broadcast capacity.
+        /// </summary>
+        public int OrderBookBroadcastCapacity { get; set; } = 5000;
+        /// <summary>
+        /// Gets or sets the order book broadcast full mode.
+        /// </summary>
+        public BoundedChannelFullMode OrderBookBroadcastFullMode { get; set; } = BoundedChannelFullMode.DropOldest;
+        /// <summary>
         /// Gets or sets the indicators broadcast capacity.
         /// </summary>
         public int IndicatorsBroadcastCapacity { get; set; } = 5000;

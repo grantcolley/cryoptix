@@ -4,12 +4,14 @@ import { TradeSchema } from "@/features/api/schema/trade-schema";
 import { StrategySchema } from "@/features/api/schema/strategy-schema";
 import { SignalSchema } from "@/features/api/schema/signal-schema";
 import { IndicatorsSchema } from "@/features/api/schema/indicators-schema";
+import { OrderBookSchema } from "@/features/api/schema/order-book-schema";
 import { MarketDataSnapshotSchema } from "./market-data-snapshot-schema";
 import { MessageType } from "./message-type";
 
 export const NotificationPayloadSchema = z.union([
   TradeSchema,
   KlineSchema,
+  OrderBookSchema,
   MarketDataSnapshotSchema,
   StrategySchema,
   IndicatorsSchema,
@@ -46,7 +48,11 @@ export const NotificationEnvelopeSchema = z.discriminatedUnion("messageType", [
     payload: TradeSchema,
   }),
   NotificationEnvelopeBaseSchema.extend({
-    messageType: z.literal(MessageType.Indicator),
+    messageType: z.literal(MessageType.OrderBook),
+    payload: OrderBookSchema,
+  }),
+  NotificationEnvelopeBaseSchema.extend({
+    messageType: z.literal(MessageType.Indicators),
     payload: IndicatorsSchema,
   }),
   NotificationEnvelopeBaseSchema.extend({

@@ -56,6 +56,22 @@ namespace Cryoptix.Strategy.Notification
         }
 
         /// <summary>
+        /// Publishes an order book notification using the configured broadcaster.
+        /// </summary>
+        /// <param name="orderBook">The order book data to publish.</param>
+        /// <param name="cancellationToken">Cancellation token for the publish operation.</param>
+        /// <returns>A task that completes when the broadcast operation finishes.</returns>
+        public Task PublishAsync(OrderBook orderBook, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(orderBook);
+
+            return _notificationBroadcaster.BroadcastAsync(
+                MessageType.OrderBook,
+                orderBook,
+                cancellationToken);
+        }
+
+        /// <summary>
         /// Executes the publish async operation.
         /// </summary>
         /// <param name="indicators">The indicators value.</param>

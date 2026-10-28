@@ -75,7 +75,7 @@ namespace Cryoptix.Strategy.Subscription
                 orderBookSubscription = await subscriptionsApi.SubscribeToOrderBookAsync(
                     symbol: strategy.Symbol,
                     limit: strategy.OrderBookLimit,
-                    onCallback: args => OnOrderBookCallback(strategy, orderBookRealtimeState, args),
+                    onCallback: args => OnOrderBookCallback(strategy, orderBookRealtimeState, channels.OrderBookBroadcasts.Writer, args),
                     onError: ex => OnOrderBookError(strategy, ex),
                     cancellationToken: sessionCancellationTokenSource.Token);
 
@@ -202,6 +202,7 @@ namespace Cryoptix.Strategy.Subscription
         private void OnOrderBookCallback(
             Strategies.Strategy strategy,
             OrderBookRealtimeState orderBookRealtimeState,
+            ChannelWriter<OrderBook> writer,
             OrderBookEventArgs args)
         {
             if (args.OrderBook == null)
@@ -213,6 +214,13 @@ namespace Cryoptix.Strategy.Subscription
             }
 
             orderBookRealtimeState.Update(args.OrderBook);
+
+            if (!writer.TryWrite(args.OrderBook))
+            {
+                _logger.LogWarning(
+                    "Failed to enqueue live order book for {Symbol}. Channel may be full or closed.",
+                    args.OrderBook.Symbol);
+            }
 
             if (_logger.IsEnabled(LogLevel.Information))
             {

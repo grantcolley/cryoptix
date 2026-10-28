@@ -24,6 +24,14 @@ namespace Cryoptix.Observer.Notification
         Task PublishAsync(Trade trade, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Publishes an order book notification to configured listeners.
+        /// </summary>
+        /// <param name="orderBook">The order book to publish.</param>
+        /// <param name="cancellationToken">Cancellation token to observe during publish.</param>
+        /// <returns>A task that completes when the publish is finished.</returns>
+        Task PublishAsync(OrderBook orderBook, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Publishes an indicator notification to configured listeners.
         /// </summary>
         /// <param name="indicators">The indicator to publish.</param>

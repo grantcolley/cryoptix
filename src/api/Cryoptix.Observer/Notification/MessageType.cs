@@ -30,6 +30,10 @@ namespace Cryoptix.Observer.Notification
         /// </summary>
         Trade,
         /// <summary>
+        /// Specifies the order book value.
+        /// </summary>
+        OrderBook,
+        /// <summary>
         /// Specifies the indicators value.
         /// </summary>
         Indicators,
