@@ -41,7 +41,7 @@ export function OrderBook({
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className="text-xs">
         {rows.map((row, index) => (
           <tr key={`${row.price}-${index}`}>
             <td
@@ -68,11 +68,10 @@ export function OrderBook({
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <h3 className="text-sm font-medium">Order book</h3>
       {renderSide("Ask", asks)}
       <p
         aria-label="Current price"
-        className={`border-y py-3 text-lg tabular-nums ${priceClassName ?? ""}`}
+        className={`border-y py-3 text-sm tabular-nums ${priceClassName ?? ""}`}
       >
         {price ?? "—"}
       </p>
