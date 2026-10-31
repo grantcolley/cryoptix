@@ -347,7 +347,7 @@ export function RsiChart({ indicators }: { indicators: Indicators[] }) {
   }, [points, rsiSeries]);
 
   return (
-    <section className="flex min-h-64 flex-col" aria-label="RSI chart">
+    <section className="flex min-h-64 flex-1 flex-col" aria-label="RSI chart">
       <h3 className="mb-1 text-xs font-semibold text-muted-foreground">RSI</h3>
       <div
         className="mb-2 flex min-h-7 flex-wrap items-center gap-x-4 gap-y-2"
