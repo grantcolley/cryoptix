@@ -32,6 +32,7 @@ import {
   KlineChart,
   MacdChart,
   RsiChart,
+  OrderBookChart,
   createKlineChartController,
   type KlineChartController,
 } from "@/features/charts";
@@ -733,12 +734,15 @@ export function StrategyPage() {
         />
 
         {showStrategyRunning ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:flex-row">
-            <Item className="min-h-0 items-start self-start rounded-xl border-0 bg-card p-4 text-card-foreground ring-1 ring-foreground/10 md:max-h-full md:w-64 md:shrink-0 md:overflow-y-auto">
-              <OrderBook orderBook={orderBook} price={price} priceClassName={priceClassName} />
+          <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
+            <Item className="min-h-0 flex-col flex-nowrap items-stretch rounded-xl border-0 bg-card p-4 text-card-foreground ring-1 ring-foreground/10 md:col-start-1 md:row-start-2 md:overflow-y-auto">
+              <div className="shrink-0">
+                <OrderBook orderBook={orderBook} price={price} priceClassName={priceClassName} />
+              </div>
+              <OrderBookChart orderBook={orderBook} />
             </Item>
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-              <Item className="min-h-5 flex-wrap items-baseline justify-start gap-1 rounded-xl bg-card px-4 text-left ring-1 ring-foreground/10">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 md:contents">
+              <Item className="min-h-5 flex-wrap items-baseline justify-start gap-1 rounded-xl bg-card px-4 text-left ring-1 ring-foreground/10 md:col-span-2 md:row-start-1">
                 {hasSymbol ? (
                   <>
                     <h4 className="text-sm text-foreground-semimuted">
@@ -766,7 +770,7 @@ export function StrategyPage() {
                   ))}
                 </dl>
               </Item>
-              <Item className="min-h-0 flex-1 flex-col flex-nowrap items-stretch gap-4 overflow-hidden rounded-xl border-0 bg-card px-0 py-4 text-card-foreground ring-1 ring-foreground/10">
+              <Item className="min-h-0 flex-1 flex-col flex-nowrap items-stretch gap-4 overflow-hidden rounded-xl border-0 bg-card px-0 py-4 text-card-foreground ring-1 ring-foreground/10 md:col-start-2 md:row-start-2">
                 <div className="flex min-h-0 flex-1 flex-col px-4">
                   {showChart ? (
                     <>
