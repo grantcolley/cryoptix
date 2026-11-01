@@ -1,8 +1,10 @@
 import type { OrderBook as OrderBookData } from "@/features/api/schema/order-book-schema";
 import type { OrderBookPrice } from "@/features/api/schema/order-book-price-schema";
+import type { Symbol } from "@/features/api/schema/symbol-schema";
 
 type OrderBookProps = {
   orderBook: OrderBookData | null;
+  symbol: Symbol | null;
   price: string | null;
   priceClassName?: string;
   levels?: number;
@@ -10,6 +12,7 @@ type OrderBookProps = {
 
 export function OrderBook({
   orderBook,
+  symbol,
   price,
   priceClassName,
   levels = 10,
@@ -28,20 +31,23 @@ export function OrderBook({
 
   const renderSide = (side: "Ask" | "Bid", rows: OrderBookPrice[]) => (
     <table
-      className="w-full text-right text-sm tabular-nums"
+      className="w-full text-right text-[10px] tabular-nums"
       aria-label={`${side}s`}
     >
-      <thead className="text-xs text-muted-foreground">
+      <thead className="text-muted-foreground">
         <tr>
           <th scope="col" className="pb-2 text-left font-normal">
-            {side} price
+            {side} price{symbol?.quoteAsset ? ` (${symbol.quoteAsset})` : ""}
           </th>
           <th scope="col" className="pb-2 font-normal">
-            Amount
+            Amount{symbol?.baseAsset ? ` (${symbol.baseAsset})` : ""}
+          </th>
+          <th scope="col" className="pb-2 font-normal">
+            Total{symbol?.quoteAsset ? ` (${symbol.quoteAsset})` : ""}
           </th>
         </tr>
       </thead>
-      <tbody className="text-xs">
+      <tbody>
         {rows.map((row, index) => (
           <tr key={`${row.price}-${index}`}>
             <td
@@ -50,13 +56,18 @@ export function OrderBook({
               {row.price}
             </td>
             <td className="py-0.5">{row.quantity}</td>
+            <td className="py-0.5">
+              {(row.price * row.quantity).toLocaleString(undefined, {
+                maximumFractionDigits: symbol?.quoteAssetPrecision ?? 8,
+              })}
+            </td>
           </tr>
         ))}
         {rows.length === 0 ? (
           <tr>
             <td
-              colSpan={2}
-              className="py-4 text-center text-xs text-muted-foreground"
+              colSpan={3}
+              className="py-4 text-center text-muted-foreground"
             >
               Waiting for {side.toLowerCase()}s
             </td>
@@ -71,7 +82,7 @@ export function OrderBook({
       {renderSide("Ask", asks)}
       <p
         aria-label="Current price"
-        className={`border-y py-3 text-sm tabular-nums ${priceClassName ?? ""}`}
+        className={`border-y py-3 text-xs tabular-nums ${priceClassName ?? ""}`}
       >
         {price ?? "—"}
       </p>
