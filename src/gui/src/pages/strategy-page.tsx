@@ -50,6 +50,7 @@ export function StrategyPage() {
   const [strategyFormVersion, setStrategyFormVersion] = React.useState(0);
   const [showStartButton, setShowStartButton] = React.useState(false);
   const [showChart, setShowChart] = React.useState(false);
+  const [showOrderBook, setShowOrderBook] = React.useState(false);
   const [selectedIndicatorTab, setSelectedIndicatorTab] =
     React.useState("macd");
   const [chartController] = React.useState<KlineChartController>(
@@ -129,8 +130,9 @@ export function StrategyPage() {
         : "text-foreground";
   const valueWidthCh = Math.max(14, valuePrecision + 10);
 
-  const resetChartData = () => {
+  const resetMarketData = () => {
     setOrderBook(null);
+    setShowOrderBook(false);
     chartController.reset();
     macdIndicatorsRef.current.clear();
     setMacdIndicators([]);
@@ -331,6 +333,7 @@ export function StrategyPage() {
       }
       case MessageType.OrderBook: {
         setOrderBook(envelope.payload);
+        setShowOrderBook(true);
         break;
       }
       case MessageType.Indicators: {
@@ -508,7 +511,7 @@ export function StrategyPage() {
     setShowStartButton(false);
     setEditedStrategy(null);
     setShowParametersOnly(false);
-    resetChartData();
+    resetMarketData();
     applySymbol(null);
     latestStrategyRef.current = null;
     resetPriceComparison();
@@ -539,7 +542,7 @@ export function StrategyPage() {
     resetPriceComparison();
     setNotificationMessage(null);
     applySymbol(null);
-    resetChartData();
+    resetMarketData();
     void stopSignalRSubscription();
   };
 
@@ -567,7 +570,7 @@ export function StrategyPage() {
         setIsStrategyConfigOpen(false);
         setShowParametersOnly(false);
         setShowStartButton(false);
-        resetChartData();
+        resetMarketData();
         await startSignalRSubscription(accessToken);
       }
 
@@ -624,7 +627,7 @@ export function StrategyPage() {
     setStrategyFormVersion((version) => version + 1);
     setIsStrategyConfigOpen(Boolean(nextStrategyId));
     setShowParametersOnly(false);
-    resetChartData();
+    resetMarketData();
     applySymbol(null);
     resetPriceComparison();
   };
@@ -736,10 +739,27 @@ export function StrategyPage() {
         {showStrategyRunning ? (
           <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
             <Item className="min-h-0 flex-col flex-nowrap items-stretch rounded-xl border-0 bg-card p-4 text-card-foreground ring-1 ring-foreground/10 md:col-start-1 md:row-start-2 md:overflow-y-auto">
-              <div className="shrink-0">
-                <OrderBook orderBook={orderBook} symbol={symbol} price={price} priceClassName={priceClassName} />
-              </div>
-              <OrderBookChart orderBook={orderBook} />
+              {showOrderBook ? (
+                <>
+                  <div className="shrink-0">
+                    <OrderBook
+                      orderBook={orderBook}
+                      symbol={symbol}
+                      price={price}
+                      priceClassName={priceClassName}
+                    />
+                  </div>
+                  <OrderBookChart orderBook={orderBook} />
+                </>
+              ) : (
+                <div
+                  className="flex min-h-0 flex-1 items-center justify-center"
+                  aria-label="Waiting for order book data"
+                  role="status"
+                >
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                </div>
+              )}
             </Item>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 md:contents">
               <Item className="min-h-5 flex-wrap items-baseline justify-start gap-1 rounded-xl bg-card px-4 text-left ring-1 ring-foreground/10 md:col-span-2 md:row-start-1">
@@ -757,7 +777,16 @@ export function StrategyPage() {
                   >
                     {price}
                   </p>
-                ) : null}
+                ) : (
+                  <div
+                    className="flex items-center px-4"
+                    style={{ width: `${valueWidthCh}ch` }}
+                    aria-label="Waiting for price"
+                    role="status"
+                  >
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  </div>
+                )}
                 <dl
                   className="ml-auto flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-left text-sm font-normal"
                   aria-label="Indicator RSIs"
