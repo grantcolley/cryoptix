@@ -15,6 +15,7 @@ function cumulativeLevels(levels: OrderBookPrice[], descending: boolean) {
 }
 
 export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
+  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
   const bids = cumulativeLevels(
     orderBook?.bids ?? (orderBook?.bestBid ? [orderBook.bestBid] : []),
     true
@@ -67,6 +68,17 @@ export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
         .join(" ")
     );
   };
+  const hoveredLevel = hover
+    ? [
+        ...bids.map((point) => ({ ...point, side: "Bid" })),
+        ...asks.map((point) => ({ ...point, side: "Ask" })),
+      ].reduce((nearest, point) =>
+        Math.abs(x(point.price) - hover.x * 800) <
+        Math.abs(x(nearest.price) - hover.x * 800)
+          ? point
+          : nearest
+      )
+    : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -75,7 +87,17 @@ export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
         {/* <span className="text-muted-foreground">Cumulative amount</span> */}
         <span className="text-destructive">Asks</span>
       </div>
-      <div className="relative min-h-32 flex-1 basis-0">
+      <div
+        className="relative min-h-32 flex-1 basis-0"
+        onPointerMove={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          setHover({
+            x: (event.clientX - bounds.left) / bounds.width,
+            y: (event.clientY - bounds.top) / bounds.height,
+          });
+        }}
+        onPointerLeave={() => setHover(null)}
+      >
         <svg
           viewBox="0 0 800 300"
           role="img"
@@ -105,8 +127,8 @@ export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
             strokeDasharray="4 4"
           />
           {[
-            { points: bids, color: "text-green-600 dark:text-green-400" },
-            { points: asks, color: "text-destructive" },
+            { side: "Bid", points: bids, color: "text-green-600 dark:text-green-400" },
+            { side: "Ask", points: asks, color: "text-destructive" },
           ].map(({ points, color }, index) =>
             points.length ? (
               <g key={index} className={color}>
@@ -126,10 +148,9 @@ export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
                     key={price}
                     cx={x(price)}
                     cy={y(quantity)}
-                    r="3"
+                    r="10"
                     fill="transparent"
                   >
-                    <title>{`Price: ${format(price)}, cumulative amount: ${format(quantity)}`}</title>
                   </circle>
                 ))}
               </g>
@@ -156,7 +177,23 @@ export function OrderBookChart({ orderBook }: { orderBook: OrderBook | null }) {
             </span>
           ))}
         </div>
+        {hover && hoveredLevel ? (
+          <div
+            role="tooltip"
+            className="pointer-events-none absolute z-10 max-w-full rounded-md border bg-popover px-2 py-1 text-[10px] text-popover-foreground shadow-md tabular-nums"
+            style={{
+              left: `${hover.x * 100}%`,
+              top: `${hover.y * 100}%`,
+              transform: `translate(${hover.x > 0.5 ? "calc(-100% - 8px)" : "8px"}, ${hover.y > 0.5 ? "calc(-100% - 8px)" : "8px"})`,
+            }}
+          >
+            <div>Side: {hoveredLevel.side}</div>
+            <div>Price: {format(hoveredLevel.price)}</div>
+            <div>Cumulative total: {format(hoveredLevel.quantity)}</div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
 }
+import { useState } from "react";
