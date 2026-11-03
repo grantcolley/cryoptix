@@ -31,15 +31,20 @@ export function OrderBook({
 
   const renderSide = (side: "Ask" | "Bid", rows: OrderBookPrice[]) => (
     <table
-      className="w-full text-right text-[10px] tabular-nums"
+      className="w-full table-fixed text-right text-[10px] tabular-nums [&_td]:truncate"
       aria-label={`${side}s`}
     >
+      <colgroup>
+        <col className="w-[36%]" />
+        <col className="w-[32%]" />
+        <col className="w-[32%]" />
+      </colgroup>
       <thead className="text-muted-foreground">
         <tr>
-          <th scope="col" className="pb-2 text-left font-normal">
+          <th scope="col" className="whitespace-nowrap pb-2 text-left font-normal">
             {side} price{symbol?.quoteAsset ? ` (${symbol.quoteAsset})` : ""}
           </th>
-          <th scope="col" className="pb-2 font-normal">
+          <th scope="col" className="pb-2 pr-4 font-normal">
             Amount{symbol?.baseAsset ? ` (${symbol.baseAsset})` : ""}
           </th>
           <th scope="col" className="pb-2 font-normal">
@@ -55,7 +60,7 @@ export function OrderBook({
             >
               {row.price}
             </td>
-            <td className="py-0.5">{row.quantity}</td>
+            <td className="py-0.5 pr-4">{row.quantity}</td>
             <td className="py-0.5">
               {(row.price * row.quantity).toLocaleString(undefined, {
                 maximumFractionDigits: symbol?.quoteAssetPrecision ?? 8,
@@ -65,10 +70,7 @@ export function OrderBook({
         ))}
         {rows.length === 0 ? (
           <tr>
-            <td
-              colSpan={3}
-              className="py-4 text-center text-muted-foreground"
-            >
+            <td colSpan={3} className="py-4 text-center text-muted-foreground">
               Waiting for {side.toLowerCase()}s
             </td>
           </tr>
@@ -78,11 +80,11 @@ export function OrderBook({
   );
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full min-w-0 flex-col gap-3 overflow-x-auto">
       {renderSide("Ask", asks)}
       <p
         aria-label="Current price"
-        className={`border-y py-3 text-xs tabular-nums ${priceClassName ?? ""}`}
+        className={`border-y py-1 text-xs tabular-nums ${priceClassName ?? ""}`}
       >
         {price ?? "—"}
       </p>
