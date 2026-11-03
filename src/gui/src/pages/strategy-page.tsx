@@ -737,7 +737,7 @@ export function StrategyPage() {
         />
 
         {showStrategyRunning ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-xl px-4 py-2 md:grid md:grid-cols-[18rem_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
             <Item className="min-h-0 flex-col flex-nowrap items-stretch rounded-xl border-0 bg-card p-4 text-card-foreground ring-1 ring-foreground/10 md:col-start-1 md:row-start-2 md:overflow-y-auto">
               {showOrderBook ? (
                 <>
