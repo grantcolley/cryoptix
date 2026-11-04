@@ -127,7 +127,7 @@ export function StrategyPage() {
       ? "text-destructive"
       : priceDirection === "up"
         ? "text-green-600 dark:text-green-400"
-        : "text-foreground";
+        : "text-blue-600 dark:text-blue-400";
   const valueWidthCh = Math.max(14, valuePrecision + 10);
 
   const resetMarketData = () => {
